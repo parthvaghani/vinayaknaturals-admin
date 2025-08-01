@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Link } from '@tanstack/react-router'
 import AuthLayout from '../auth-layout'
 import { UserAuthForm } from './components/user-auth-form'
 
@@ -23,7 +24,7 @@ export default function SignIn() {
         <CardContent>
           <UserAuthForm />
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex flex-col space-y-4">
           <p className='text-muted-foreground px-8 text-center text-sm'>
             By clicking login, you agree to our{' '}
             <a
@@ -40,6 +41,15 @@ export default function SignIn() {
               Privacy Policy
             </a>
             .
+          </p>
+          <p className='text-muted-foreground text-center text-sm'>
+            Don't have an account?{' '}
+            <Link
+              to='/sign-up'
+              className='hover:text-primary underline underline-offset-4'
+            >
+              Sign up
+            </Link>
           </p>
         </CardFooter>
       </Card>

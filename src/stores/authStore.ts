@@ -8,6 +8,11 @@ interface AuthUser {
   email: string
   role: string[]
   exp: number
+  user_details: {
+    country: string
+    gender: string
+    name: string
+  }
 }
 
 interface AuthState {
@@ -18,12 +23,14 @@ interface AuthState {
     setAccessToken: (accessToken: string) => void
     resetAccessToken: () => void
     reset: () => void
+    clearAuth: () => void
   }
 }
 
 export const useAuthStore = create<AuthState>()((set) => {
   const cookieState = Cookies.get(ACCESS_TOKEN)
   const initToken = cookieState ? JSON.parse(cookieState) : ''
+
   return {
     auth: {
       user: null,
@@ -48,8 +55,16 @@ export const useAuthStore = create<AuthState>()((set) => {
             auth: { ...state.auth, user: null, accessToken: '' },
           }
         }),
+      clearAuth: () =>
+        set((state) => {
+          Cookies.remove(ACCESS_TOKEN)
+          localStorage.removeItem('session')
+          sessionStorage.clear()
+          return {
+            ...state,
+            auth: { ...state.auth, user: null, accessToken: '' },
+          }
+        }),
     },
   }
 })
-
-// export const useAuth = () => useAuthStore((state) => state.auth)

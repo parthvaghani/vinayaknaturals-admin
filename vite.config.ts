@@ -14,7 +14,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  resolve: {
+  resolve: {  
     alias: {
       '@': path.resolve(__dirname, './src'),
 
@@ -23,4 +23,13 @@ export default defineConfig({
       '@tabler/icons-react': '@tabler/icons-react/dist/esm/icons/index.mjs',
     },
   },
+    server: {
+  proxy: {
+    '/api': {
+      target: 'http://localhost:3000/v1',  
+      changeOrigin: true,
+      secure: false,
+    },
+  },
+}   
 })

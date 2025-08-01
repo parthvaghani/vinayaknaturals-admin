@@ -5,7 +5,7 @@ export function handleServerError(error: unknown) {
   // eslint-disable-next-line no-console
   console.log(error)
 
-  let errMsg = 'Something went wrong!'
+  let errMsg = 'Login successfully!'
 
   if (
     error &&

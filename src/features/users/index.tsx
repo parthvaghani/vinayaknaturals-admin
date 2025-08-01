@@ -1,25 +1,26 @@
-import { Header } from '@/components/layout/header'
+import { useGetUsers } from '@/hooks/use-auth'
+import { UsersDialogs } from './components/users-dialogs'
+import UsersProvider from './context/users-context'
 import { Main } from '@/components/layout/main'
+import { UsersTable } from './components/users-table'
+import { UsersPrimaryButtons } from './components/users-primary-buttons'
 import { ProfileDropdown } from '@/components/profile-dropdown'
+import { Header } from '@/components/layout/header'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { columns } from './components/users-columns'
-import { UsersDialogs } from './components/users-dialogs'
-import { UsersPrimaryButtons } from './components/users-primary-buttons'
-import { UsersTable } from './components/users-table'
-import UsersProvider from './context/users-context'
-import { userListSchema } from './data/schema'
-import { users } from './data/users'
 
 export default function Users() {
-  // Parse user list
-  const userList = userListSchema.parse(users)
+  const { data: userList = [], isLoading, isError } = useGetUsers()
+
+  if (isLoading) return <div>Loading users...</div>
+  if (isError) return <div>Failed to load users</div>
 
   return (
     <UsersProvider>
       <Header fixed>
         <Search />
-        <div className='ml-auto flex items-center space-x-4'>
+        <div className='ml-auto flex items-center space-x-4'>   
           <ThemeSwitch />
           <ProfileDropdown />
         </div>
@@ -40,7 +41,7 @@ export default function Users() {
         </div>
       </Main>
 
-      <UsersDialogs />
+      <UsersDialogs />  
     </UsersProvider>
   )
 }
