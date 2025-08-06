@@ -56,12 +56,12 @@ export const sidebarData: SidebarData = {
           icon: IconLayoutDashboard,
         },
         {
-          title: 'Tasks',
+          title: 'Categories',
           url: '/tasks',
           icon: IconChecklist,
         },
         {
-          title: 'Apps',
+          title: 'Products',
           url: '/apps',
           icon: IconPackages,
         },
