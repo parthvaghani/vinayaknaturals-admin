@@ -58,7 +58,7 @@ export const columns: ColumnDef<Product>[] = [
   // ✅ Product ID
   {
     accessorKey: 'id',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Product ID" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Product ID"  className='text-center'/>,
     cell: ({ row }) => <div className="w-[210px] truncate">{row.getValue('id')}</div>,
     enableSorting: false,
     enableHiding: false,
@@ -67,7 +67,7 @@ export const columns: ColumnDef<Product>[] = [
   // ✅ Category
   {
     accessorKey: 'category',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Category" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Category" className='text-center' />,
     cell: ({ row }) => {
   
       return <span className="font-medium">{row.original.category?.name || '—'}</span>;
@@ -77,7 +77,7 @@ export const columns: ColumnDef<Product>[] = [
   // ✅ Product Name
   {
     accessorKey: 'name',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Name" className='text-center' />,
     cell: ({ row }) => <span className="font-semibold">{row.getValue('name')}</span>,
     filterFn: (row, id, value) => value.includes(row.getValue(id)),
   },
@@ -85,7 +85,7 @@ export const columns: ColumnDef<Product>[] = [
   // ✅ Description
   {
     accessorKey: 'description',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Description" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Description" className='text-center' />,
     cell: ({ row }) => {
       const description = row.getValue('description') as string
       const maxLength = 25 // reduced length to prevent scroll
@@ -112,7 +112,7 @@ export const columns: ColumnDef<Product>[] = [
   // ✅ Ingredients
   {
     accessorKey: 'ingredients',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Ingredients" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Ingredients" className='text-center'/>,
     cell: ({ row }) => {
       const ingredients = row.original.ingredients || []
       const content = ingredients.length > 0 ? ingredients.join(', ') : '—'
@@ -141,7 +141,7 @@ export const columns: ColumnDef<Product>[] = [
   // ✅ Benefits
   {
     accessorKey: 'benefits',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Benefits" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Benefits" className='text-center' />,
     cell: ({ row }) => {
       const benefits = row.original.benefits || []
       const content = benefits.length > 0 ? benefits.join(', ') : '—'
@@ -169,7 +169,7 @@ export const columns: ColumnDef<Product>[] = [
   // ✅ Image (Eye Button Preview)
   {
     id: 'images',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Images" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Images" className='text-center'/>,
     cell: ({ row }) => {
       const images = row.original.images || []
       if (images.length === 0) return <span>—</span>
@@ -203,7 +203,7 @@ export const columns: ColumnDef<Product>[] = [
   // ✅ Premium Badge
   {
     accessorKey: 'isPremium',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Premium" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Premium" className='text-center' />,
     cell: ({ row }) => {
       const isPremium = row.getValue('isPremium') as boolean
       return (
@@ -218,7 +218,7 @@ export const columns: ColumnDef<Product>[] = [
   // ✅ Popular Badge
   {
     accessorKey: 'isPopular',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Popular" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Popular" className='text-center' />,
     cell: ({ row }) => {
       const isPopular = row.getValue('isPopular') as boolean
       return (
@@ -233,7 +233,7 @@ export const columns: ColumnDef<Product>[] = [
   // ✅ Variants
   {
     id: "variants",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Variants" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Variants" className='text-center' />,
     cell: ({ row }) => {
       const variants = row.original.variants;
       const gmVariants = variants?.gm || [];
@@ -258,8 +258,13 @@ export const columns: ColumnDef<Product>[] = [
                 {gmVariants.map((v, i) => (
                   <DropdownMenuItem key={`gm-${i}`} className="flex justify-between text-sm">
                     <span>{formatWeight(v.weight, "g")}</span>
+                    <del className='text-gray-500'>
+                      ₹{v.price}
+                    </del>
                     <span>
-                      ₹{v.price}{" "}
+                    ₹{v.price - v.discount}
+                    </span>
+                    <span>
                       {v.discount > 0 && <span className="text-red-500 text-xs ml-1">-{v.discount}%</span>}
                     </span>
                   </DropdownMenuItem>
@@ -274,8 +279,13 @@ export const columns: ColumnDef<Product>[] = [
                 {kgVariants.map((v, i) => (
                   <DropdownMenuItem key={`kg-${i}`} className="flex justify-between text-sm">
                     <span>{formatWeight(v.weight, "kg")}</span>
+                    <del className='text-gray-500'>
+                      ₹{v.price}
+                    </del>
                     <span>
-                      ₹{v.price}{" "}
+                    ₹{v.price - v.discount}
+                    </span>
+                    <span>
                       {v.discount > 0 && <span className="text-red-500 text-xs ml-1">-{v.discount}%</span>}
                     </span>
                   </DropdownMenuItem>
@@ -297,7 +307,7 @@ export const columns: ColumnDef<Product>[] = [
   // ✅ Actions
   {
     id: 'actions',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" className='text-center' />,
     cell: ({ row }) => <DataTableRowActions row={row} />,
     enableSorting: false,
     enableHiding: false,

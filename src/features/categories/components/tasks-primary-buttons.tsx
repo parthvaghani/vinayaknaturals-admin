@@ -1,4 +1,5 @@
-import { IconDownload, IconPlus } from '@tabler/icons-react'
+// import { IconDownload } from '@tabler/icons-react'
+import { IconPlus } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
 import { Input } from '@/components/ui/input'
@@ -43,9 +44,9 @@ export function TasksPrimaryButtons() {
   return (
     <div className="flex gap-2">
       {/* Import Button */}
-      <Button variant="outline" className="space-x-1">
+      {/* <Button variant="outline" className="space-x-1">
         <span>Import</span> <IconDownload size={18} />
-      </Button>
+      </Button> */}
 
       {/* Create Category Button */}
       <Button className="space-x-1" onClick={() => setOpenSheet(true)}>

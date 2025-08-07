@@ -495,7 +495,7 @@ export function DataTableRowActions({ row }: { row: { original: Product } }) {
                         className='mt-1 flex items-center justify-between rounded bg-gray-100 p-2'
                       >
                         <span>
-                          {v.weight} - ₹{v.price} (Discount: {v.discount}%)
+                          {v.weight}{type} - ₹{v.price} (Discount: {v.discount}%)
                         </span>
                         <button
                           onClick={() =>

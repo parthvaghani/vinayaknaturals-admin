@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { IconDownload, IconPlus } from '@tabler/icons-react'
+// import { IconDownload } from '@tabler/icons-react'
+import { IconPlus } from '@tabler/icons-react'
 import { toast } from 'sonner'
 import { useProductCategories } from '@/hooks/use-categories'
 import { useCreateProduct } from '@/hooks/use-products'
@@ -167,9 +168,9 @@ export function ProductsPrimaryButtons() {
 
   return (
     <div className='flex gap-2'>
-      <Button variant='outline' className='space-x-1'>
+      {/* <Button variant='outline' className='space-x-1'>
         <span>Import</span> <IconDownload size={18} />
-      </Button>
+      </Button> */}
 
       <Button className='space-x-1' onClick={() => setOpenSheet(true)}>
         <span>Create Product</span> <IconPlus size={18} />
@@ -364,29 +365,34 @@ export function ProductsPrimaryButtons() {
                   />
                   <Button onClick={handleAddVariant}>Add</Button>
                 </div>
-                <div className='mt-2'>
-                  {(['gm', 'kg'] as const).map((type) => (
-                    <div key={type} className='mt-2'>
-                      <p className='font-medium capitalize'>{type} Variants:</p>
-                      {productData.variants[type].map((v, i) => (
-                        <div
-                          key={i}
-                          className='mt-1 flex items-center justify-between rounded bg-gray-100 p-2'
-                        >
-                          <span>
-                            {v.weight} - ₹{v.price} (Discount: {v.discount}%)
-                          </span>
-                          <button
-                            onClick={() => handleRemoveVariant(type, i)}
-                            className='text-xs text-red-500'
+                {productData.variants.gm.length > 0 || productData.variants.kg.length > 0 ? (
+                  <div className='mt-2'>
+                    {(['gm', 'kg'] as const).map((type) => (
+                      <div key={type} className='mt-2'>
+                        <p className='font-medium capitalize'>
+                          {type} Variants:
+                        </p>
+                        {productData.variants[type].map((v, i) => (
+                          <div
+                            key={i}
+                            className='mt-1 flex items-center justify-between rounded bg-gray-100 p-2'
                           >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
+                            <span>
+                              {v.weight}
+                              {type} - ₹{v.price} (Discount: {v.discount}%)
+                            </span>
+                            <button
+                              onClick={() => handleRemoveVariant(type, i)}
+                              className='text-xs text-red-500'
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
 
               {/* Switches */}

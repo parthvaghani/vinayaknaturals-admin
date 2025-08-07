@@ -45,7 +45,7 @@ export const columns: ColumnDef<Category>[] = [
   {
     accessorKey: 'id',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Category ID' />
+      <DataTableColumnHeader column={column} title='Category ID'  />
     ),
     cell: ({ row }) => <div className='w-[210px] truncate'>{row.getValue('id')}</div>,
     enableSorting: false,
@@ -56,7 +56,7 @@ export const columns: ColumnDef<Category>[] = [
   {
     accessorKey: 'category',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Category' />
+      <DataTableColumnHeader column={column} title='Category' className='text-center' />
     ),
     cell: ({ row }) => (
       <div className='flex space-x-2'>
@@ -71,7 +71,7 @@ export const columns: ColumnDef<Category>[] = [
   {
     accessorKey: 'name',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Name' />
+      <DataTableColumnHeader column={column} title='Name' className='text-center' />
     ),
     cell: ({ row }) => (
       <div className='flex w-[150px] items-center'>
@@ -86,7 +86,7 @@ export const columns: ColumnDef<Category>[] = [
   // ✅ Description Column
   {
     accessorKey: 'description',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Description" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Description" className='text-center' />,
     cell: ({ row }) => {
       const description = row.getValue('description') as string
       const maxLength = 25 // reduced length to prevent scroll
@@ -115,7 +115,7 @@ export const columns: ColumnDef<Category>[] = [
   {
     accessorKey: 'pricingEnabled',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Pricing Enabled' />
+      <DataTableColumnHeader column={column} title='Pricing Enabled' className='text-center' />
     ),
     cell: ({ row }) => {
       const isEnabled = row.getValue('pricingEnabled') as boolean
@@ -134,7 +134,7 @@ export const columns: ColumnDef<Category>[] = [
   // ✅ Actions Column (Edit/Delete)
   {
     id: 'actions',
-    header: ({column}) => ( <DataTableColumnHeader column={column} title='Actions' />
+    header: ({column}) => ( <DataTableColumnHeader column={column} title='Actions' className='text-center' />
   ),
     cell: ({ row }) => <DataTableRowActions row={row} />,
     enableSorting: false,
