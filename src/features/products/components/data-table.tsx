@@ -28,10 +28,12 @@ import type { ColumnDef } from '@tanstack/react-table'
 interface DataTableProps {
   columns: ColumnDef<Product, unknown>[]
   data: Product[]
+  showToolbar?: boolean
+  showPagination?: boolean
 }
 
-export function DataTable({ columns, data }: DataTableProps) {
-  
+export function DataTable({ columns, data, showToolbar = true, showPagination = true }: DataTableProps) {
+
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
@@ -64,7 +66,7 @@ export function DataTable({ columns, data }: DataTableProps) {
 
   return (
     <div className='space-y-4'>
-      <DataTableToolbar table={table} />
+      {showToolbar ? <DataTableToolbar table={table} /> : null}
       <div className='overflow-hidden rounded-md border'>
         <Table>
           <TableHeader>
@@ -115,7 +117,7 @@ export function DataTable({ columns, data }: DataTableProps) {
           </TableBody>
         </Table>
       </div>
-      <DataTablePagination table={table} />
+      {showPagination ? <DataTablePagination table={table} /> : null}
     </div>
   )
 }

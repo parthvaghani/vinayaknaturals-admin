@@ -1,19 +1,36 @@
-import { useProducts } from '@/hooks/use-products'
-import { Header } from '@/components/layout/header'
-import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
-import { columns } from './components/columns'
-import { DataTable } from './components/data-table'
-import { ProductsPrimaryButtons } from './components/products-primary-buttons'
-import TasksProvider from './context/tasks-context'
-import type { Product } from './data/schema'
+import { useState, useMemo } from 'react';
+import { useProductsList } from '@/hooks/use-products';
+import { Header } from '@/components/layout/header';
+import { Main } from '@/components/layout/main';
+import { ProfileDropdown } from '@/components/profile-dropdown';
+import { Search } from '@/components/search';
+import { ThemeSwitch } from '@/components/theme-switch';
+import { columns } from './components/columns';
+import { DataTable } from './components/data-table';
+import { ProductsPrimaryButtons } from './components/products-primary-buttons';
+import TasksProvider from './context/tasks-context';
+import type { Product } from './data/schema';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 // import { ColumnDef } from '@tanstack/react-table'
 
 
 export default function Products() {
-  const { data, isLoading, isError, error } = useProducts()
+  const [isPremium, setIsPremium] = useState<boolean | undefined>(undefined);
+  const [isPopular, setIsPopular] = useState<boolean | undefined>(undefined);
+
+  // Keep UI minimal: only premium/popular switches
+  const { data, isLoading, isError, error, isFetching } = useProductsList({
+    page: 1,
+    limit: 100,
+    isPremium,
+    isPopular,
+  });
+
+  const products: Product[] = useMemo(() => {
+    const raw = data?.results ?? [];
+    return Array.isArray(raw) ? (raw as Product[]) : [];
+  }, [data]);
   return (
     <TasksProvider>
       <Header fixed>
@@ -32,68 +49,87 @@ export default function Products() {
               Manage and view all products in one place!
             </p>
           </div>
-          <ProductsPrimaryButtons />
-
+          <div className='flex items-center gap-6'>
+            <div className='flex items-center gap-3'>
+              <div className='flex items-center gap-2'>
+                <Label htmlFor='filter-premium'>Premium</Label>
+                <Switch
+                  id='filter-premium'
+                  checked={isPremium ?? false}
+                  onCheckedChange={(val) => setIsPremium(val ? true : undefined)}
+                />
+              </div>
+              <div className='flex items-center gap-2'>
+                <Label htmlFor='filter-popular'>Popular</Label>
+                <Switch
+                  id='filter-popular'
+                  checked={isPopular ?? false}
+                  onCheckedChange={(val) => setIsPopular(val ? true : undefined)}
+                />
+              </div>
+            </div>
+            <ProductsPrimaryButtons />
+          </div>
         </div>
 
         <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-y-0 lg:space-x-12'>
-  {isLoading ? (
-    <p>Loading Products...</p>
-  ) : isError ? (
-    <p className='text-red-500'>Error: {(error as Error).message}</p>
-  ) : (
-    <DataTable
-    data={(() => {
-      const rawData: Product[] = Array.isArray(data) ?  (data as Product[]) : [];
-      return rawData.map((product) => ({
-        _id: product._id, // or String(product._id)
-        id: product._id,  // or String(product._id)
-        category:
-          typeof product.category === 'object' && product.category !== null
-            ? product.category
-            : String(product.category || 'Unknown Category'),
-        name: product.name || 'Unnamed',
-        description: product.description || '',
-        isPremium: Boolean(product.isPremium ?? false),
-        isPopular: Boolean(product.isPopular ?? false),
-        variants: product.variants || {},
-        images: Array.isArray(product.images) ? product.images : [],
-        ingredients: Array.isArray(product.ingredients) ? product.ingredients : [],
-        benefits: Array.isArray(product.benefits) ? product.benefits : [],
-      }));
-    })() as {
-      _id: string;
-      id: string;
-      category: string;
-      name: string;
-      description?: string;
-      isPremium?: boolean;
-      isPopular?: boolean;
-      variants?: Record<string, unknown>;
-      images?: string[];
-      ingredients?: string[];
-      benefits?: string[];
-    }[]
-    }
-    columns={columns as import('@tanstack/react-table').ColumnDef<{
-      _id: string;
-      id: string;
-      category: string;
-      name: string;
-      description?: string;
-      isPremium?: boolean;
-      isPopular?: boolean;
-      variants?: Record<string, unknown>;
-      images?: string[];
-      ingredients?: string[];
-      benefits?: string[];
-    }, unknown>[]}
-  />
-  )}
-</div>
+          {isLoading || isFetching ? (
+            <p>Loading Products...</p>
+          ) : isError ? (
+            <p className='text-red-500'>Error: {(error as Error).message}</p>
+          ) : (
+            <DataTable
+              data={(() => {
+                const rawData: Product[] = products;
+                return rawData.map((product) => ({
+                  _id: product._id, // or String(product._id)
+                  id: product._id,  // or String(product._id)
+                  category:
+                    typeof product.category === 'object' && product.category !== null
+                      ? product.category
+                      : String(product.category || 'Unknown Category'),
+                  name: product.name || 'Unnamed',
+                  description: product.description || '',
+                  isPremium: Boolean(product.isPremium ?? false),
+                  isPopular: Boolean(product.isPopular ?? false),
+                  variants: product.variants || {},
+                  images: Array.isArray(product.images) ? product.images : [],
+                  ingredients: Array.isArray(product.ingredients) ? product.ingredients : [],
+                  benefits: Array.isArray(product.benefits) ? product.benefits : [],
+                }));
+              })() as {
+                _id: string;
+                id: string;
+                category: string;
+                name: string;
+                description?: string;
+                isPremium?: boolean;
+                isPopular?: boolean;
+                variants?: Record<string, unknown>;
+                images?: string[];
+                ingredients?: string[];
+                benefits?: string[];
+              }[]
+              }
+              columns={columns as import('@tanstack/react-table').ColumnDef<{
+                _id: string;
+                id: string;
+                category: string;
+                name: string;
+                description?: string;
+                isPremium?: boolean;
+                isPopular?: boolean;
+                variants?: Record<string, unknown>;
+                images?: string[];
+                ingredients?: string[];
+                benefits?: string[];
+              }, unknown>[]}
+            />
+          )}
+        </div>
       </Main>
 
       {/* <ProductDialogs /> */}
     </TasksProvider>
-  )
+  );
 }

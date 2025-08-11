@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, keepPreviousData } from '@tanstack/react-query'
 import api from '@/lib/api'
 
 interface Variant {
@@ -21,17 +21,56 @@ interface Product {
   isPremium?: boolean;
   isPopular?: boolean;
   variants?: Variants;
-  images?: string[];       
-  ingredients?: string[];  
-  benefits?: string[];     
+  images?: string[];
+  ingredients?: string[];
+  benefits?: string[];
 }
 
+interface GetProductsParams {
+  page?: number
+  limit?: number
+  search?: string
+  isPremium?: boolean
+  isPopular?: boolean
+}
 
+interface PaginatedProductsResponse {
+  results: Product[]
+  total?: number
+  page?: number
+  limit?: number
+}
 
-//  Fetch all products
-const getProductsApi = async (): Promise<Product[]> => {
-  const response = await api.get('/products/product')
-  return response.data.data
+//  Fetch products with pagination/search/filters
+const getProductsApi = async (
+  params: GetProductsParams = {}
+): Promise<PaginatedProductsResponse> => {
+  const { page, limit, search, isPremium, isPopular } = params
+  const response = await api.get('/products/product', {
+    params: {
+      page,
+      limit,
+      search,
+      isPremium,
+      isPopular,
+    },
+  })
+
+  const payload = response?.data?.data ?? response?.data ?? {}
+  const results: Product[] = payload?.results ?? []
+
+  // Try common meta fields for total/page/limit with graceful fallback
+  const total: number | undefined =
+    payload?.total ?? payload?.count ?? payload?.totalResults ?? undefined
+  const currentPage: number | undefined = payload?.page ?? payload?.currentPage
+  const currentLimit: number | undefined = payload?.limit ?? payload?.pageSize
+
+  return {
+    results,
+    total,
+    page: currentPage,
+    limit: currentLimit,
+  }
 }
 
 //  Get product by ID
@@ -48,9 +87,9 @@ const createProductApi = async (payload: {
   isPremium?: boolean;
   isPopular?: boolean;
   variants?: Variants;
-  images?: string[];       
-  ingredients?: string[];  
-  benefits?: string[];     
+  images?: string[];
+  ingredients?: string[];
+  benefits?: string[];
 }): Promise<Product> => {
   const response = await api.post('/products/product', payload)
   return response.data
@@ -65,9 +104,9 @@ const updateProductApi = async (payload: {
   isPremium?: boolean;
   isPopular?: boolean;
   variants?: Variants;
-  images?: string[];       
-  ingredients?: string[];      
-  benefits?: string[];     
+  images?: string[];
+  ingredients?: string[];
+  benefits?: string[];
 }): Promise<Product> => {
   const updatedPayload = {
     category: payload.category,
@@ -80,7 +119,7 @@ const updateProductApi = async (payload: {
     ingredients: payload.ingredients || [],
     benefits: payload.benefits || [],
   }
-  
+
   const response = await api.put(`/products/product/${payload.id}`, updatedPayload)
   return response.data.data
 }
@@ -93,10 +132,23 @@ const deleteProductApi = async (id: string): Promise<void> => {
 // hooks
 
 export function useProducts() {
+  // Keep a backwards-compatible signature that fetches without params
   return useQuery({
-    queryKey: ['products'],
-    queryFn: getProductsApi,
+    queryKey: ['products', { page: 1, limit: 10 }],
+    queryFn: () => getProductsApi({ page: 1, limit: 10 }),
     staleTime: 1000 * 60 * 5,
+    retry: 3,
+    refetchOnWindowFocus: false,
+  })
+}
+
+export function useProductsList(params: GetProductsParams) {
+  const { page = 1, limit = 10, search = '', isPremium, isPopular } = params
+  return useQuery({
+    queryKey: ['products', { page, limit, search, isPremium, isPopular }],
+    queryFn: () => getProductsApi({ page, limit, search, isPremium, isPopular }),
+    placeholderData: keepPreviousData,
+    staleTime: 1000 * 30,
     retry: 3,
     refetchOnWindowFocus: false,
   })

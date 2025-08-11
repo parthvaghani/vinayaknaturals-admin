@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, keepPreviousData } from '@tanstack/react-query'
 import api from '@/lib/api'
 
 export interface ProductCategory {
@@ -12,16 +12,49 @@ export interface ProductCategory {
   heroImage?: string
 }
 
-// Fetch all categories
-const getProductCategoriesApi = async (): Promise<ProductCategory[]> => {
-  const response = await api.get('/categories/product-category')
-  return response.data.data
+interface GetProductCategoriesParams {
+  page?: number
+  limit?: number
+  search?: string
+  pricingEnabled?: boolean
 }
-const searchProductCategoriesApi = async (search: string): Promise<ProductCategory[]> => {
+
+interface PaginatedCategoriesResponse {
+  results: ProductCategory[]
+  total?: number
+  page?: number
+  limit?: number
+}
+
+// Fetch categories (supports pagination/search/pricingEnabled)
+const getProductCategoriesApi = async (
+  params: GetProductCategoriesParams = {}
+): Promise<PaginatedCategoriesResponse> => {
+  const { page, limit, search, pricingEnabled } = params
   const response = await api.get('/categories/product-category', {
-    params: { search }, // Pass search term as query param
+    params: { page, limit, search, pricingEnabled },
   })
-  return response.data
+
+  const payload = response?.data?.data ?? response?.data ?? {}
+  const results: ProductCategory[] = payload?.results ?? payload ?? []
+  const total: number | undefined =
+    payload?.total ?? payload?.count ?? payload?.totalResults ?? undefined
+  const currentPage: number | undefined = payload?.page ?? payload?.currentPage
+  const currentLimit: number | undefined = payload?.limit ?? payload?.pageSize
+
+  return {
+    results,
+    total,
+    page: currentPage,
+    limit: currentLimit,
+  }
+}
+
+const searchProductCategoriesApi = async (
+  search: string
+): Promise<ProductCategory[]> => {
+  const { results } = await getProductCategoriesApi({ search })
+  return results
 }
 // Create new category
 const createProductCategoryApi = async (payload: {category: string, name: string, description: string, pricingEnabled: boolean}): Promise<ProductCategory> => {
@@ -43,15 +76,19 @@ export const updateProductCategoryApi = async (payload: { id: string, category:s
 
 // Delete category
 const deleteProductCategoryApi = async (id: string): Promise<void> => {
-    await api.delete(`/categories/product-category/${id}`) 
+    await api.delete(`/categories/product-category/${id}`)
   }
-  
+
 
 // Hooks
 export function useProductCategories() {
   return useQuery({
     queryKey: ['product-categories'],
-    queryFn: getProductCategoriesApi,
+    // Backwards-compatible: return only results array
+    queryFn: async () => {
+      const { results } = await getProductCategoriesApi()
+      return results
+    },
     staleTime: 1000 * 60 * 5,
     retry: 3,
     refetchOnWindowFocus: false,
@@ -86,3 +123,16 @@ export function useDeleteProductCategory() {
       refetchOnWindowFocus: false,
     })
   }
+
+// Paginated list hook
+export function useProductCategoriesList(params: GetProductCategoriesParams) {
+  const { page = 1, limit = 10, search = '', pricingEnabled } = params
+  return useQuery({
+    queryKey: ['product-categories', { page, limit, search, pricingEnabled }],
+    queryFn: () => getProductCategoriesApi({ page, limit, search, pricingEnabled }),
+    placeholderData: keepPreviousData,
+    staleTime: 1000 * 30,
+    retry: 3,
+    refetchOnWindowFocus: false,
+  })
+}

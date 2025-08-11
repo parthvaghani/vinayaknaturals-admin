@@ -127,7 +127,9 @@ export const columns: ColumnDef<Category>[] = [
     },
     enableSorting: true,
     filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id))
+      const isEnabled = row.getValue(id) as boolean
+      const status = isEnabled ? 'enabled' : 'disabled'
+      return (value as string[]).includes(status)
     },
   },
 

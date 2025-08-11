@@ -1,18 +1,22 @@
-import { useProductCategories } from '@/hooks/use-categories'
-import { Header } from '@/components/layout/header'
-import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
-import { columns } from './components/columns'
-import { DataTable } from './components/data-table'
-import { TasksDialogs } from './components/tasks-dialogs'
-import { TasksPrimaryButtons } from './components/tasks-primary-buttons'
-import TasksProvider from './context/tasks-context'
+import { useProductCategoriesList } from '@/hooks/use-categories';
+import { useState } from 'react';
+import { Header } from '@/components/layout/header';
+import { Main } from '@/components/layout/main';
+import { ProfileDropdown } from '@/components/profile-dropdown';
+import { Search } from '@/components/search';
+import { ThemeSwitch } from '@/components/theme-switch';
+import { columns } from './components/columns';
+import { DataTable } from './components/data-table';
+import { TasksDialogs } from './components/tasks-dialogs';
+import { TasksPrimaryButtons } from './components/tasks-primary-buttons';
+import TasksProvider from './context/tasks-context';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 
 
 export default function Categories() {
-  const { data, isLoading, isError, error } = useProductCategories()
+  const [pricingEnabled, setPricingEnabled] = useState<boolean | undefined>(undefined);
+  const { data, isLoading, isError, error } = useProductCategoriesList({ page: 1, limit: 10, search: '', pricingEnabled });
 
 
 
@@ -34,46 +38,54 @@ export default function Categories() {
               Manage and view all product categories in one place!
             </p>
           </div>
-          <TasksPrimaryButtons />
+          <div className='flex items-center gap-6'>
+            <div className='flex items-center gap-2'>
+              <div className='flex items-center gap-2'>
+                <Label htmlFor='filter-premium'>Pricing Enabled</Label>
+                <Switch
+                  id='filter-premium'
+                  checked={pricingEnabled  ?? false}
+                  onCheckedChange={(val) => setPricingEnabled(val ? true : undefined)}
+                />
+              </div>
+
+            </div>
+            <TasksPrimaryButtons />
+          </div>
         </div>
 
         <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-y-0 lg:space-x-12'>
-  {isLoading ? (
-    <p>Loading categories...</p>
-  ) : isError ? (
-    <p className='text-red-500'>Error: {(error as Error).message}</p>
-  ) : (
-    <DataTable
-      data={(() => {
-        const rawData = data || [];
-        // console.log('rawData :>> ', data);
-        if (!Array.isArray(rawData)) {
-          // console.warn('Data is not an array:', rawData);
-          return [];
-        }
-
-        return rawData.map((category: {
-          _id?: string;
-          id?: string;
-          category?: string;
-          name?: string;
-          description?: string;
-          pricingEnabled?: boolean;
-        }, index: number) => ({
-          id: category._id || category.id || `category-${index}`,
-          category: category.category || 'Unknown Category',
-          name: category.name || 'Unnamed',
-          description: category.description || '',
-          pricingEnabled: category.pricingEnabled ?? false,
-        }));
-      })()}
-      columns={columns}
-    />
-  )}
-</div>
+          {isLoading ? (
+            <p>Loading categories...</p>
+          ) : isError ? (
+            <p className='text-red-500'>Error: {(error as Error).message}</p>
+          ) : (
+            <DataTable
+              data={(() => {
+                const payload = data ?? { results: [] };
+                const rawData = Array.isArray(payload) ? payload : payload.results ?? [];
+                return rawData.map((category: {
+                  _id?: string;
+                  id?: string;
+                  category?: string;
+                  name?: string;
+                  description?: string;
+                  pricingEnabled?: boolean;
+                }, index: number) => ({
+                  id: category._id || category.id || `category-${index}`,
+                  category: category.category || 'Unknown Category',
+                  name: category.name || 'Unnamed',
+                  description: category.description || '',
+                  pricingEnabled: category.pricingEnabled ?? false,
+                }));
+              })()}
+              columns={columns}
+            />
+          )}
+        </div>
       </Main>
 
       <TasksDialogs />
     </TasksProvider>
-  )
+  );
 }

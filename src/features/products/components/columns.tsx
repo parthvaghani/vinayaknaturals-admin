@@ -1,31 +1,31 @@
-import { ColumnDef } from '@tanstack/react-table'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Badge } from '@/components/ui/badge'
-import { DataTableColumnHeader } from './data-table-column-header'
-import { DataTableRowActions } from './data-table-row-actions'
-import { Button } from '@/components/ui/button'
-import { Eye, IndianRupee  } from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { ColumnDef } from '@tanstack/react-table';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { DataTableColumnHeader } from './data-table-column-header';
+import { DataTableRowActions } from './data-table-row-actions';
+import { Button } from '@/components/ui/button';
+import { Eye, IndianRupee } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 
 // Product Interface (based on your schema)
 export interface Product {
-  _id: string
+  _id: string;
   id: string;
-  category: { id: string; name: string }
-  name: string
-  description?: string
-  images?: string[]
-  ingredients?: string[]
-  benefits?: string[]
-  isPremium: boolean
-  isPopular: boolean
+  category: { id: string; name: string; };
+  name: string;
+  description?: string;
+  images?: string[];
+  ingredients?: string[];
+  benefits?: string[];
+  isPremium: boolean;
+  isPopular: boolean;
   variants: {
-    gm: { weight: string; price: number; discount: number }[]
-    kg: { weight: string; price: number; discount: number }[]
-  }
+    gm: { weight: string; price: number; discount: number; }[];
+    kg: { weight: string; price: number; discount: number; }[];
+  };
 }
 
 export const columns: ColumnDef<Product>[] = [
@@ -56,12 +56,40 @@ export const columns: ColumnDef<Product>[] = [
   },
 
   // ✅ Product ID
+  // {
+  //   accessorKey: 'id',
+  //   header: ({ column }) => <DataTableColumnHeader column={column} title="Product ID"  className='text-center'/>,
+  //   cell: ({ row }) => <div className="w-[210px] truncate">{row.getValue('id')}</div>,
+  //   enableSorting: false,
+  //   enableHiding: false,
+  // },
+
+  // ✅ Product Name
   {
-    accessorKey: 'id',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Product ID"  className='text-center'/>,
-    cell: ({ row }) => <div className="w-[210px] truncate">{row.getValue('id')}</div>,
-    enableSorting: false,
-    enableHiding: false,
+    accessorKey: 'name',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Name" className='text-center' />,
+    cell: ({ row }) => {
+      const name = row.getValue('name') as string;
+      const maxLength = 25; // reduced length to prevent scroll
+      const truncated = name?.length > maxLength ? `${name.slice(0, maxLength)}...` : name || '—';
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="font-semibold">
+                {truncated}
+              </span>
+            </TooltipTrigger>
+            {name && (
+              <TooltipContent className="max-w-xs">
+                <p>{name}</p>
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
+      );
+    },
+    filterFn: (row, id, value) => value.includes(row.getValue(id)),
   },
 
   // ✅ Category
@@ -69,17 +97,8 @@ export const columns: ColumnDef<Product>[] = [
     accessorKey: 'category',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Category" className='text-center' />,
     cell: ({ row }) => {
-
       return <span className="font-medium">{row.original.category?.name || '—'}</span>;
     },
-  },
-
-  // ✅ Product Name
-  {
-    accessorKey: 'name',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Name" className='text-center' />,
-    cell: ({ row }) => <span className="font-semibold">{row.getValue('name')}</span>,
-    filterFn: (row, id, value) => value.includes(row.getValue(id)),
   },
 
   // ✅ Description
@@ -87,9 +106,9 @@ export const columns: ColumnDef<Product>[] = [
     accessorKey: 'description',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Description" className='text-center' />,
     cell: ({ row }) => {
-      const description = row.getValue('description') as string
-      const maxLength = 25 // reduced length to prevent scroll
-      const truncated = description?.length > maxLength ? `${description.slice(0, maxLength)}...` : description || '—'
+      const description = row.getValue('description') as string;
+      const maxLength = 25; // reduced length to prevent scroll
+      const truncated = description?.length > maxLength ? `${description.slice(0, maxLength)}...` : description || '—';
       return (
         <TooltipProvider>
           <Tooltip>
@@ -105,19 +124,19 @@ export const columns: ColumnDef<Product>[] = [
             )}
           </Tooltip>
         </TooltipProvider>
-      )
+      );
     },
   },
 
   // ✅ Ingredients
   {
     accessorKey: 'ingredients',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Ingredients" className='text-center'/>,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Ingredients" className='text-center' />,
     cell: ({ row }) => {
-      const ingredients = row.original.ingredients || []
-      const content = ingredients.length > 0 ? ingredients.join(', ') : '—'
-      const maxLength = 25
-      const truncated = content.length > maxLength ? `${content.slice(0, maxLength)}...` : content
+      const ingredients = row.original.ingredients || [];
+      const content = ingredients.length > 0 ? ingredients.join(', ') : '—';
+      const maxLength = 25;
+      const truncated = content.length > maxLength ? `${content.slice(0, maxLength)}...` : content;
 
       return (
         <TooltipProvider>
@@ -134,7 +153,7 @@ export const columns: ColumnDef<Product>[] = [
             )}
           </Tooltip>
         </TooltipProvider>
-      )
+      );
     },
   },
 
@@ -143,36 +162,36 @@ export const columns: ColumnDef<Product>[] = [
     accessorKey: 'benefits',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Benefits" className='text-center' />,
     cell: ({ row }) => {
-      const benefits = row.original.benefits || []
-      const content = benefits.length > 0 ? benefits.join(', ') : '—'
-      const maxLength = 25
-      const truncated = content.length > maxLength ? `${content.slice(0, maxLength)}...` : content
+      const benefits = row.original.benefits || [];
+      const content = benefits.length > 0 ? benefits.join(', ') : '—';
+      const maxLength = 25;
+      const truncated = content.length > maxLength ? `${content.slice(0, maxLength)}...` : content;
 
       return (
         <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="truncate block max-w-[200px] text-sm text-muted-foreground cursor-help">
-                  {truncated}
-                </span>
-              </TooltipTrigger>
-              {benefits.length > 0 && (
-                <TooltipContent className="max-w-xs">
-                  <p>{content}</p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
-      )
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="truncate block max-w-[200px] text-sm text-muted-foreground cursor-help">
+                {truncated}
+              </span>
+            </TooltipTrigger>
+            {benefits.length > 0 && (
+              <TooltipContent className="max-w-xs">
+                <p>{content}</p>
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
+      );
     },
   },
   // ✅ Image (Eye Button Preview)
   {
     id: 'images',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Images" className='text-center'/>,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Images" className='text-center' />,
     cell: ({ row }) => {
-      const images = row.original.images || []
-      if (images.length === 0) return <span>—</span>
+      const images = row.original.images || [];
+      if (images.length === 0) return <span>—</span>;
       return (
         <Dialog>
           <DialogTrigger asChild>
@@ -196,7 +215,7 @@ export const columns: ColumnDef<Product>[] = [
             </div>
           </DialogContent>
         </Dialog>
-      )
+      );
     },
   },
 
@@ -205,12 +224,12 @@ export const columns: ColumnDef<Product>[] = [
     accessorKey: 'isPremium',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Premium" className='text-center' />,
     cell: ({ row }) => {
-      const isPremium = row.getValue('isPremium') as boolean
+      const isPremium = row.getValue('isPremium') as boolean;
       return (
         <Badge variant={isPremium ? 'enable' : 'destructive'}>
           {isPremium ? 'Yes' : 'No'}
         </Badge>
-      )
+      );
     },
     enableSorting: true,
   },
@@ -220,12 +239,12 @@ export const columns: ColumnDef<Product>[] = [
     accessorKey: 'isPopular',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Popular" className='text-center' />,
     cell: ({ row }) => {
-      const isPopular = row.getValue('isPopular') as boolean
+      const isPopular = row.getValue('isPopular') as boolean;
       return (
         <Badge variant={isPopular ? 'enable' : 'destructive'}>
           {isPopular ? 'Yes' : 'No'}
         </Badge>
-      )
+      );
     },
     enableSorting: true,
   },
@@ -342,4 +361,4 @@ export const columns: ColumnDef<Product>[] = [
     enableSorting: false,
     enableHiding: false,
   },
-]
+];
