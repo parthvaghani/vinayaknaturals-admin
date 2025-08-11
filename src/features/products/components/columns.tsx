@@ -69,7 +69,7 @@ export const columns: ColumnDef<Product>[] = [
     accessorKey: 'category',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Category" className='text-center' />,
     cell: ({ row }) => {
-  
+
       return <span className="font-medium">{row.original.category?.name || '—'}</span>;
     },
   },
@@ -108,7 +108,7 @@ export const columns: ColumnDef<Product>[] = [
       )
     },
   },
-  
+
   // ✅ Ingredients
   {
     accessorKey: 'ingredients',
@@ -118,7 +118,7 @@ export const columns: ColumnDef<Product>[] = [
       const content = ingredients.length > 0 ? ingredients.join(', ') : '—'
       const maxLength = 25
       const truncated = content.length > maxLength ? `${content.slice(0, maxLength)}...` : content
-  
+
       return (
         <TooltipProvider>
           <Tooltip>
@@ -137,7 +137,7 @@ export const columns: ColumnDef<Product>[] = [
       )
     },
   },
-  
+
   // ✅ Benefits
   {
     accessorKey: 'benefits',
@@ -147,7 +147,7 @@ export const columns: ColumnDef<Product>[] = [
       const content = benefits.length > 0 ? benefits.join(', ') : '—'
       const maxLength = 25
       const truncated = content.length > maxLength ? `${content.slice(0, maxLength)}...` : content
-  
+
       return (
         <TooltipProvider>
             <Tooltip>
@@ -165,7 +165,7 @@ export const columns: ColumnDef<Product>[] = [
           </TooltipProvider>
       )
     },
-  },  
+  },
   // ✅ Image (Eye Button Preview)
   {
     id: 'images',
@@ -238,11 +238,19 @@ export const columns: ColumnDef<Product>[] = [
       const variants = row.original.variants;
       const gmVariants = variants?.gm || [];
       const kgVariants = variants?.kg || [];
-  
+
       // ✅ Helper to clean weight suffix (avoids duplicate "g" or "kg")
       const formatWeight = (weight: string, unit: string) =>
         weight.toLowerCase().endsWith(unit) ? weight : `${weight}${unit}`;
-  
+
+      // ✅ Format INR like the mock (e.g. ₹2,940)
+      const formatINR = (amount: number) =>
+        new Intl.NumberFormat('en-IN', {
+          style: 'currency',
+          currency: 'INR',
+          maximumFractionDigits: 0,
+        }).format(amount);
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -250,49 +258,71 @@ export const columns: ColumnDef<Product>[] = [
               <IndianRupee className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="center" className="w-52">
+          <DropdownMenuContent align="center" className="w-72 pt-4">
             {/* Gram Variants */}
             {gmVariants.length > 0 && (
               <>
-                <p className="px-2 py-1 text-xs text-gray-500">Gram Variants</p>
-                {gmVariants.map((v, i) => (
-                  <DropdownMenuItem key={`gm-${i}`} className="flex justify-between text-sm">
-                    <span>{formatWeight(v.weight, "g")}</span>
-                    <del className='text-gray-500'>
-                      ₹{v.price}
-                    </del>
-                    <span>
-                    ₹{v.price - v.discount}
-                    </span>
-                    <span>
-                      {v.discount > 0 && <span className="text-red-500 text-xs ml-1">-{v.discount}%</span>}
-                    </span>
-                  </DropdownMenuItem>
-                ))}
+                <p className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 rounded-md mx-2 mb-1">
+                  Gram Variants
+                </p>
+                {gmVariants.map((v, i) => {
+                  const discountPercent = Math.max(0, Math.min(100, v.discount || 0));
+                  const discountedPrice = Math.round(v.price * (1 - discountPercent / 100));
+                  return (
+                    <DropdownMenuItem
+                      key={`gm-${i}`}
+                      className="text-sm px-3 py-2 rounded-lg border flex items-center justify-between gap-3 mx-2 my-1 hover:bg-muted/50"
+                    >
+                      <span className="font-medium">{formatWeight(v.weight, "g")}</span>
+                      <span className="ml-auto flex items-center gap-2">
+                        {discountPercent > 0 && (
+                          <del className="text-muted-foreground">
+                            {formatINR(v.price)}
+                          </del>
+                        )}
+                        <span className="font-semibold">{formatINR(discountedPrice)}</span>
+                        {discountPercent > 0 && (
+                          <span className="text-xs rounded-full px-2 py-0.5 bg-red-100 text-red-600">-{discountPercent}%</span>
+                        )}
+                      </span>
+                    </DropdownMenuItem>
+                  );
+                })}
               </>
             )}
-  
+
             {/* Kilogram Variants */}
             {kgVariants.length > 0 && (
               <>
-                <p className="px-2 py-1 text-xs text-gray-500 border-t mt-1 pt-1">Kilogram Variants</p>
-                {kgVariants.map((v, i) => (
-                  <DropdownMenuItem key={`kg-${i}`} className="flex justify-between text-sm">
-                    <span>{formatWeight(v.weight, "kg")}</span>
-                    <del className='text-gray-500'>
-                      ₹{v.price}
-                    </del>
-                    <span>
-                    ₹{v.price - v.discount}
-                    </span>
-                    <span>
-                      {v.discount > 0 && <span className="text-red-500 text-xs ml-1">-{v.discount}%</span>}
-                    </span>
-                  </DropdownMenuItem>
-                ))}
+                <p className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 rounded-md mx-2 mt-2 mb-1">
+                  Kilogram Variants
+                </p>
+                {kgVariants.map((v, i) => {
+                  const discountPercent = Math.max(0, Math.min(100, v.discount || 0));
+                  const discountedPrice = Math.round(v.price * (1 - discountPercent / 100));
+                  return (
+                    <DropdownMenuItem
+                      key={`kg-${i}`}
+                      className="text-sm px-3 py-2 rounded-lg border flex items-center justify-between gap-3 mx-2 my-1 hover:bg-muted/50"
+                    >
+                      <span className="font-medium">{formatWeight(v.weight, "kg")}</span>
+                      <span className="ml-auto flex items-center gap-2">
+                        {discountPercent > 0 && (
+                          <del className="text-muted-foreground">
+                            {formatINR(v.price)}
+                          </del>
+                        )}
+                        <span className="font-semibold">{formatINR(discountedPrice)}</span>
+                        {discountPercent > 0 && (
+                          <span className="text-xs rounded-full px-2 py-0.5 bg-red-100 text-red-600">-{discountPercent}%</span>
+                        )}
+                      </span>
+                    </DropdownMenuItem>
+                  );
+                })}
               </>
             )}
-  
+
             {/* No Variants */}
             {!gmVariants.length && !kgVariants.length && (
               <p className="px-2 py-2 text-sm text-gray-500 text-center">No variants available</p>
@@ -302,7 +332,7 @@ export const columns: ColumnDef<Product>[] = [
       );
     },
   },
-  
+
 
   // ✅ Actions
   {
