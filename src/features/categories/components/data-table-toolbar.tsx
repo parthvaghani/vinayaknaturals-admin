@@ -7,9 +7,10 @@ import { useState, useEffect } from 'react'
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
+  onSearchChange?: (value: string) => void
 }
 
-export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>) {
+export function DataTableToolbar<TData>({ table, onSearchChange }: DataTableToolbarProps<TData>) {
   const [search, setSearch] = useState('')
   const isFiltered = !!table.getState().globalFilter
 
@@ -17,9 +18,12 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
   useEffect(() => {
     const delay = setTimeout(() => {
       table.setGlobalFilter(search) // ✅ apply search globally
+      if (onSearchChange) {
+        onSearchChange(search)
+      }
     }, 500)
     return () => clearTimeout(delay)
-  }, [search, table])
+  }, [search, table, onSearchChange])
 
   return (
     <div className='flex items-center justify-between'>

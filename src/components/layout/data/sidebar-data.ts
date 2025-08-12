@@ -1,4 +1,5 @@
 import {
+  IconAugmentedReality,
   // IconBarrierBlock,
   // IconBrowserCheck,
   // IconBug,
@@ -6,6 +7,7 @@ import {
   // IconError404,
   // IconHelp,
   IconLayoutDashboard,
+  IconMoodPin,
   // IconLock,
   // IconLockAccess,
   // IconMessages,
@@ -64,6 +66,16 @@ export const sidebarData: SidebarData = {
           title: 'Products',
           url: '/products',
           icon: IconPackages,
+        },
+        {
+          title: 'Testimonials',
+          url: '/testimonials',
+          icon: IconMoodPin,
+        },
+        {
+          title: 'Suggested Products',
+          url: '/suggested-products',
+          icon: IconAugmentedReality,
         },
         // {
         //   title: 'Chats',
