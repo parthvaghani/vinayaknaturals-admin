@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import { SearchProvider } from '@/context/search-context'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/app-sidebar'
+import { ContentLoader } from '@/components/content-loader'
 import SkipToMain from '@/components/skip-to-main'
 
 interface Props {
@@ -24,12 +25,13 @@ export function AuthenticatedLayout({ children }: Props) {
             'peer-data-[state=collapsed]:w-[calc(100%-var(--sidebar-width-icon)-1rem)]',
             'peer-data-[state=expanded]:w-[calc(100%-var(--sidebar-width))]',
             'sm:transition-[width] sm:duration-200 sm:ease-linear',
-            'flex h-svh flex-col',
+            'relative flex h-svh flex-col',
             'group-data-[scroll-locked=1]/body:h-full',
             'has-[main.fixed-main]:group-data-[scroll-locked=1]/body:h-svh'
           )}
         >
           {children ? children : <Outlet />}
+          <ContentLoader />
         </div>
       </SidebarProvider>
     </SearchProvider>
