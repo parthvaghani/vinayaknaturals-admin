@@ -104,3 +104,5 @@ export function DataTablePagination<TData>({ table, pagination, onChange }: Data
     </div>
   )
 }
+
+

@@ -1,30 +1,31 @@
 import {
   IconAugmentedReality,
-  // IconBarrierBlock,
-  // IconBrowserCheck,
-  // IconBug,
-  IconChecklist,
-  // IconError404,
-  // IconHelp,
   IconLayoutDashboard,
   IconMessages,
   IconMoodPin,
+  IconUsers,
+  IconPackages,
+  IconChecklist,
+  IconShoppingCart,
+  // IconBarrierBlock,
+  // IconBrowserCheck,
+  // IconBug,
+  // IconError404,
+  // IconHelp,
   // IconLock,
   // IconLockAccess,
   // IconMessages,
   // IconNotification,
-  IconPackages,
   // IconPalette,
   // IconServerOff,
   // IconSettings,
   // IconTool,
   // IconUserCog,
   // IconUserOff,
-  // IconUsers,
-} from '@tabler/icons-react'
+} from '@tabler/icons-react';
 // import { Command } from 'lucide-react'
 // import { ClerkLogo } from '@/assets/clerk-logo'
-import { type SidebarData } from '../types'
+import { type SidebarData } from '../types';
 
 export const sidebarData: SidebarData = {
   user: {
@@ -83,17 +84,16 @@ export const sidebarData: SidebarData = {
           url: '/whatsapp-leads',
           icon: IconMessages,
         },
-        // {
-        //   title: 'Chats',
-        //   url: '/chats',
-        //   badge: '3',
-        //   icon: IconMessages,
-        // },
-        // {
-        //   title: 'Users',
-        //   url: '/users',
-        //   icon: IconUsers,
-        // },
+        {
+          title: 'Users',
+          url: '/users',
+          icon: IconUsers,
+        },
+        {
+          title: 'Orders',
+          url: '/orders',
+          icon: IconShoppingCart,
+        },
         // {
         //   title: 'Secured by Clerk',
         //   icon: ClerkLogo,
@@ -218,4 +218,4 @@ export const sidebarData: SidebarData = {
     //   ],
     // },
   ],
-}
+};

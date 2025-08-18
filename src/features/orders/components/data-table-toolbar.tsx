@@ -2,7 +2,7 @@ import { Cross2Icon } from '@radix-ui/react-icons';
 import { Table } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { DataTableViewOptions } from '../components/data-table-view-options';
+import { DataTableViewOptions } from '@/features/users/components/data-table-view-options';
 import { useEffect, useState } from 'react';
 
 interface DataTableToolbarProps<TData> {
@@ -12,17 +12,14 @@ interface DataTableToolbarProps<TData> {
 }
 
 export function DataTableToolbar<TData>({ table, search, onSearchChange }: DataTableToolbarProps<TData>) {
-  // Local state for debounce UX
   const [localSearch, setLocalSearch] = useState(search);
 
   useEffect(() => {
     setLocalSearch(search);
   }, [search]);
 
-  // Debounce server-side search
   useEffect(() => {
     const delay = setTimeout(() => {
-      // Only trigger change if value actually differs to avoid unintended resets
       if (localSearch !== search) {
         onSearchChange(localSearch);
       }
@@ -36,7 +33,7 @@ export function DataTableToolbar<TData>({ table, search, onSearchChange }: DataT
     <div className='flex items-center justify-between'>
       <div className='flex flex-1 flex-col-reverse items-start gap-y-2 sm:flex-row sm:items-center sm:space-x-2'>
         <Input
-          placeholder='Search...'
+          placeholder='Search orders...'
           value={localSearch}
           onChange={(e) => setLocalSearch(e.target.value)}
           className='h-8 w-[200px] lg:w-[300px]'
@@ -61,3 +58,5 @@ export function DataTableToolbar<TData>({ table, search, onSearchChange }: DataT
     </div>
   );
 }
+
+

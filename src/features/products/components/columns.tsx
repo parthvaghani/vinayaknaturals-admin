@@ -271,89 +271,90 @@ export const columns: ColumnDef<Product>[] = [
         }).format(amount);
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <IndianRupee className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="center" className="w-72 pt-4">
-            {/* Gram Variants */}
-            {gmVariants.length > 0 && (
-              <>
-                <p className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 rounded-md mx-2 mb-1">
-                  Gram Variants
-                </p>
-                {gmVariants.map((v, i) => {
-                  const discountPercent = Math.max(0, Math.min(100, v.discount || 0));
-                  return (
-                    <DropdownMenuItem
-                      key={`gm-${i}`}
-                      className="text-sm px-3 py-2 rounded-lg border flex items-center justify-between gap-3 mx-2 my-1 hover:bg-muted/50"
-                    >
-                      <span className="font-medium">{formatWeight(v.weight, "g")}</span>
-                      <span className="ml-auto flex items-center gap-2">
-                        {discountPercent > 0 && (
-                          <span className="line-through text-muted-red">
-                            {formatINR(v.price)}
-                          </span>
-                        )}
-                        <span className="font-semibold">{formatINR(v.price - v.discount)}</span>
-                        {discountPercent > 0 && (
-                          <span className="text-xs rounded-full px-2 py-0.5 bg-red-600 text-white">
-                            - {formatINR(v.discount)} OFF
-                          </span>
-                        )}
-                      </span>
-                    </DropdownMenuItem>
-                  );
-                })}
-              </>
-            )}
+        <div className='flex justify-center'>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <IndianRupee className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="w-72 pt-4">
+              {/* Gram Variants */}
+              {gmVariants.length > 0 && (
+                <>
+                  <p className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 rounded-md mx-2 mb-1">
+                    Gram Variants
+                  </p>
+                  {gmVariants.map((v, i) => {
+                    const discountPercent = Math.max(0, Math.min(100, v.discount || 0));
+                    return (
+                      <DropdownMenuItem
+                        key={`gm-${i}`}
+                        className="text-sm px-3 py-2 rounded-lg border flex items-center justify-between gap-3 mx-2 my-1 hover:bg-muted/50"
+                      >
+                        <span className="font-medium">{formatWeight(v.weight, "g")}</span>
+                        <span className="ml-auto flex items-center gap-2">
+                          {discountPercent > 0 && (
+                            <span className="line-through text-muted-red">
+                              {formatINR(v.price)}
+                            </span>
+                          )}
+                          <span className="font-semibold">{formatINR(v.price - v.discount)}</span>
+                          {discountPercent > 0 && (
+                            <span className="text-xs rounded-full px-2 py-0.5 bg-red-600 text-white">
+                              - {formatINR(v.discount)} OFF
+                            </span>
+                          )}
+                        </span>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </>
+              )}
 
-            {/* Kilogram Variants */}
-            {kgVariants.length > 0 && (
-              <>
-                <p className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 rounded-md mx-2 mt-2 mb-1">
-                  Kilogram Variants
-                </p>
-                {kgVariants.map((v, i) => {
-                  const discountPercent = Math.max(0, Math.min(100, v.discount || 0));
-                  return (
-                    <DropdownMenuItem
-                      key={`kg-${i}`}
-                      className="text-sm px-3 py-2 rounded-lg border flex items-center justify-between gap-3 mx-2 my-1 hover:bg-muted/50"
-                    >
-                      <span className="font-medium">{formatWeight(v.weight, "kg")}</span>
-                      <span className="ml-auto flex items-center gap-2">
-                        {discountPercent > 0 && (
-                          <span className="line-through text-muted-red hover:text-l">
-                            {formatINR(v.price)}
-                          </span>
-                        )}
-                        <span className="font-semibold">{formatINR(v.price - v.discount)}</span>
-                        {discountPercent > 0 && (
-                          <span className="text-xs rounded-full px-2 py-0.5 bg-red-600 text-white">
-                            - {formatINR(v.discount)} OFF
-                          </span>
-                        )}
-                      </span>
-                    </DropdownMenuItem>
-                  );
-                })}
-              </>
-            )}
+              {/* Kilogram Variants */}
+              {kgVariants.length > 0 && (
+                <>
+                  <p className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 rounded-md mx-2 mt-2 mb-1">
+                    Kilogram Variants
+                  </p>
+                  {kgVariants.map((v, i) => {
+                    const discountPercent = Math.max(0, Math.min(100, v.discount || 0));
+                    return (
+                      <DropdownMenuItem
+                        key={`kg-${i}`}
+                        className="text-sm px-3 py-2 rounded-lg border flex items-center justify-between gap-3 mx-2 my-1 hover:bg-muted/50"
+                      >
+                        <span className="font-medium">{formatWeight(v.weight, "kg")}</span>
+                        <span className="ml-auto flex items-center gap-2">
+                          {discountPercent > 0 && (
+                            <span className="line-through text-muted-red hover:text-l">
+                              {formatINR(v.price)}
+                            </span>
+                          )}
+                          <span className="font-semibold">{formatINR(v.price - v.discount)}</span>
+                          {discountPercent > 0 && (
+                            <span className="text-xs rounded-full px-2 py-0.5 bg-red-600 text-white">
+                              - {formatINR(v.discount)} OFF
+                            </span>
+                          )}
+                        </span>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </>
+              )}
 
-            {/* No Variants */}
-            {!gmVariants.length && !kgVariants.length && (
-              <p className="px-2 py-2 text-sm text-gray-500 text-center">No variants available</p>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+              {/* No Variants */}
+              {!gmVariants.length && !kgVariants.length && (
+                <p className="px-2 py-2 text-sm text-gray-500 text-center">No variants available</p>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       );
     },
   },
-
 
   // ✅ Actions
   {

@@ -1,34 +1,35 @@
-import { ColumnDef } from '@tanstack/react-table'
-import { Badge, badgeVariants } from '@/components/ui/badge'
-import type { VariantProps } from 'class-variance-authority'
-import { DataTableColumnHeader } from '@/features/categories/components/data-table-column-header'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { DataTableRowActions } from './data-table-row-actions'
+import { ColumnDef } from '@tanstack/react-table';
+import { Badge, badgeVariants } from '@/components/ui/badge';
+import type { VariantProps } from 'class-variance-authority';
+import { DataTableColumnHeader } from '@/features/categories/components/data-table-column-header';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { DataTableRowActions } from './data-table-row-actions';
 import { Checkbox } from '@/components/ui/checkbox';
+import { FileSymlinkIcon } from 'lucide-react';
 
 export interface WhatsappLeadMetadata {
-  productId?: string
-  productName?: string
-  variant?: string
-  discountApplied?: boolean
+  productId?: string;
+  productName?: string;
+  variant?: string;
+  discountApplied?: boolean;
 }
 
 export interface WhatsappLead {
-  _id: string
-  page: string
-  button: string
-  message: string
-  phoneNumber: string
-  status: string
-  sourceUrl?: string
-  userAgent?: string
-  ipAddress?: string
-  metadata?: WhatsappLeadMetadata
-  whatsappIntent?: boolean
-  whatsappSent?: boolean
-  createdAt?: string | Date
-  updatedAt?: string | Date
-  __v?: number
+  _id: string;
+  page: string;
+  button: string;
+  message: string;
+  phoneNumber: string;
+  status: string;
+  sourceUrl?: string;
+  userAgent?: string;
+  ipAddress?: string;
+  metadata?: WhatsappLeadMetadata;
+  whatsappIntent?: boolean;
+  whatsappSent?: boolean;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+  __v?: number;
 }
 
 export const columns: ColumnDef<WhatsappLead>[] = [
@@ -61,7 +62,27 @@ export const columns: ColumnDef<WhatsappLead>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title='Page' />
     ),
-    cell: ({ getValue }) => <span className='font-medium'>{String(getValue() ?? '')}</span>,
+    cell: ({ getValue }) => {
+      const value = String(getValue() ?? '');
+      const max = 30;
+      const truncated = value.length > max ? `${value.slice(0, max)}…` : value;
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span title={value} className='text-sm text-muted-foreground'>
+                {truncated || '—'}
+              </span>
+            </TooltipTrigger>
+            {value.length > 0 && (
+              <TooltipContent className='max-w-3xl'>
+                <p>{value}</p>
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
+      );
+    },
   },
   {
     accessorKey: 'button',
@@ -76,9 +97,9 @@ export const columns: ColumnDef<WhatsappLead>[] = [
       <DataTableColumnHeader column={column} title='Message' />
     ),
     cell: ({ getValue }) => {
-      const value = String(getValue() ?? '')
-      const max = 60
-      const truncated = value.length > max ? `${value.slice(0, max)}…` : value
+      const value = String(getValue() ?? '');
+      const max = 40;
+      const truncated = value.length > max ? `${value.slice(0, max)}…` : value;
       return (
         <TooltipProvider>
           <Tooltip>
@@ -94,7 +115,7 @@ export const columns: ColumnDef<WhatsappLead>[] = [
             )}
           </Tooltip>
         </TooltipProvider>
-      )
+      );
     },
   },
   {
@@ -110,25 +131,25 @@ export const columns: ColumnDef<WhatsappLead>[] = [
       <DataTableColumnHeader column={column} title='Status' />
     ),
     cell: ({ getValue }) => {
-      const status = String(getValue() ?? 'new').toLowerCase()
-      let variant: VariantProps<typeof badgeVariants>['variant'] = 'default'
+      const status = String(getValue() ?? 'new').toLowerCase();
+      let variant: VariantProps<typeof badgeVariants>['variant'] = 'default';
       switch (status) {
         case 'new':
-          variant = 'pending'
-          break
+          variant = 'pending';
+          break;
         case 'contacted':
-          variant = 'reviewed'
-          break
+          variant = 'reviewed';
+          break;
         case 'closed':
-          variant = 'enable'
-          break
+          variant = 'enable';
+          break;
         case 'spam':
-          variant = 'destructive'
-          break
+          variant = 'destructive';
+          break;
         default:
-          variant = 'default'
+          variant = 'default';
       }
-      return <Badge variant={variant}>{status}</Badge>
+      return <Badge variant={variant}>{status}</Badge>;
     },
   },
   {
@@ -137,8 +158,8 @@ export const columns: ColumnDef<WhatsappLead>[] = [
       <DataTableColumnHeader column={column} title='Intent' className='text-center' />
     ),
     cell: ({ getValue }) => {
-      const val = Boolean(getValue())
-      return <Badge variant={val ? 'enable' : 'destructive'}>{val ? 'Yes' : 'No'}</Badge>
+      const val = Boolean(getValue());
+      return <Badge variant={val ? 'enable' : 'destructive'}>{val ? 'Yes' : 'No'}</Badge>;
     },
   },
   {
@@ -147,23 +168,25 @@ export const columns: ColumnDef<WhatsappLead>[] = [
       <DataTableColumnHeader column={column} title='Sent' className='text-center' />
     ),
     cell: ({ getValue }) => {
-      const val = Boolean(getValue())
-      return <Badge variant={val ? 'enable' : 'destructive'}>{val ? 'Yes' : 'No'}</Badge>
+      const val = Boolean(getValue());
+      return <Badge variant={val ? 'enable' : 'destructive'}>{val ? 'Yes' : 'No'}</Badge>;
     },
   },
   {
     accessorKey: 'sourceUrl',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Source' />
+      <DataTableColumnHeader column={column} title='Source' className='text-center' />
     ),
     cell: ({ getValue }) => {
-      const href = String(getValue() ?? '')
-      if (!href) return <span>—</span>
+      const href = String(getValue() ?? '');
+      if (!href) return <span>—</span>;
       return (
-        <a href={href} target='_blank' rel='noreferrer' className='text-primary underline underline-offset-4'>
-          Open
-        </a>
-      )
+        <div className='flex justify-center'>
+          <a href={href} target='_blank' rel='noreferrer' className='text-primary underline underline-offset-4'>
+            <FileSymlinkIcon className='w-4 h-4' />
+          </a>
+        </div>
+      );
     },
   },
   {
@@ -172,17 +195,17 @@ export const columns: ColumnDef<WhatsappLead>[] = [
       <DataTableColumnHeader column={column} title='Created' className='text-center' />
     ),
     cell: ({ getValue }) => {
-      const raw = getValue() as string | Date | undefined
-      if (!raw) return <span>—</span>
-      const date = typeof raw === 'string' ? new Date(raw) : raw
+      const raw = getValue() as string | Date | undefined;
+      if (!raw) return <span>—</span>;
+      const date = typeof raw === 'string' ? new Date(raw) : raw;
       const formatted = new Intl.DateTimeFormat('en-IN', {
         year: 'numeric',
         month: 'short',
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
-      }).format(date)
-      return <span>{formatted}</span>
+      }).format(date);
+      return <span>{formatted}</span>;
     },
   },
   {
@@ -191,7 +214,7 @@ export const columns: ColumnDef<WhatsappLead>[] = [
       <DataTableColumnHeader column={column} title='Actions' className='text-center' />
     ),
     cell: ({ row }) => (
-      <DataTableRowActions row={row as unknown as { original: { _id?: string } }} />
+      <DataTableRowActions row={row as unknown as { original: { _id?: string; }; }} />
     ),
     enableSorting: false,
     enableHiding: false,

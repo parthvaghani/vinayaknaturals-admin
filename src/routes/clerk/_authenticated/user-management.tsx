@@ -14,13 +14,9 @@ import { Main } from '@/components/layout/main'
 import { LearnMore } from '@/components/learn-more'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { columns } from '@/features/users/components/users-columns'
-import { UsersDialogs } from '@/features/users/components/users-dialogs'
-import { UsersPrimaryButtons } from '@/features/users/components/users-primary-buttons'
-import { UsersTable } from '@/features/users/components/users-table'
-import UsersProvider from '@/features/users/context/users-context'
-import { userListSchema } from '@/features/users/data/schema'
-import { users } from '@/features/users/data/users'
+import { columns } from '@/features/users/components/columns'
+import { DataTable } from '@/features/users/components/data-table'
+import type { UserRow as TableUser } from '@/features/users/components/columns'
 
 export const Route = createFileRoute('/clerk/_authenticated/user-management')({
   component: UserManagement,
@@ -42,12 +38,30 @@ function UserManagement() {
     return <Unauthorized />
   }
 
-  // Parse user list
-  const userList = userListSchema.parse(users)
+  // Minimal mock; in a real setup, point this to the same API as /users
+  const userList: TableUser[] = [
+    {
+      _id: '66c1e8f7b12d3f5f9c123456',
+      email: 'john.doe@example.com',
+      phoneNumber: '+14155552671',
+      role: 'user',
+      isActive: true,
+      profileCompleted: true,
+      createdAt: '2025-08-18T10:25:30.123Z',
+      user_details: {
+        name: 'John Doe',
+        country: 'United States',
+        city: 'San Francisco',
+        zip: '94107',
+        address: '123 Market Street, Apt 5B',
+        avatar: 'https://cdn.example.com/uploads/avatars/johndoe.png',
+      },
+    },
+  ]
   return (
     <>
       <SignedIn>
-        <UsersProvider>
+        {/* Wrapper removed since the original UsersProvider is not present */}
           <Header fixed>
             <Search />
             <div className='ml-auto flex items-center space-x-4'>
@@ -87,15 +101,14 @@ function UserManagement() {
                   </LearnMore>
                 </div>
               </div>
-              <UsersPrimaryButtons />
+              {/* Primary actions can be added here if needed */}
             </div>
             <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-y-0 lg:space-x-12'>
-              <UsersTable data={userList} columns={columns} />
+              <DataTable<TableUser> data={userList} columns={columns} />
             </div>
           </Main>
 
-          <UsersDialogs />
-        </UsersProvider>
+          {/* Dialogs can be added here if needed */}
       </SignedIn>
     </>
   )
