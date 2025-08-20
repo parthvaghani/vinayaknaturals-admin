@@ -1,189 +1,458 @@
-import { Row } from '@tanstack/react-table'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow as UiTR } from '@/components/ui/table'
+import { Row } from '@tanstack/react-table';
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow as UiTR } from '@/components/ui/table';
+import { useIdByOrder, type Order } from '@/hooks/use-orders';
+import { ShoppingCart, CheckCircle2, Package, XCircle, Hourglass, PackageCheck } from 'lucide-react';
 
 export interface OrderRow {
-  _id: string
+  _id: string;
   userId: string | {
-    _id?: string
-    id?: string
-    email?: string
-    phoneNumber?: string
-    role?: string
+    _id?: string;
+    id?: string;
+    email?: string;
+    phoneNumber?: string;
+    role?: string;
     user_details?: {
-      name?: string
-      country?: string
-    }
-  }
-  phoneNumber: string
-  status: string
-  createdAt: string
-  totalAmount?: number
-  originalTotal?: number
-  images?: string[]
+      name?: string;
+      country?: string;
+    };
+  };
+  phoneNumber: string;
+  status: string;
+  createdAt: string;
+  totalAmount?: number;
+  originalTotal?: number;
+  images?: string[];
   address?: {
-    addressLine1?: string
-    addressLine2?: string
-    city?: string
-    state?: string
-    zip?: string
-    country?: string
-  }
+    addressLine1?: string;
+    addressLine2?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    country?: string;
+  };
   productsDetails?: Array<{
     productId?: {
-      _id?: string
-      name?: string
-      images?: string[]
-    }
-    weightVariant?: string
-    weight?: string
-    pricePerUnit?: number
-    discount?: number
-    totalUnit?: number
-    _id?: string
-  }>
-  updatedAt?: string
-  cancelDetails?: { reason?: string | null }
+      _id?: string;
+      name?: string;
+      images?: string[];
+    };
+    weightVariant?: string;
+    weight?: string;
+    pricePerUnit?: number;
+    discount?: number;
+    totalUnit?: number;
+    _id?: string;
+  }>;
+  updatedAt?: string;
+  cancelDetails?: { reason?: string | null; };
 }
 
-export function DataTableRowActions({ row }: { row: Row<OrderRow> }) {
-  const order = row.original
+type StatusHistoryEntry = {
+  _id: string;
+  status: string;
+  note: string | null;
+  updatedBy: 'user' | 'admin';
+  date: string;
+};
+
+type NormalizedOrder = {
+  _id: string;
+  userId: OrderRow['userId'];
+  phoneNumber: string;
+  status: string;
+  createdAt: string;
+  cancelDetails?: { reason?: string | null; };
+  address?: OrderRow['address'];
+  productsDetails?: OrderRow['productsDetails'];
+  totalAmount?: number;
+  originalTotal?: number;
+  statusHistory?: StatusHistoryEntry[];
+};
+
+const ORDER_STEPS = [
+  { key: "placed", label: "Your order has been placed", icon: ShoppingCart },
+  { key: "accepted", label: "Order confirmed and accepted", icon: CheckCircle2 },
+  { key: "inprogress", label: "Your order is being prepared", icon: Hourglass },
+  { key: "completed", label: "Order is ready for delivery", icon: Package },
+  { key: "cancelled", label: "Order has been cancelled", icon: XCircle },
+  { key: "delivered", label: "Order has been delivered", icon: PackageCheck },
+];
+
+const STATUS_VARIANTS = {
+  placed: 'placed',
+  accepted: 'reviewed',
+  inprogress: 'inprogress',
+  completed: 'enable',
+  cancelled: 'destructive',
+  delivered: 'delivered',
+} as const;
+
+export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
+  const order = row.original;
+  const [open, setOpen] = useState(false);
+  const { data: fetchedOrder, isLoading: isLoadingOrder, refetch } = useIdByOrder(open ? order._id : undefined);
+
+  useEffect(() => {
+    if (open) {
+      refetch();
+    }
+  }, [open, refetch]);
+
+  const normalizeOrderFromApi = (o: Order): NormalizedOrder => ({
+    _id: o._id,
+    userId: o.userId as NormalizedOrder['userId'],
+    phoneNumber: o.phoneNumber,
+    status: o.status,
+    createdAt: o.createdAt,
+    cancelDetails: o.cancelDetails,
+    address: o.address,
+    productsDetails: o.productsDetails as NormalizedOrder['productsDetails'],
+    totalAmount: undefined,
+    originalTotal: undefined,
+    statusHistory: (o as unknown as { statusHistory?: StatusHistoryEntry[]; }).statusHistory,
+  });
+
+  const detail: NormalizedOrder = fetchedOrder ? normalizeOrderFromApi(fetchedOrder) : order;
+
   const formatINR = (amount: number) =>
     new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 0,
-    }).format(amount)
+    }).format(amount);
+
+  const currentStatus = String(detail.status ?? order.status);
+  const status = STATUS_VARIANTS[currentStatus as keyof typeof STATUS_VARIANTS] || 'default';
+
+  const getUserDisplayName = () => {
+    if (typeof detail?.userId === 'object' && detail?.userId !== null) {
+      return detail?.userId.user_details?.name ||
+        detail?.userId.email ||
+        detail?.userId._id ||
+        detail?.userId.id ||
+        '—';
+    }
+    return String(detail?.userId);
+  };
+
+  const getUserEmail = () => {
+    return (typeof detail?.userId === 'object' && detail?.userId?.email)
+      ? detail?.userId.email
+      : '—';
+  };
+
+  const getFilteredSteps = () => {
+    const current = currentStatus.toLowerCase();
+    if (current === "delivered") {
+      return ORDER_STEPS.filter((s) => s.key !== "cancelled");
+    }
+    if (current === "cancelled") {
+      return ORDER_STEPS.filter((s) => s.key !== "delivered");
+    }
+    return ORDER_STEPS.filter((s) => s.key !== "cancelled");
+  };
+
+  const TrackingStep = ({
+    step,
+    index,
+    isLast,
+    stepIndex,
+    isCancelled,
+    historyEntry,
+  }: {
+    step: typeof ORDER_STEPS[0];
+    index: number;
+    isLast: boolean;
+    currentStatus: string;
+    stepIndex: number;
+    isCancelled: boolean;
+    historyEntry?: StatusHistoryEntry;
+    totalSteps: number;
+  }) => {
+    const isCompleted = !isCancelled && index < stepIndex;
+    const isActive = !isCancelled && index === stepIndex;
+    const Icon = step.icon;
+
+    const getStepClasses = () => {
+      if (isCancelled && index === stepIndex) {
+        return {
+          circle: "bg-destructive border-destructive text-destructive-foreground",
+          connector: "bg-destructive",
+          label: "text-destructive"
+        };
+      }
+      if (isCompleted) {
+        return {
+          circle: "bg-primary border-primary text-primary-foreground",
+          connector: "bg-primary",
+          label: "text-foreground"
+        };
+      }
+      if (isActive) {
+        return {
+          circle: "border-primary text-primary bg-white",
+          connector: "bg-primary",
+          label: "text-foreground"
+        };
+      }
+      return {
+        circle: "bg-muted border-border text-muted-foreground",
+        connector: "bg-border",
+        label: "text-foreground"
+      };
+    };
+
+    const classes = getStepClasses();
+
+    return (
+      <div className="flex flex-col items-center text-center relative min-h-[120px] justify-start flex-1">
+        {/* Step circle with icon */}
+        <div className={`
+          relative z-10 h-12 w-12 rounded-full border-2
+          flex items-center justify-center mb-3
+          ${classes.circle}
+        `}>
+          <Icon className={`h-5 w-5 ${isActive && step.key === "inprogress" ? "animate-spin" : ""}`} />
+        </div>
+
+        {/* Step content */}
+        <div className="flex flex-col items-center space-y-1 max-w-[140px]">
+          <span className={`text-xs font-semibold leading-tight ${classes.label}`}>
+            {step.label}
+          </span>
+
+          {historyEntry?.date && (
+            <span className="text-[10px] text-muted-foreground">
+              {new Date(historyEntry.date).toLocaleString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </span>
+          )}
+
+          {historyEntry?.note && (
+            <span className="text-[10px] text-muted-foreground italic leading-tight">
+              {historyEntry.note}
+            </span>
+          )}
+        </div>
+
+        {/* Connector line to next step */}
+        {!isLast && (
+          <div className={`
+            absolute top-6 left-1/2 h-0.5 z-0
+            ${classes.connector}
+          `}
+            style={{
+              width: 'calc(100% - 24px)',
+              transform: 'translateX(12px)'
+            }} />
+        )}
+      </div>
+    );
+  };
+
+  const allSteps = getFilteredSteps();
+  const current = currentStatus.toLowerCase();
+  const stepIndex = allSteps.findIndex((s) => s.key === current);
+  const isCancelled = current === "cancelled";
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">View</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-max">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span>Order Details</span>
-            <Badge variant={order.status === 'placed' ? 'enable' : 'pending'}>{order.status}</Badge>
+            <Badge variant={status}>{currentStatus}</Badge>
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 text-sm">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Order ID</span>
-                <span className="font-medium truncate max-w-[280px] text-right">{order._id}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">User</span>
-                <span className="font-medium text-right truncate max-w-[280px]">
-                  {typeof order.userId === 'object' && order.userId !== null
-                    ? (order.userId.user_details?.name || order.userId.email || order.userId._id || order.userId.id || '—')
-                    : String(order.userId)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Email</span>
-                <span className="font-medium bg">
-                  {typeof order.userId === 'object' && order.userId?.email
-                    ? order.userId.email
-                    : '—'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Phone</span>
-                <span className="font-medium">{order.phoneNumber}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Created</span>
-                <span className="font-medium">{new Date(order.createdAt).toLocaleString()}</span>
-              </div>
-              {order.cancelDetails?.reason ? (
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Cancel Reason</span>
-                  <span className="font-medium text-red-600">{order.cancelDetails.reason}</span>
+
+        <div className="space-y-6 text-sm">
+          {isLoadingOrder ? (
+            <div className="p-6 text-center">Loading...</div>
+          ) : (
+            <>
+              {/* Order Info Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-base">Order Information</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Order ID</span>
+                      <span className="font-medium truncate max-w-[280px]">{detail?._id}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">User</span>
+                      <span className="font-medium truncate max-w-[280px]">{getUserDisplayName()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Email</span>
+                      <span className="font-medium">{getUserEmail()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Phone</span>
+                      <span className="font-medium">{detail?.phoneNumber}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Created</span>
+                      <span className="font-medium">
+                        {detail?.createdAt ? new Date(detail.createdAt).toLocaleString('en-IN') : ''}
+                      </span>
+                    </div>
+                    {detail?.cancelDetails?.reason && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Cancel Reason</span>
+                        <span className="font-medium text-red-600">{detail.cancelDetails.reason}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              ) : null}
-            </div>
-            <div className="space-y-2">
-              <div className="text-muted-foreground font-semibold">Shipping Address</div>
-              <div className="rounded-md border p-3 text-sm leading-5">
-                <div>{order.address?.addressLine1}</div>
-                {order.address?.addressLine2 ? <div>{order.address.addressLine2}</div> : null}
-                <div>
-                  {[order.address?.city, order.address?.state, order.address?.zip].filter(Boolean).join(', ')}
+
+                {/* Shipping Address */}
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-base">Shipping Address</h3>
+                  <div className="rounded-lg border p-4 bg-muted/20">
+                    {detail?.address ? (
+                      <>
+                        <div>{detail.address.addressLine1}</div>
+                        {detail.address.addressLine2 && <div>{detail.address.addressLine2}</div>}
+                        <div>
+                          {[detail.address.city, detail.address.state, detail.address.zip]
+                            .filter(Boolean)
+                            .join(', ')}
+                        </div>
+                        <div>{detail.address.country}</div>
+                      </>
+                    ) : (
+                      <div className="text-muted-foreground">No address provided</div>
+                    )}
+                  </div>
                 </div>
-                <div>{order.address?.country}</div>
               </div>
-            </div>
-          </div>
 
-          <Separator />
+              <Separator />
 
-          <div>
-            <div className="mb-2 text-sm font-semibold">Items</div>
-            <div className="overflow-hidden rounded-md border">
-              <Table>
-                <TableHeader>
-                  <UiTR>
-                    <TableHead>Product</TableHead>
-                    <TableHead className="w-[100px]">Weight</TableHead>
-                    <TableHead className="w-[120px] text-right">Unit Price</TableHead>
-                    <TableHead className="w-[110px] text-right">Discount</TableHead>
-                    <TableHead className="w-[80px] text-right">Qty</TableHead>
-                    <TableHead className="w-[120px] text-right">Line Total</TableHead>
-                  </UiTR>
-                </TableHeader>
-                <TableBody>
-                  {(order.productsDetails || []).map((p) => {
-                    const unit = Number(p.pricePerUnit || 0)
-                    const off = Number(p.discount || 0)
-                    const qty = Number(p.totalUnit || 1)
-                    const line = (unit - off) * qty
-                    const thumb = (p.productId?.images && p.productId.images[0]) || undefined
-                    return (
-                      <UiTR key={String(p._id || p.productId?._id || Math.random())}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            {thumb ? (
-                              <img src={thumb} alt={p.productId?.name || 'Product'} className="h-10 w-10 rounded object-cover border" />
-                            ) : null}
-                            <div className="flex flex-col">
-                              <span className="font-medium">{p.productId?.name || '—'}</span>
-                              <span className="text-xs text-muted-foreground">{p.productId?._id || ''}</span>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>{p.weight ? `${p.weight}${p.weightVariant || ''}` : '—'}</TableCell>
-                        <TableCell className="text-right">{formatINR(unit)}</TableCell>
-                        <TableCell className="text-right text-red-600">{off ? `- ${formatINR(off)}` :  `- ${formatINR(0)}`}</TableCell>
-                        <TableCell className="text-right">{qty}</TableCell>
-                        <TableCell className="text-right font-medium">{formatINR(line)}</TableCell>
-                      </UiTR>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
+              {/* Items Table */}
+              <div>
+                <h3 className="font-semibold text-base mb-4">Items</h3>
+                <div className="rounded-lg border overflow-hidden">
+                  <div className="max-h-60 overflow-auto">
+                    <Table>
+                      <TableHeader>
+                        <UiTR>
+                          <TableHead>Product</TableHead>
+                          <TableHead className="w-[100px]">Weight</TableHead>
+                          <TableHead className="w-[120px] text-right">Unit Price</TableHead>
+                          <TableHead className="w-[110px] text-right">Discount</TableHead>
+                          <TableHead className="w-[80px] text-right">Qty</TableHead>
+                          <TableHead className="w-[120px] text-right">Line Total</TableHead>
+                        </UiTR>
+                      </TableHeader>
+                      <TableBody>
+                        {(detail.productsDetails || []).map((p) => {
+                          const unit = Number(p.pricePerUnit || 0);
+                          const off = Number(p.discount || 0);
+                          const qty = Number(p.totalUnit || 1);
+                          const line = (unit - off) * qty;
+                          const thumb = p.productId?.images?.[0];
 
-          <div className="flex items-center justify-end gap-4 text-sm">
-            {typeof order.originalTotal === 'number' && order.originalTotal > (order.totalAmount ?? 0) ? (
-              <div className="line-through text-muted-foreground">{formatINR(order.originalTotal)}</div>
-            ) : null}
-            {typeof order.totalAmount === 'number' ? (
-              <div className="text-base font-semibold">{formatINR(order.totalAmount)}</div>
-            ) : null}
-          </div>
+                          return (
+                            <UiTR key={String(p._id || p.productId?._id || Math.random())}>
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  {thumb && (
+                                    <img
+                                      src={thumb}
+                                      alt={p.productId?.name || 'Product'}
+                                      className="h-10 w-10 rounded object-cover border"
+                                    />
+                                  )}
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{p.productId?.name || '—'}</span>
+                                    <span className="text-xs text-muted-foreground">{p.productId?._id || ''}</span>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell>{p.weight ? `${p.weight}${p.weightVariant || ''}` : '—'}</TableCell>
+                              <TableCell className="text-right">{formatINR(unit)}</TableCell>
+                              <TableCell className="text-right text-red-600">
+                                {off ? `- ${formatINR(off)}` : `- ${formatINR(0)}`}
+                              </TableCell>
+                              <TableCell className="text-right">{qty}</TableCell>
+                              <TableCell className="text-right font-medium">{formatINR(line)}</TableCell>
+                            </UiTR>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
 
+                {/* Order Summary */}
+                <div className="flex justify-end mt-4">
+                  <div className="border rounded-lg p-4 w-full max-w-sm bg-muted/20">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Subtotal:</span>
+                        <span>{formatINR(order.originalTotal ?? order.totalAmount ?? 0)}</span>
+                      </div>
+                      <div className="flex justify-between text-red-600">
+                        <span>Discount:</span>
+                        <span>- {formatINR((order.originalTotal ?? 0) - (detail.totalAmount ?? 0))}</span>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between text-lg font-bold">
+                        <span>Total:</span>
+                        <span>{formatINR(order.totalAmount ?? 0)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
+              <Separator />
+
+              {/* Optimized Tracking Section */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-base">Order Tracking</h3>
+                <div className="bg-muted/20 rounded-lg p-6">
+                  <div className="flex items-start justify-between relative w-full">
+                    {allSteps.map((step, index) => {
+                      const historyEntry = detail.statusHistory?.find(
+                        (h) => h.status.toLowerCase() === step.key.toLowerCase()
+                      );
+
+                      return (
+                        <TrackingStep
+                          key={step.key}
+                          step={step}
+                          index={index}
+                          isLast={index === allSteps.length - 1}
+                          currentStatus={current}
+                          stepIndex={stepIndex}
+                          isCancelled={isCancelled}
+                          historyEntry={historyEntry}
+                          totalSteps={allSteps.length}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-
-
