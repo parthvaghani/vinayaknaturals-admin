@@ -46,6 +46,7 @@ export default function Orders() {
                 userId,
                 phoneNumber: derivedPhone,
                 status: o.status,
+                paymentStatus: o.paymentStatus ?? 'unpaid',
                 createdAt: o.createdAt,
                 images: (o.productsDetails || []).flatMap((p) => (p?.productId && Array.isArray(p.productId.images)) ? p.productId.images : []),
                 totalAmount: discountedTotal,

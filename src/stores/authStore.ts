@@ -71,7 +71,7 @@ export const useAuthStore = create<AuthState>()((set) => {
       clearAuth: () =>
         set((state) => {
           Cookies.remove(ACCESS_TOKEN)
-          localStorage.removeItem('session')
+          localStorage.removeItem('admin_session')
           sessionStorage.clear()
           return {
             ...state,
@@ -109,4 +109,3 @@ export const useAuthStore = create<AuthState>()((set) => {
     },
   }
 })
- 

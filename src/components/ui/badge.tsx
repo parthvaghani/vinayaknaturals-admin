@@ -21,15 +21,19 @@ const badgeVariants = cva(
         pending:
           'border-amber-200 bg-amber-400 text-white',
         reviewed:
-          'border-sky-300 bg-sky-500 text-white dark:text-sky-100',
+          'border-sky-500 bg-sky-500 text-white dark:text-sky-100',
         placed:
-          'border-slate-300 bg-slate-500 text-white',
+          'border-slate-500 bg-slate-500 text-white',
         accepted:
-          'border-blue-300 bg-blue-500 text-white',
+          'border-blue-500 bg-blue-500 text-white',
         inprogress:
-          'border-orange-300 bg-orange-500 text-white',
+          'border-orange-500 bg-orange-500 text-white',
         delivered:
-          'border-lime-300 bg-lime-500 text-white',
+          'border-lime-500 bg-lime-500 text-white',
+        trackDelivered:
+          'inline-flex items-center gap-4 rounded-full bg-primary-dark px-4 py-2 text-md border-primary-dark text-primary-light',
+        trackCancelled:
+          'inline-flex items-center gap-4 rounded-full bg-destructive/90 px-4 py-2 text-md border-destructive text-primary-light',
       },
     },
     defaultVariants: {

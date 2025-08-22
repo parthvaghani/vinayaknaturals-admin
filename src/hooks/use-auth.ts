@@ -88,7 +88,7 @@ export function useLogin() {
         return;
       }
 
-      setCookie('session', access.token, {
+      setCookie('admin_session', access.token, {
         expires: new Date(access.expires),
         path: '/',
         secure: process.env.NODE_ENV === 'production',
@@ -146,7 +146,7 @@ export function useLogout() {
     onSuccess: () => {
       reset();
       queryClient.clear(); // Clear all queries
-      removeCookie('session');
+      removeCookie('admin_session');
       navigate({ to: '/sign-in' });
       toast.success('Logged out successfully');
     },

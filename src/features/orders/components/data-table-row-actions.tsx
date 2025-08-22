@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow as UiTR } from '@/components/ui/table';
 import { useIdByOrder, type Order } from '@/hooks/use-orders';
-import { ShoppingCart, CheckCircle2, Package, XCircle, Hourglass, PackageCheck } from 'lucide-react';
+import { ShoppingCart, CheckCircle2, Package, XCircle, Hourglass, PackageCheck, } from 'lucide-react';
+import { ContentLoader } from '@/components/content-loader';
 
 export interface OrderRow {
   _id: string;
@@ -50,6 +51,7 @@ export interface OrderRow {
   }>;
   updatedAt?: string;
   cancelDetails?: { reason?: string | null; };
+  paymentStatus: string;
 }
 
 type StatusHistoryEntry = {
@@ -75,12 +77,12 @@ type NormalizedOrder = {
 };
 
 const ORDER_STEPS = [
-  { key: "placed", label: "Your order has been placed", icon: ShoppingCart },
-  { key: "accepted", label: "Order confirmed and accepted", icon: CheckCircle2 },
-  { key: "inprogress", label: "Your order is being prepared", icon: Hourglass },
-  { key: "completed", label: "Order is ready for delivery", icon: Package },
-  { key: "cancelled", label: "Order has been cancelled", icon: XCircle },
-  { key: "delivered", label: "Order has been delivered", icon: PackageCheck },
+  { key: "placed", label: "Your order has been placed", text: "Order received in kitchen", icon: ShoppingCart },
+  { key: "accepted", label: "Order confirmed and accepted", text: "Chef has accepted your order", icon: CheckCircle2 },
+  { key: "inprogress", label: "Your order is being prepared", text: "We’re preparing your order with care", icon: Hourglass },
+  { key: "completed", label: "Order is ready for delivery", text: "Your order is ready to go!", icon: Package },
+  { key: "cancelled", label: "Order has been cancelled", text: "Oops! Order was cancelled", icon: XCircle },
+  { key: "delivered", label: "Order has been delivered", text: "Order successfully delivered", icon: PackageCheck },
 ];
 
 const STATUS_VARIANTS = {
@@ -263,6 +265,8 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
   const current = currentStatus.toLowerCase();
   const stepIndex = allSteps.findIndex((s) => s.key === current);
   const isCancelled = current === "cancelled";
+  const currentStep = ORDER_STEPS.find((s) => s.key === current);
+  const CurrentStatusIcon = currentStep?.icon;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -270,18 +274,20 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
         <Button variant="outline" size="sm">View</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <span>Order Details</span>
-            <Badge variant={status}>{currentStatus}</Badge>
-          </DialogTitle>
-        </DialogHeader>
+        {isLoadingOrder ? (
+          <div className="relative min-h-[200px]">
+            <ContentLoader active />
+          </div>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <span>Order Details</span>
+                <Badge variant={order.paymentStatus === 'paid' ? 'enable' : 'destructive'} className='shadow-xl/30'>{order.paymentStatus}</Badge>
+              </DialogTitle>
+            </DialogHeader>
 
-        <div className="space-y-6 text-sm">
-          {isLoadingOrder ? (
-            <div className="p-6 text-center">Loading...</div>
-          ) : (
-            <>
+            <div className="space-y-6 text-sm">
               {/* Order Info Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-3">
@@ -424,8 +430,11 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
 
               {/* Optimized Tracking Section */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-base">Order Tracking</h3>
-                <div className="bg-muted/20 rounded-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-base">Order Tracking</h3>
+                  <Badge variant={status} className='shadow-xl/30' >{currentStatus}</Badge>
+                </div>
+                <div className="flex flex-col justify-center items-center bg-muted/20 dark:bg-accent/15 rounded-lg p-6">
                   <div className="flex items-start justify-between relative w-full">
                     {allSteps.map((step, index) => {
                       const historyEntry = detail.statusHistory?.find(
@@ -447,11 +456,21 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
                       );
                     })}
                   </div>
+                  <div className="mt-8 text-center">
+                    <Badge variant={currentStatus !== 'cancelled' ? 'trackDelivered' : 'trackCancelled'} className='shadow-xl/25' >
+                      <span className="flex items-center justify-center gap-1">
+                        {CurrentStatusIcon ? (
+                          <CurrentStatusIcon className="h-5 w-h-5 animate-bounce" />
+                        ) : null}
+                        {currentStep?.text || ''}
+                      </span>
+                    </Badge>
+                  </div>
                 </div>
               </div>
-            </>
-          )}
-        </div>
+            </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

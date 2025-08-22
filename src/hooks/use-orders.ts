@@ -31,6 +31,7 @@ export interface Order {
   };
   phoneNumber: string;
   status: string;
+  paymentStatus?: string;
   createdAt: string;
   updatedAt?: string;
   cancelDetails?: { reason?: string | null; };
@@ -108,12 +109,13 @@ const getOrderByIdApi = async (id: string): Promise<Order> => {
 // Update order status
 export interface UpdateOrderStatusPayload {
   id: string;
-  status: string;
+  status?: string;
   note?: string;
+  paymentStatus?: string;
 }
 
-const updateOrderStatusApi = async ({ id, status, note }: UpdateOrderStatusPayload) => {
-  const response = await api.patch(`/orders/${id}/status`, { status, note });
+const updateOrderStatusApi = async ({ id, status, paymentStatus, note }: UpdateOrderStatusPayload) => {
+  const response = await api.patch(`/orders/${id}/status`, { status, paymentStatus, note });
   return response.data;
 };
 
