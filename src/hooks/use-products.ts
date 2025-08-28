@@ -111,8 +111,8 @@ const updateProductApi = async (
   payload:
     | {
         id: string
-        category: string
-        name: string
+        category?: string
+        name?: string
         description?: string
         isPremium?: boolean
         isPopular?: boolean
@@ -120,10 +120,13 @@ const updateProductApi = async (
         images?: string[]
         ingredients?: string[]
         benefits?: string[]
+        // When provided, we will build multipart/form-data
+        files?: File[] | Blob[]
+        imagesToRemove?: string[]
       }
     | { id: string; data: FormData }
 ): Promise<Product> => {
-  // If FormData is provided, send multipart PUT like the provided curl
+  // Case 1: Direct FormData provided by caller
   if (
     typeof FormData !== 'undefined' &&
     (payload as { data?: unknown }).data instanceof FormData
@@ -135,10 +138,11 @@ const updateProductApi = async (
     return response.data
   }
 
+  // Narrow to JSON-like payload
   const jsonPayload = payload as {
     id: string
-    category: string
-    name: string
+    category?: string
+    name?: string
     description?: string
     isPremium?: boolean
     isPopular?: boolean
@@ -146,8 +150,64 @@ const updateProductApi = async (
     images?: string[]
     ingredients?: string[]
     benefits?: string[]
+    files?: File[] | Blob[]
+    imagesToRemove?: string[]
   }
 
+  // Case 2: If files or imagesToRemove are present, build multipart matching curl
+  const shouldUseMultipart =
+    typeof FormData !== 'undefined' &&
+    (Array.isArray(jsonPayload.files) && jsonPayload.files.length > 0 ||
+      Array.isArray(jsonPayload.imagesToRemove) && jsonPayload.imagesToRemove.length > 0)
+
+  if (shouldUseMultipart) {
+    const formData = new FormData()
+
+    // Files: append under field name 'images'
+    if (Array.isArray(jsonPayload.files)) {
+      for (const file of jsonPayload.files) {
+        formData.append('images', file as Blob)
+      }
+    }
+
+    // Images to remove: append as repeated 'imagesToRemove[]'
+    if (Array.isArray(jsonPayload.imagesToRemove)) {
+      for (const key of jsonPayload.imagesToRemove) {
+        formData.append('imagesToRemove[]', key)
+      }
+    }
+
+    // Include other optional fields
+    if (jsonPayload.category !== undefined) formData.append('category', String(jsonPayload.category))
+    if (jsonPayload.name !== undefined) formData.append('name', String(jsonPayload.name))
+    if (jsonPayload.description !== undefined) formData.append('description', String(jsonPayload.description))
+    if (jsonPayload.isPremium !== undefined) formData.append('isPremium', String(jsonPayload.isPremium))
+    if (jsonPayload.isPopular !== undefined) formData.append('isPopular', String(jsonPayload.isPopular))
+    // Variants: append as structured object-like keys (backend expects object, not JSON string)
+    if (jsonPayload.variants !== undefined) {
+      (['gm', 'kg'] as const).forEach((type) => {
+        jsonPayload.variants?.[type]?.forEach((v, i) => {
+          formData.append(`variants[${type}][${i}][weight]`, v.weight)
+          formData.append(`variants[${type}][${i}][price]`, String(v.price))
+          formData.append(`variants[${type}][${i}][discount]`, String(v.discount || 0))
+        })
+      })
+    }
+    // Arrays as repeated fields
+    if (Array.isArray(jsonPayload.ingredients)) {
+      jsonPayload.ingredients.forEach((ing) => formData.append('ingredients', ing))
+    }
+    if (Array.isArray(jsonPayload.benefits)) {
+      jsonPayload.benefits.forEach((ben) => formData.append('benefits', ben))
+    }
+
+    const response = await api.put(`/products/product/${jsonPayload.id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return response.data
+  }
+
+  // Case 3: Regular JSON update
   const updatedPayload = {
     category: jsonPayload.category,
     name: jsonPayload.name,

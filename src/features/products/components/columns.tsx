@@ -204,14 +204,26 @@ export const columns: ColumnDef<Product>[] = [
               <DialogTitle>Product Images</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
-              {images.map((img, index) => (
-                <img
-                  key={index}
-                  src={img}
-                  alt={`Product Image ${index + 1}`}
-                  className="w-full h-32 object-cover rounded border"
-                />
-              ))}
+              {(() => {
+                type ImageLike = string | { url: string };
+                const hasUrl = (value: unknown): value is { url: string } =>
+                  typeof value === 'object' && value !== null &&
+                  typeof (value as { url?: unknown }).url === 'string';
+                const imgs = (images ?? []) as unknown as ImageLike[];
+                const base = import.meta.env.VITE_IMAGE_BASE_URL ?? '';
+                return imgs.map((img, index) => {
+                  const path = typeof img === 'string' ? img : hasUrl(img) ? img.url : '';
+                  const src = `${base}${path}`;
+                  return (
+                    <img
+                      key={index}
+                      src={src}
+                      alt={`Product Image ${index + 1}`}
+                      className="w-full h-32 object-cover rounded border"
+                    />
+                  );
+                });
+              })()}
             </div>
           </DialogContent>
         </Dialog>

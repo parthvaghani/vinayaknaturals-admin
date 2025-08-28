@@ -91,6 +91,17 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
     // Local state for new image files (max 5)
     const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
 
+    const buildImageUrl = (value: unknown): string => {
+        const base = import.meta.env.VITE_IMAGE_BASE_URL as string;
+        if (typeof value === 'string') return `${base}${value}`;
+        if (value && typeof value === 'object') {
+            const v = value as Record<string, unknown>;
+            const candidate = (v.url ?? v.src ?? v.path);
+            if (typeof candidate === 'string') return `${base}${candidate}`;
+        }
+        return '';
+    };
+
     const handleFilesSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
         if (!files.length) return;
@@ -126,37 +137,64 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
             return;
         }
 
-        // If there are new files, send multipart FormData (id in URL)
-        if (newImageFiles.length > 0) {
-            const form = new FormData();
-
-            // Text fields from state (append category only if valid ObjectId)
-            if (/^[a-fA-F0-9]{24}$/.test(categoryId)) {
-                form.append('category', categoryId);
+        // Compute imagesToRemove by diffing original images vs current state
+        const originalImages = product.images || [];
+        const currentImages = formData.images || [];
+        // Normalize to storage keys like "products/..." if full URLs are present
+        const toStorageKey = (value: unknown) => {
+            // Handle common object shapes first
+            if (value && typeof value === 'object') {
+                const v = value as Record<string, unknown>;
+                const candidate = v.key || v.path || v.url || v.src;
+                if (typeof candidate === 'string') value = candidate;
             }
-            form.append('name', formData.name || '');
-            if (formData.description) form.append('description', formData.description);
-            form.append('isPremium', String(formData.isPremium ?? false));
-            form.append('isPopular', String(formData.isPopular ?? false))
-
-                // Arrays
-                ; (formData.ingredients || []).forEach((ing) => form.append('ingredients', ing))
-                ; (formData.benefits || []).forEach((ben) => form.append('benefits', ben))
-
-                // Variants structured shape
-                ; (['gm', 'kg'] as const).forEach((type) => {
-                    formData.variants?.[type]?.forEach((v, i) => {
-                        form.append(`variants[${type}][${i}][weight]`, v.weight);
-                        form.append(`variants[${type}][${i}][price]`, String(v.price));
-                        form.append(`variants[${type}][${i}][discount]`, String(v.discount || 0));
-                    });
-                });
-
-            // Images: append ONLY new files under the expected key
-            newImageFiles.forEach((file) => form.append('images', file));
-
+            if (typeof value !== 'string') return '';
+            try {
+                const url = new URL(value);
+                const idx = url.pathname.indexOf('/products/');
+                if (idx >= 0) return url.pathname.slice(idx + 1); // drop leading '/'
+                return value;
+            } catch {
+                const i = value.indexOf('products/');
+                return i >= 0 ? value.slice(i) : value;
+            }
+        };
+        const imagesToRemove = originalImages
+            .filter((img) => !currentImages.includes(img))
+            .map((img) => toStorageKey(img))
+            .filter((s): s is string => typeof s === 'string' && s.length > 0);
+        // If new files or images to remove exist, let the hook build FormData
+        if (newImageFiles.length > 0 || imagesToRemove.length > 0) {
             updateProduct(
-                { id: String(formData.id || formData._id!), data: form } as unknown as never,
+                {
+                    id: String(formData.id || formData._id!),
+                    files: newImageFiles,
+                    imagesToRemove,
+                    // include fields to update alongside images
+                    category: /^[a-fA-F0-9]{24}$/.test(categoryId) ? categoryId : undefined,
+                    name: formData.name || '',
+                    description: formData.description || undefined,
+                    isPremium: formData.isPremium ?? false,
+                    isPopular: formData.isPopular ?? false,
+                    ingredients: formData.ingredients || [],
+                    benefits: formData.benefits || [],
+                    variants: {
+                        gm:
+                            formData.variants?.gm?.map(({ weight, price, discount }) => ({
+                                weight,
+                                price,
+                                discount: discount || 0,
+                            })) || [],
+                        kg:
+                            formData.variants?.kg?.map(({ weight, price, discount }) => ({
+                                weight,
+                                price,
+                                discount: discount || 0,
+                            })) || [],
+                    },
+                    // keep currently retained images to help backend reconcile
+                    images: currentImages,
+                } as unknown as never,
                 {
                     onSuccess: () => {
                         queryClient.invalidateQueries({ queryKey: ['products'] });
@@ -197,7 +235,7 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
             },
         };
 
-        updateProduct(payload, {
+        updateProduct(payload as unknown as never, {
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: ['products'] });
                 toast.success('Product updated successfully!');
@@ -347,7 +385,7 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
                                         className='relative overflow-hidden rounded border'
                                     >
                                         <img
-                                            src={img}
+                                            src={buildImageUrl(img)}
                                             alt={`Image ${i + 1}`}
                                             className='h-24 w-full object-cover'
                                         />
