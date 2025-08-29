@@ -75,7 +75,16 @@ export const columns: ColumnDef<OrderRow>[] = [
         id: 'images',
         header: ({ column }) => <DataTableColumnHeader column={column} title='Images' />,
         cell: ({ row }) => {
-            const images = row.original.images || [];
+            const base = import.meta.env.VITE_IMAGE_BASE_URL ?? '';
+            const images = ((row.original.productsDetails ?? []) as Array<{
+                productId?: { images?: Array<string | { url: string }>; };
+            }>).flatMap((p) => {
+                const imgs = p.productId?.images ?? [];
+                return imgs
+                    .map((i) => (typeof i === 'string' ? i : (i && typeof i.url === 'string' ? i.url : '')))
+                    .filter(Boolean)
+                    .map((path) => `${base}${path}`);
+            });
             if (!images.length) return <span>—</span>;
             const first = images[0];
             return (

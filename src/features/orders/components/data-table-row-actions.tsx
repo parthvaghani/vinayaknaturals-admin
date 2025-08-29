@@ -462,7 +462,10 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
                           const off = Number(p.discount || 0);
                           const qty = Number(p.totalUnit || 1);
                           const line = (unit - off) * qty;
-                          const thumb = p.productId?.images?.[0];
+                          const base = import.meta.env.VITE_IMAGE_BASE_URL ?? '';
+                          const raw = (p.productId?.images?.[0] ?? '') as unknown;
+                          const path = typeof raw === 'string' ? raw : (raw && typeof (raw as { url?: unknown }).url === 'string' ? (raw as { url: string }).url : '');
+                          const thumb = path ? `${base}${path}` : '';
 
                           return (
                             <UiTR key={String(p._id || p.productId?._id || Math.random())}>
