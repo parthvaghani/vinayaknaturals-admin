@@ -31,15 +31,15 @@ interface TestimonialsResponse {
 const getTestimonialsApi = async (
   params: GetTestimonialsParams = {}
 ): Promise<TestimonialsResponse> => {
-  const { search, visible } = params
+  const { page, limit, search, visible } = params
   const response = await api.get('/testimonials/testimonial', {
-    params: { search, visible },
+    params: { page, limit, search, visible },
   })
 
   const payload = response?.data?.data ?? response?.data ?? {}
   const results: Testimonial[] = payload?.results ?? payload ?? []
   const total: number | undefined =
-    payload?.total ?? payload?.count ?? payload?.totalResults ?? undefined
+    payload?.totalResults ?? payload?.total ?? payload?.count ?? undefined
   const currentPage: number | undefined = payload?.page ?? payload?.currentPage
   const currentLimit: number | undefined = payload?.limit ?? payload?.pageSize
 
@@ -90,10 +90,10 @@ const deleteTestimonialApi = async (id: string): Promise<void> => {
 
 // Hooks
 export function useTestimonialsList(params: GetTestimonialsParams) {
-  const { search = '', visible } = params
+  const { page = 1, limit = 10, search = '', visible } = params
   return useQuery({
-    queryKey: ['testimonials', { search, visible }],
-    queryFn: () => getTestimonialsApi({ search, visible }),
+    queryKey: ['testimonials', { page, limit, search, visible }],
+    queryFn: () => getTestimonialsApi({ page, limit, search, visible }),
     placeholderData: keepPreviousData,
     staleTime: 1000 * 30,
     retry: 3,

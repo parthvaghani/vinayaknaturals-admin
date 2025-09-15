@@ -7,7 +7,6 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
@@ -22,14 +21,29 @@ import {
 import { DataTablePagination } from '@/features/categories/components/data-table-pagination'
 import { DataTableToolbar } from '@/features/categories/components/data-table-toolbar'
 
+interface PaginationState {
+  page: number
+  limit: number
+  total?: number
+}
+
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   search?: string
   onSearchChange?: (value: string) => void
+  pagination?: PaginationState
+  onPaginationChange?: (next: PaginationState) => void
 }
 
-export function DataTable<TData, TValue>({ columns, data, search, onSearchChange }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ 
+  columns, 
+  data, 
+  search, 
+  onSearchChange, 
+  pagination, 
+  onPaginationChange 
+}: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -51,7 +65,6 @@ export function DataTable<TData, TValue>({ columns, data, search, onSearchChange
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
   })
 
@@ -96,7 +109,9 @@ export function DataTable<TData, TValue>({ columns, data, search, onSearchChange
           </TableBody>
         </Table>
       </div>
-      <DataTablePagination table={table} />
+      {pagination && onPaginationChange ? (
+        <DataTablePagination table={table} pagination={pagination} onChange={onPaginationChange} />
+      ) : null}
     </div>
   )
 }

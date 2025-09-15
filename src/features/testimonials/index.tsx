@@ -12,6 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 export default function Testimonials() {
     const [status, setStatus] = useState<'all' | 'visible' | 'hidden'>('all');
+    const [page, setPage] = useState<number>(1);
+    const [limit, setLimit] = useState<number>(10);
+    const [search, setSearch] = useState<string>('');
+    
     const visible = useMemo(() => {
         if (status === 'visible') return true;
         if (status === 'hidden') return false;
@@ -19,8 +23,9 @@ export default function Testimonials() {
     }, [status]);
 
     const { data, isLoading, isError, error, isFetching } = useTestimonialsList({
-        page: 1,
-        limit: 100,
+        page,
+        limit,
+        search,
         visible,
     });
     return (
@@ -43,7 +48,10 @@ export default function Testimonials() {
                         <div className='flex items-center gap-2'>
                             <Select
                                 value={status}
-                                onValueChange={(val: 'all' | 'visible' | 'hidden') => setStatus(val)}
+                                onValueChange={(val: 'all' | 'visible' | 'hidden') => {
+                                    setStatus(val);
+                                    setPage(1);
+                                }}
                             >
                                 <SelectTrigger id='status-filter' className='h-8 w-[160px]'>
                                     <SelectValue placeholder='All' />
@@ -65,7 +73,20 @@ export default function Testimonials() {
                     ) : isError ? (
                         <p className='text-red-500'>Error: {(error as Error).message}</p>
                     ) : (
-                        <DataTable data={(data?.results as Testimonial[]) ?? []} columns={columns} />
+                        <DataTable 
+                            data={(data?.results as Testimonial[]) ?? []} 
+                            columns={columns}
+                            search={search}
+                            onSearchChange={(val) => {
+                                setSearch(val);
+                                setPage(1);
+                            }}
+                            pagination={{ page, limit, total: data?.total ?? 0 }}
+                            onPaginationChange={({ page: nextPage, limit: nextLimit }) => {
+                                setPage(nextPage);
+                                setLimit(nextLimit);
+                            }}
+                        />
                     )}
                 </div>
             </Main>
