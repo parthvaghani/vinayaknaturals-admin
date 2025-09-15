@@ -54,20 +54,20 @@ export const sidebarData: SidebarData = {
     {
       title: 'General',
       items: [
+        // {
+        //   title: 'Dashboard',
+        //   url: '/',
+        //   icon: IconLayoutDashboard,
+        // },
         {
-          title: 'Dashboard',
-          url: '/',
-          icon: IconLayoutDashboard,
+          title: 'Products',
+          url: '/products',
+          icon: IconPackages,
         },
         {
           title: 'Categories',
           url: '/categories',
           icon: IconChecklist,
-        },
-        {
-          title: 'Products',
-          url: '/products',
-          icon: IconPackages,
         },
         {
           title: 'Testimonials',

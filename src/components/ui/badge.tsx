@@ -21,15 +21,15 @@ const badgeVariants = cva(
         pending:
           'border-amber-200 bg-amber-400 text-white',
         reviewed:
-          'border-sky-500 bg-sky-500 text-white dark:text-sky-100',
+          'border-primary bg-primary text-primary-foreground',
         placed:
-          'border-slate-500 bg-slate-500 text-white',
+          'border-primary-dark bg-primary-dark text-primary-light',
         accepted:
-          'border-blue-500 bg-blue-500 text-white',
+          'border-primary bg-primary text-primary-foreground',
         inprogress:
-          'border-orange-500 bg-orange-500 text-white',
+          'border-amber-500 bg-amber-500 text-white',
         delivered:
-          'border-lime-500 bg-lime-500 text-white',
+          'border-green-600 bg-green-600 text-white',
         trackDelivered:
           'inline-flex items-center gap-4 rounded-full bg-primary-dark px-4 py-2 text-md border-primary-dark text-primary-light',
         trackCancelled:

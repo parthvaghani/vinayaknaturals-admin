@@ -1,17 +1,11 @@
-import { Link } from '@tanstack/react-router'
 import {
-  BadgeCheck,
-  Bell,
   ChevronsUpDown,
-  CreditCard,
   LogOut,
-  Sparkles,
 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -24,6 +18,8 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { useAuthStore } from '@/stores/authStore'
+import { useLogout } from '@/hooks/use-auth'
+import { getInitials } from '@/lib/utils'
 
 export function NavUser({
   userData,
@@ -36,6 +32,10 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar()
   const user = useAuthStore((state) => state.auth.user)
+  const logoutMutation = useLogout()
+  const handleLogout = async () => {
+    await logoutMutation.mutateAsync()
+  }
 
   return (
     <SidebarMenu>
@@ -48,7 +48,7 @@ export function NavUser({
             >
               <Avatar className='h-8 w-8 rounded-lg'>
                 <AvatarImage src={userData.avatar} alt={user?.user_details?.name} />
-                <AvatarFallback className='rounded-lg'>SN</AvatarFallback>
+                <AvatarFallback className='rounded-lg'>{getInitials(user?.user_details?.name)}</AvatarFallback>
               </Avatar>
               <div className='grid flex-1 text-left text-sm leading-tight'>
                 <span className='truncate font-semibold'>{user?.user_details?.name}</span>
@@ -67,7 +67,7 @@ export function NavUser({
               <div className='flex items-center gap-2 px-1 py-1.5 text-left text-sm'>
                 <Avatar className='h-8 w-8 rounded-lg'>
                   <AvatarImage src={userData.avatar} alt={user?.user_details?.name} />
-                  <AvatarFallback className='rounded-lg'>SN</AvatarFallback>
+                  <AvatarFallback className='rounded-lg'>{getInitials(user?.user_details?.name)}</AvatarFallback>
                 </Avatar>
                 <div className='grid flex-1 text-left text-sm leading-tight'>
                   <span className='truncate font-semibold'>{user?.user_details?.name}</span>
@@ -76,7 +76,7 @@ export function NavUser({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
+            {/* <DropdownMenuGroup>
               <DropdownMenuItem>
                 <Sparkles />
                 Upgrade to Pro
@@ -102,9 +102,9 @@ export function NavUser({
                   Notifications
                 </Link>
               </DropdownMenuItem>
-            </DropdownMenuGroup>
+            </DropdownMenuGroup> */}
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
               Log out
             </DropdownMenuItem>

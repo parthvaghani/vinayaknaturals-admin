@@ -53,7 +53,7 @@ export function ProfileDropdown() {
 
         {user ? (
           <>
-            <DropdownMenuGroup>
+            {/* <DropdownMenuGroup>
               <DropdownMenuItem asChild>
                 <Link to="/settings">
                   Profile
@@ -66,12 +66,12 @@ export function ProfileDropdown() {
                   <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
                 </Link>
               </DropdownMenuItem>
-            </DropdownMenuGroup>
+            </DropdownMenuGroup> */}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
-      Log out
-      <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
-    </DropdownMenuItem>
+              Log out
+              <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
+            </DropdownMenuItem>
           </>
         ) : (
           <DropdownMenuItem asChild>
