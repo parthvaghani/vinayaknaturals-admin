@@ -1,6 +1,5 @@
 import {
   IconAugmentedReality,
-  IconLayoutDashboard,
   IconMessages,
   IconMoodPin,
   IconUsers,
