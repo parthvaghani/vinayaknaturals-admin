@@ -25,18 +25,43 @@ export function DataTableRowActions({ row }: { row: { original: Category } }) {
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [formData, setFormData] = useState<Category>(category)
+  const [errors, setErrors] = useState<{ category?: string; name?: string; description?: string }>({})
 
   const { mutate: updateCategory, isPending: isUpdating } = useUpdateProductCategory()
   const { mutate: deleteCategory, isPending: isDeleting } = useDeleteProductCategory()
 
+  const validateForm = (data: Category) => {
+    const nextErrors: { category?: string; name?: string; description?: string } = {}
+    const categoryValue = (data.category || '').trim()
+    const nameValue = (data.name || '').trim()
+    const descriptionValue = (data.description || '').trim()
+
+    if (!categoryValue) nextErrors.category = 'Category is required'
+    if (!nameValue) nextErrors.name = 'Name is required'
+    if (!descriptionValue) nextErrors.description = 'Description is required'
+    if (descriptionValue.length > 200) nextErrors.description = 'Description must be 200 characters or fewer'
+
+    setErrors(nextErrors)
+    return Object.keys(nextErrors).length === 0
+  }
+
   const handleEditSubmit = () => {
+    const trimmed: Category = {
+      ...formData,
+      category: (formData.category || '').trim(),
+      name: (formData.name || '').trim(),
+      description: (formData.description || '').trim(),
+    }
+
+    if (!validateForm(trimmed)) return
+
     updateCategory(
       {
-        id: formData.id,
-        category: formData.category,
-        name: formData.name,
-        description: formData.description || '',
-        pricingEnabled: formData.pricingEnabled, // ✅ included pricingEnabled
+        id: trimmed.id,
+        category: trimmed.category,
+        name: trimmed.name,
+        description: trimmed.description || '',
+        pricingEnabled: trimmed.pricingEnabled, // ✅ included pricingEnabled
       },
       {
         onSuccess: () => {
@@ -93,26 +118,60 @@ export function DataTableRowActions({ row }: { row: { original: Category } }) {
             <div>
               <Label>Category</Label>
               <Input
-                className="mt-2"
+                required
+                aria-invalid={Boolean(errors.category) || undefined}
+                className={`mt-2 ${errors.category ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                onChange={(e) => {
+                  const next = { ...formData, category: e.target.value }
+                  setFormData(next)
+                  if (errors.category) validateForm(next)
+                }}
+                onBlur={() => validateForm({ ...formData, category: formData.category })}
+                placeholder="Enter category"
               />
+              {errors.category && (
+                <p className="mt-1 text-xs text-destructive">{errors.category}</p>
+              )}
             </div>
             <div>
               <Label>Name</Label>
               <Input
-                className="mt-2"
+                required
+                aria-invalid={Boolean(errors.name) || undefined}
+                className={`mt-2 ${errors.name ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) => {
+                  const next = { ...formData, name: e.target.value }
+                  setFormData(next)
+                  if (errors.name) validateForm(next)
+                }}
+                onBlur={() => validateForm({ ...formData, name: formData.name })}
+                placeholder="Enter name"
               />
+              {errors.name && (
+                <p className="mt-1 text-xs text-destructive">{errors.name}</p>
+              )}
             </div>
             <div>
               <Label>Description</Label>
               <Input
-                className="mt-2"
+                required
+                aria-invalid={Boolean(errors.description) || undefined}
+                className={`mt-2 ${errors.description ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 value={formData.description || ''}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) => {
+                  const next = { ...formData, description: e.target.value }
+                  setFormData(next)
+                  if (errors.description) validateForm(next)
+                }}
+                onBlur={() => validateForm({ ...formData, description: formData.description || '' })}
+                placeholder="Enter description (max 200 chars)"
+                maxLength={200}
               />
+              {errors.description && (
+                <p className="mt-1 text-xs text-destructive">{errors.description}</p>
+              )}
             </div>
           </div>
 
@@ -135,7 +194,12 @@ export function DataTableRowActions({ row }: { row: { original: Category } }) {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
-            <Button onClick={handleEditSubmit} disabled={isUpdating}>
+            <Button onClick={handleEditSubmit} disabled={
+              isUpdating ||
+              !formData.category?.trim() ||
+              !formData.name?.trim() ||
+              !(formData.description ?? '').trim()
+            }>
               {isUpdating ? 'Updating...' : 'Save Changes'}
             </Button>
           </DialogFooter>

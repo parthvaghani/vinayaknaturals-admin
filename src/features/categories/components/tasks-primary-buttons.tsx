@@ -21,24 +21,80 @@ export function TasksPrimaryButtons() {
     pricingEnabled: false,
   })
 
- 
+  const [errors, setErrors] = useState<{ category?: string; name?: string; description?: string }>({})
+
+
   const { mutate: createCategory, isPending } = useCreateProductCategory()
 
+  const validate = () => {
+    const nextErrors: { category?: string; name?: string; description?: string } = {}
+
+    const category = categoryData.category.trim()
+    const name = categoryData.name.trim()
+    const description = categoryData.description.trim()
+
+    if (!category) {
+      nextErrors.category = 'Category is required'
+    } else {
+      if (category.length < 2) nextErrors.category = 'Category must be at least 2 characters'
+      else if (category.length > 32) nextErrors.category = 'Category must be at most 32 characters'
+      else if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(category))
+        nextErrors.category = 'Use lowercase letters, numbers, and hyphens only'
+    }
+
+    if (!name) {
+      nextErrors.name = 'Name is required'
+    } else {
+      if (name.length < 3) nextErrors.name = 'Name must be at least 3 characters'
+      else if (name.length > 64) nextErrors.name = 'Name must be at most 64 characters'
+    }
+
+    if (!description) {
+      nextErrors.description = 'Description is required'
+    } else {
+      if (description.length < 10) nextErrors.description = 'Description must be at least 10 characters'
+      else if (description.length > 200) nextErrors.description = 'Description must be at most 200 characters'
+    }
+
+    return nextErrors
+  }
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCategoryData({ ...categoryData, [e.target.name]: e.target.value })
+    const { name, value } = e.target
+    setCategoryData({ ...categoryData, [name]: value })
+    if (errors[name as keyof typeof errors]) {
+      setErrors({ ...errors, [name]: undefined })
+    }
   }
 
   const handleSubmit = () => {
-    createCategory(categoryData, {
+    const nextErrors = validate()
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors)
+      toast.error('Please fill all details before saving.')
+      return
+    }
+
+    createCategory(
+      {
+        ...categoryData,
+        category: categoryData.category.trim(),
+        name: categoryData.name.trim(),
+        description: categoryData.description.trim(),
+      },
+      {
       onSuccess: () => {
         toast.success('Category created successfully!')
-        queryClient.invalidateQueries({ queryKey: ['product-categories'] }) 
-        setCategoryData({ category: '', name: '', description: '', pricingEnabled: false }) // Reset form
+        queryClient.invalidateQueries({ queryKey: ['product-categories'] })
+        setCategoryData({ category: '', name: '', description: '', pricingEnabled: false })
+        setErrors({})
+        setOpenSheet(false)
       },
       onError: (error: Error) => {
         toast.error(error.message || 'Failed to create category')
       },
-    })
+    }
+    )
   }
 
   return (
@@ -75,7 +131,13 @@ export function TasksPrimaryButtons() {
                 value={categoryData.category}
                 onChange={handleChange}
                 placeholder="e.g. electronics"
+                required
+                maxLength={32}
+                aria-invalid={!!errors.category}
               />
+              {errors.category ? (
+                <p className="text-xs text-red-500">{errors.category}</p>
+              ) : null}
             </div>
 
             {/* Name */}
@@ -89,19 +151,32 @@ export function TasksPrimaryButtons() {
                 value={categoryData.name}
                 onChange={handleChange}
                 placeholder="e.g. Electronics & Gadgets"
+                required
+                maxLength={64}
+                aria-invalid={!!errors.name}
               />
+              {errors.name ? (
+                <p className="text-xs text-red-500">{errors.name}</p>
+              ) : null}
             </div>
 
             {/* Description */}
             <div className="space-y-2">
-              <Label htmlFor="description" className="text-sm font-medium">Description</Label>
+              <Label htmlFor="description" className="text-sm font-medium">Description <span className="text-red-500">*</span></Label>
               <Input
                 id="description"
                 name="description"
                 value={categoryData.description}
                 onChange={handleChange}
                 placeholder="Short description about this category"
+                required
+                minLength={10}
+                maxLength={200}
+                aria-invalid={!!errors.description}
               />
+              {errors.description ? (
+                <p className="text-xs text-red-500">{errors.description}</p>
+              ) : null}
             </div>
 
             {/* Pricing Enabled Switch */}

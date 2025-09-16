@@ -47,6 +47,13 @@ export function ProductsPrimaryButtons() {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [ingredientInput, setIngredientInput] = useState('');
   const [benefitInput, setBenefitInput] = useState('');
+  const [ingredientsError, setIngredientsError] = useState<string | null>(null);
+  const [benefitsError, setBenefitsError] = useState<string | null>(null);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
+  const [variantsError, setVariantsError] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [descriptionError, setDescriptionError] = useState<string | null>(null);
+  const [imagesError, setImagesError] = useState<string | null>(null);
   const [variantType, setVariantType] = useState<'gm' | 'kg'>('gm');
   const [variantWeight, setVariantWeight] = useState('');
   const [variantPrice, setVariantPrice] = useState('');
@@ -56,7 +63,14 @@ export function ProductsPrimaryButtons() {
   const { mutate: createProduct, isPending } = useCreateProduct();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setProductData({ ...productData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setProductData({ ...productData, [name]: value });
+    if (name === 'name') {
+      setNameError(value.trim() ? null : 'Please enter a product name.');
+    }
+    if (name === 'description') {
+      setDescriptionError(value.trim() ? null : 'Please enter a product description.');
+    }
   };
 
   const handleImagesSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,7 +78,20 @@ export function ProductsPrimaryButtons() {
     if (files.length === 0) return;
 
     const remainingSlots = 5 - imageFiles.length;
-    const toAdd = files.slice(0, Math.max(0, remainingSlots));
+    const acceptedMimePrefix = 'image/';
+    const maxFileSizeBytes = 2 * 1024 * 1024; // 2MB per image
+    const filtered = files.filter((file) => {
+      if (!file.type.startsWith(acceptedMimePrefix)) {
+        toast.warning(`${file.name} is not an image and was ignored.`);
+        return false;
+      }
+      if (file.size > maxFileSizeBytes) {
+        toast.warning(`${file.name} exceeds 2MB and was ignored.`);
+        return false;
+      }
+      return true;
+    });
+    const toAdd = filtered.slice(0, Math.max(0, remainingSlots));
 
     if (files.length > remainingSlots) {
       toast.warning('You can upload a maximum of 5 images. Extra files ignored.');
@@ -72,7 +99,11 @@ export function ProductsPrimaryButtons() {
 
     if (toAdd.length === 0) return;
 
-    setImageFiles((prev) => [...prev, ...toAdd]);
+    setImageFiles((prev) => {
+      const updated = [...prev, ...toAdd];
+      if (updated.length > 0) setImagesError(null);
+      return updated;
+    });
     const newPreviews = toAdd.map((file) => URL.createObjectURL(file));
     setProductData((prev) => ({ ...prev, images: [...prev.images, ...newPreviews] }));
   };
@@ -84,75 +115,158 @@ export function ProductsPrimaryButtons() {
     setImageFiles(updatedFiles);
     const updatedPreviews = productData.images.filter((_, i) => i !== index);
     setProductData((prev) => ({ ...prev, images: updatedPreviews }));
+    if (updatedFiles.length === 0) setImagesError('Please upload at least one image.');
   };
 
   const handleAddIngredient = () => {
-    if (ingredientInput.trim()) {
+    const value = ingredientInput.trim();
+    if (value) {
+      const isDuplicate = productData.ingredients.some((i) => i.toLowerCase() === value.toLowerCase());
+      if (isDuplicate) {
+        setIngredientsError('This ingredient has already been added.');
+        return;
+      }
       setProductData((prev) => ({
         ...prev,
-        ingredients: [...prev.ingredients, ingredientInput.trim()],
+        ingredients: [...prev.ingredients, value],
       }));
       setIngredientInput('');
+      setIngredientsError(null);
     }
   };
 
   const handleRemoveIngredient = (index: number) => {
-    setProductData((prev) => ({
-      ...prev,
-      ingredients: prev.ingredients.filter((_, i) => i !== index),
-    }));
+    setProductData((prev) => {
+      const updated = prev.ingredients.filter((_, i) => i !== index);
+      if (updated.length < 2) setIngredientsError('Please add at least two ingredients.');
+      return { ...prev, ingredients: updated };
+    });
   };
 
   const handleAddBenefit = () => {
-    if (benefitInput.trim()) {
+    const value = benefitInput.trim();
+    if (value) {
+      const isDuplicate = productData.benefits.some((b) => b.toLowerCase() === value.toLowerCase());
+      if (isDuplicate) {
+        setBenefitsError('This benefit has already been added.');
+        return;
+      }
       setProductData((prev) => ({
         ...prev,
-        benefits: [...prev.benefits, benefitInput.trim()],
+        benefits: [...prev.benefits, value],
       }));
       setBenefitInput('');
+      setBenefitsError(null);
     }
   };
 
   const handleRemoveBenefit = (index: number) => {
-    setProductData((prev) => ({
-      ...prev,
-      benefits: prev.benefits.filter((_, i) => i !== index),
-    }));
+    setProductData((prev) => {
+      const updated = prev.benefits.filter((_, i) => i !== index);
+      if (updated.length < 2) setBenefitsError('Please add at least two benefits.');
+      return { ...prev, benefits: updated };
+    });
   };
 
   const handleAddVariant = () => {
-    if (variantWeight && variantPrice) {
-      setProductData((prev) => ({
-        ...prev,
-        variants: {
-          ...prev.variants,
-          [variantType]: [
-            ...prev.variants[variantType],
-            {
-              weight: variantWeight,
-              price: parseFloat(variantPrice),
-              discount: parseFloat(variantDiscount) || 0,
-            },
-          ],
-        },
-      }));
-      setVariantWeight('');
-      setVariantPrice('');
-      setVariantDiscount('');
+    const weightTrimmed = variantWeight.trim();
+    if (!weightTrimmed || !variantPrice) {
+      setVariantsError('Please enter both weight and price for the variant.');
+      return;
     }
-  };
-
-  const handleRemoveVariant = (type: 'gm' | 'kg', index: number) => {
+    const price = parseFloat(variantPrice);
+    const discount = parseFloat(variantDiscount) || 0;
+    if (Number.isNaN(price) || price <= 0) {
+      setVariantsError('Price must be a number greater than 0.');
+      return;
+    }
+    if (discount < 0 || discount >= price) {
+      setVariantsError('Discount must be >= 0 and less than price.');
+      return;
+    }
+    // Prevent duplicate weight within the same type
+    const isDuplicate = productData.variants[variantType].some((v) => v.weight === weightTrimmed);
+    if (isDuplicate) {
+      setVariantsError('This variant already exists for the selected unit.');
+      return;
+    }
     setProductData((prev) => ({
       ...prev,
       variants: {
         ...prev.variants,
-        [type]: prev.variants[type].filter((_, i) => i !== index),
+        [variantType]: [
+          ...prev.variants[variantType],
+          {
+            weight: weightTrimmed,
+            price,
+            discount,
+          },
+        ],
       },
     }));
+    setVariantWeight('');
+    setVariantPrice('');
+    setVariantDiscount('');
+    setVariantsError(null);
+  };
+
+  const handleRemoveVariant = (type: 'gm' | 'kg', index: number) => {
+    setProductData((prev) => {
+      const updatedOfType = prev.variants[type].filter((_, i) => i !== index);
+      const updatedVariants = { ...prev.variants, [type]: updatedOfType } as typeof prev.variants;
+      const totalCount = updatedVariants.gm.length + updatedVariants.kg.length;
+      if (totalCount > 0) setVariantsError(null);
+      return { ...prev, variants: updatedVariants };
+    });
   };
 
   const handleSubmit = () => {
+    // Validate required arrays
+    let hasError = false;
+    setIngredientsError(null);
+    setBenefitsError(null);
+    setCategoryError(null);
+    setVariantsError(null);
+    setNameError(null);
+    setDescriptionError(null);
+    setImagesError(null);
+
+    if (!productData.category) {
+      setCategoryError('Please select a category.');
+      hasError = true;
+    }
+    if (!productData.name.trim()) {
+      setNameError('Please enter a product name.');
+      hasError = true;
+    }
+    if (!productData.description.trim()) {
+      setDescriptionError('Please enter a product description.');
+      hasError = true;
+    }
+    if (imageFiles.length === 0) {
+      setImagesError('Please upload at least one image.');
+      hasError = true;
+    }
+    if (productData.ingredients.length < 2) {
+      setIngredientsError('Please add at least two ingredients.');
+      hasError = true;
+    }
+    if (productData.benefits.length < 2) {
+      setBenefitsError('Please add at least two benefits.');
+      hasError = true;
+    }
+
+    const totalVariants = productData.variants.gm.length + productData.variants.kg.length;
+    if (totalVariants === 0) {
+      setVariantsError('Please add at least one variant.');
+      hasError = true;
+    }
+
+    if (hasError) {
+      toast.error('Please fill all details before saving.');
+      return;
+    }
+
     // Build FormData to match backend expectations
     const form = new FormData();
     form.append('category', productData.category);
@@ -229,11 +343,12 @@ export function ProductsPrimaryButtons() {
                 <Label htmlFor='category'>Category*</Label>
                 <Select
                   value={productData.category}
-                  onValueChange={(value) =>
-                    setProductData((prev) => ({ ...prev, category: value }))
-                  }
+                  onValueChange={(value) => {
+                    setProductData((prev) => ({ ...prev, category: value }));
+                    setCategoryError(null);
+                  }}
                 >
-                  <SelectTrigger id='category' className='w-full'>
+                  <SelectTrigger id='category' className='w-full' aria-invalid={!!categoryError}>
                     <SelectValue placeholder='Select a category' />
                   </SelectTrigger>
                   <SelectContent>
@@ -244,6 +359,9 @@ export function ProductsPrimaryButtons() {
                     ))}
                   </SelectContent>
                 </Select>
+                {categoryError ? (
+                  <p className='text-red-500 text-xs'>{categoryError}</p>
+                ) : null}
               </div>
 
               {/* Name */}
@@ -254,7 +372,12 @@ export function ProductsPrimaryButtons() {
                   name='name'
                   value={productData.name}
                   onChange={handleChange}
+                  required
+                  aria-invalid={!!nameError}
                 />
+                {nameError ? (
+                  <p className='text-red-500 text-xs'>{nameError}</p>
+                ) : null}
               </div>
 
               {/* Description */}
@@ -265,7 +388,12 @@ export function ProductsPrimaryButtons() {
                   name='description'
                   value={productData.description}
                   onChange={handleChange}
+                  required
+                  aria-invalid={!!descriptionError}
                 />
+                {descriptionError ? (
+                  <p className='text-red-500 text-xs'>{descriptionError}</p>
+                ) : null}
               </div>
 
               {/* Images */}
@@ -277,10 +405,15 @@ export function ProductsPrimaryButtons() {
                   multiple
                   onChange={handleImagesSelected}
                   disabled={imageFiles.length >= 5}
+                  required
+                  aria-invalid={!!imagesError}
                 />
                 <p className='text-muted-foreground text-xs'>
                   {imageFiles.length}/5 selected
                 </p>
+                {imagesError ? (
+                  <p className='text-red-500 text-xs'>{imagesError}</p>
+                ) : null}
                 <div className='mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3'>
                   {productData.images.map((img, i) => (
                     <div
@@ -334,6 +467,9 @@ export function ProductsPrimaryButtons() {
                     </span>
                   ))}
                 </div>
+                {ingredientsError ? (
+                  <p className='text-red-500 text-xs'>{ingredientsError}</p>
+                ) : null}
               </div>
 
               {/* Benefits */}
@@ -365,6 +501,9 @@ export function ProductsPrimaryButtons() {
                     </span>
                   ))}
                 </div>
+                {benefitsError ? (
+                  <p className='text-red-500 text-xs'>{benefitsError}</p>
+                ) : null}
               </div>
 
               {/* Variants */}
@@ -438,6 +577,9 @@ export function ProductsPrimaryButtons() {
                       </div>
                     ))}
                   </div>
+                ) : null}
+                {variantsError ? (
+                  <p className='text-red-500 text-xs'>{variantsError}</p>
                 ) : null}
               </div>
 

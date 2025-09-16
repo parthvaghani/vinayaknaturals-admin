@@ -13,7 +13,7 @@ import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { LearnMore } from '@/components/learn-more'
 import { Search } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
+// import { ThemeSwitch } from '@/components/theme-switch'
 import { columns } from '@/features/users/components/columns'
 import { DataTable } from '@/features/users/components/data-table'
 import type { UserRow as TableUser } from '@/features/users/components/columns'
@@ -65,7 +65,7 @@ function UserManagement() {
           <Header fixed>
             <Search />
             <div className='ml-auto flex items-center space-x-4'>
-              <ThemeSwitch />
+              {/* <ThemeSwitch /> */}
               <UserButton />
             </div>
           </Header>

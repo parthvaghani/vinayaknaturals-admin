@@ -2,7 +2,7 @@ import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import { ProfileDropdown } from '@/components/profile-dropdown';
 import { Search } from '@/components/search';
-import { ThemeSwitch } from '@/components/theme-switch';
+// import { ThemeSwitch } from '@/components/theme-switch';
 import { DataTable } from './components/data-table';
 import { columns, type Testimonial } from './components/columns';
 import { useTestimonialsList } from '@/hooks/use-testimonials';
@@ -15,7 +15,7 @@ export default function Testimonials() {
     const [page, setPage] = useState<number>(1);
     const [limit, setLimit] = useState<number>(10);
     const [search, setSearch] = useState<string>('');
-    
+
     const visible = useMemo(() => {
         if (status === 'visible') return true;
         if (status === 'hidden') return false;
@@ -33,7 +33,7 @@ export default function Testimonials() {
             <Header fixed>
                 <Search />
                 <div className='ml-auto flex items-center space-x-4'>
-                    <ThemeSwitch />
+                    {/* <ThemeSwitch /> */}
                     <ProfileDropdown />
                 </div>
             </Header>
@@ -73,8 +73,8 @@ export default function Testimonials() {
                     ) : isError ? (
                         <p className='text-red-500'>Error: {(error as Error).message}</p>
                     ) : (
-                        <DataTable 
-                            data={(data?.results as Testimonial[]) ?? []} 
+                        <DataTable
+                            data={(data?.results as Testimonial[]) ?? []}
                             columns={columns}
                             search={search}
                             onSearchChange={(val) => {

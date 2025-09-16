@@ -2,7 +2,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
@@ -24,7 +23,7 @@ export default function SignIn() {
         <CardContent>
           <UserAuthForm />
         </CardContent>
-        <CardFooter className="flex flex-col">
+        {/* <CardFooter className="flex flex-col">
           <p className='text-muted-foreground px-8 pb-4 text-center text-sm'>
             By clicking login, you agree to our{' '}
             <a
@@ -41,7 +40,7 @@ export default function SignIn() {
               Privacy Policy
             </a>
             .
-          </p>
+          </p> */}
           {/* <p className='text-muted-foreground text-center text-sm'>
             Don't have an account?{' '}
             <Link
@@ -51,7 +50,7 @@ export default function SignIn() {
               Sign up
             </Link>
           </p> */}
-        </CardFooter>
+        {/* </CardFooter> */}
       </Card>
     </AuthLayout>
   )

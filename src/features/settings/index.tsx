@@ -11,7 +11,7 @@ import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
+// import { ThemeSwitch } from '@/components/theme-switch'
 import SidebarNav from './components/sidebar-nav'
 
 export default function Settings() {
@@ -21,7 +21,7 @@ export default function Settings() {
       <Header>
         <Search />
         <div className='ml-auto flex items-center space-x-4'>
-          <ThemeSwitch />
+          {/* <ThemeSwitch /> */}
           <ProfileDropdown />
         </div>
       </Header>

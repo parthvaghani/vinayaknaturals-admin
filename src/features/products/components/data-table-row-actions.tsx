@@ -73,6 +73,12 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
 
     const [newIngredient, setNewIngredient] = useState('');
     const [newBenefit, setNewBenefit] = useState('');
+    const [formErrors, setFormErrors] = useState<{
+        category?: string;
+        name?: string;
+        images?: string;
+        variants?: string;
+    }>({});
     const [newVariant, setNewVariant] = useState<{
         type: 'gm' | 'kg';
         weight: string;
@@ -90,6 +96,9 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
 
     // Local state for new image files (max 5)
     const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
+    const MAX_IMAGES = 5;
+    const MAX_IMAGE_SIZE_MB = 2; // per file
+    const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
     const buildImageUrl = (value: unknown): string => {
         const base = import.meta.env.VITE_IMAGE_BASE_URL as string;
@@ -105,23 +114,119 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
     const handleFilesSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
         if (!files.length) return;
-        const remainingSlots = 5 - (formData.images?.length || 0) - newImageFiles.length;
+        const remainingSlots = MAX_IMAGES - (formData.images?.length || 0) - newImageFiles.length;
         if (remainingSlots <= 0) {
-            toast.error('You can upload a maximum of 5 images');
+            const msg = `You can upload a maximum of ${MAX_IMAGES} images`;
+            setFormErrors((er) => ({ ...er, images: msg }));
+            toast.error(msg);
             return;
         }
-        const toAdd = files.slice(0, remainingSlots);
-        setNewImageFiles((prev) => [...prev, ...toAdd]);
+
+        const accepted: File[] = [];
+        const rejectedMessages: string[] = [];
+        for (const file of files) {
+            if (accepted.length >= remainingSlots) break;
+            if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+                rejectedMessages.push(`${file.name}: unsupported type`);
+                continue;
+            }
+            const sizeMb = file.size / (1024 * 1024);
+            if (sizeMb > MAX_IMAGE_SIZE_MB) {
+                rejectedMessages.push(`${file.name}: larger than ${MAX_IMAGE_SIZE_MB}MB`);
+                continue;
+            }
+            accepted.push(file);
+        }
+        if (rejectedMessages.length) {
+            const msg = `Some files were rejected: ${rejectedMessages.join(', ')}`;
+            setFormErrors((er) => ({ ...er, images: msg }));
+            toast.error(msg);
+        } else {
+            setFormErrors((er) => ({ ...er, images: undefined }));
+        }
+        if (accepted.length) {
+            setNewImageFiles((prev) => [...prev, ...accepted]);
+        }
     };
 
     const removePendingFile = (index: number) => {
         setNewImageFiles((prev) => prev.filter((_, i) => i !== index));
+        setTimeout(() => validateForm(), 0);
+    };
+
+    const isValidObjectId = (val: string) => /^[a-fA-F0-9]{24}$/.test(val);
+
+    const validateForm = (): boolean => {
+        const errors: typeof formErrors = {};
+        const categoryId =
+            typeof formData.category === 'string'
+                ? formData.category
+                : formData.category?._id || formData.category?.id || '';
+
+        if (!categoryId) {
+            errors.category = 'Category is required';
+        } else if (!isValidObjectId(categoryId)) {
+            errors.category = 'Invalid category selection';
+        }
+
+        if (!formData.name || !formData.name.trim()) {
+            errors.name = 'Name is required';
+        } else if (formData.name.trim().length < 2) {
+            errors.name = 'Name must be at least 2 characters';
+        }
+
+        const totalImages = (formData.images?.length || 0) + newImageFiles.length;
+        if (totalImages > 5) {
+            errors.images = 'You can upload a maximum of 5 images';
+        }
+
+        // Validate variants: non-empty weight, non-negative price/discount, unique weight per type
+        const variantErrors: string[] = [];
+        (['gm', 'kg'] as const).forEach((type) => {
+            const list = formData.variants?.[type] || [];
+            const seen = new Set<string>();
+            for (const v of list) {
+                const weightKey = String(v.weight || '').trim().toLowerCase();
+                if (!weightKey) {
+                    variantErrors.push(`${type}: weight is required`);
+                }
+                if (seen.has(weightKey)) {
+                    variantErrors.push(`${type}: duplicate weight '${v.weight}'`);
+                } else if (weightKey) {
+                    seen.add(weightKey);
+                }
+                const priceNum = Number(v.price);
+                const discountNum = Number(v.discount || 0);
+                if (!(priceNum >= 0)) {
+                    variantErrors.push(`${type}: price must be >= 0`);
+                }
+                if (!(discountNum >= 0)) {
+                    variantErrors.push(`${type}: discount must be >= 0`);
+                }
+                if (discountNum > priceNum) {
+                    variantErrors.push(`${type}: discount cannot exceed price`);
+                }
+            }
+        });
+        if (variantErrors.length) {
+            errors.variants = variantErrors.join(' • ');
+        }
+
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
     };
 
     // ✅ Updated Edit Submit Handler
     const handleEditSubmit = () => {
         if (!formData.id && !formData._id) {
             toast.error('Product ID is missing!');
+            return;
+        }
+
+        // Validate all fields before submit
+        const ok = validateForm();
+        if (!ok) {
+            toast.error('Please fix validation errors');
             return;
         }
 
@@ -171,7 +276,7 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
                     files: newImageFiles,
                     imagesToRemove,
                     // include fields to update alongside images
-                    category: /^[a-fA-F0-9]{24}$/.test(categoryId) ? categoryId : undefined,
+                    category: isValidObjectId(categoryId) ? categoryId : undefined,
                     name: formData.name || '',
                     description: formData.description || undefined,
                     isPremium: formData.isPremium ?? false,
@@ -322,9 +427,10 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
                                         ? formData.category
                                         : formData.category?.id || formData.category?._id || ''
                                 }
-                                onValueChange={(value) =>
-                                    setFormData({ ...formData, category: value })
-                                }
+                                onValueChange={(value) => {
+                                    setFormData({ ...formData, category: value });
+                                    setFormErrors((e) => ({ ...e, category: undefined }));
+                                }}
                             >
                                 <SelectTrigger id='category' className='w-full'>
                                     <SelectValue placeholder='Select a category' />
@@ -337,6 +443,9 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
                                     ))}
                                 </SelectContent>
                             </Select>
+                            {formErrors.category && (
+                                <p className='text-xs text-red-500 mt-1'>{formErrors.category}</p>
+                            )}
                         </div>
                         {/* Name */}
                         <div>
@@ -344,10 +453,16 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
                             <Input
                                 className='mt-2'
                                 value={formData.name || ''}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, name: e.target.value })
-                                }
+                                onChange={(e) => {
+                                    setFormData({ ...formData, name: e.target.value });
+                                    if (formErrors.name) {
+                                        setFormErrors((er) => ({ ...er, name: undefined }));
+                                    }
+                                }}
                             />
+                            {formErrors.name && (
+                                <p className='text-xs text-red-500 mt-1'>{formErrors.name}</p>
+                            )}
                         </div>
 
                         {/* Description */}
@@ -427,6 +542,9 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
                                     </div>
                                 ))}
                             </div>
+                            {formErrors.images && (
+                                <p className='text-xs text-red-500 mt-1'>{formErrors.images}</p>
+                            )}
                         </div>
 
                         {/* Ingredients */}
@@ -575,28 +693,58 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
                                 />
                                 <Button
                                     onClick={() => {
-                                        if (newVariant.weight && newVariant.price) {
-                                            setFormData({
-                                                ...formData,
+                                        const weight = newVariant.weight.trim();
+                                        const priceNum = Number(newVariant.price);
+                                        const discountNum = Number(newVariant.discount || 0);
+                                        const list = formData.variants?.[newVariant.type] || [];
+                                        const duplicate = list.some(
+                                            (v) => String(v.weight).trim().toLowerCase() === weight.toLowerCase()
+                                        );
+                                        if (!weight) {
+                                            toast.error('Variant weight is required');
+                                            return;
+                                        }
+                                        if (!(priceNum >= 0)) {
+                                            toast.error('Variant price must be >= 0');
+                                            return;
+                                        }
+                                        if (!(discountNum >= 0)) {
+                                            toast.error('Variant discount must be >= 0');
+                                            return;
+                                        }
+                                        if (discountNum > priceNum) {
+                                            toast.error('Variant discount cannot exceed price');
+                                            return;
+                                        }
+                                        if (duplicate) {
+                                            toast.error('Duplicate weight for this type');
+                                            return;
+                                        }
+                                        setFormData((prev) => {
+                                            const updated = {
+                                                ...prev,
                                                 variants: {
-                                                    ...formData.variants!,
+                                                    ...prev.variants!,
                                                     [newVariant.type]: [
-                                                        ...(formData.variants?.[newVariant.type] || []),
+                                                        ...(prev.variants?.[newVariant.type] || []),
                                                         {
-                                                            weight: newVariant.weight,
-                                                            price: parseFloat(newVariant.price),
-                                                            discount: parseFloat(newVariant.discount) || 0,
+                                                            weight,
+                                                            price: priceNum,
+                                                            discount: discountNum || 0,
                                                         },
                                                     ],
                                                 },
-                                            });
-                                            setNewVariant({
-                                                type: 'gm',
-                                                weight: '',
-                                                price: '',
-                                                discount: '',
-                                            });
-                                        }
+                                            };
+                                            // revalidate variants after update to clear possible errors
+                                            setTimeout(() => validateForm(), 0);
+                                            return updated;
+                                        });
+                                        setNewVariant({
+                                            type: 'gm',
+                                            weight: '',
+                                            price: '',
+                                            discount: '',
+                                        });
                                     }}
                                 >
                                     Add
@@ -626,17 +774,21 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
                                                     )}
                                                 </div>
                                                 <button
-                                                    onClick={() =>
-                                                        setFormData({
-                                                            ...formData,
-                                                            variants: {
-                                                                ...formData.variants!,
-                                                                [type]: formData.variants?.[type]?.filter(
-                                                                    (_, idx) => idx !== i
-                                                                ),
-                                                            },
-                                                        })
-                                                    }
+                                                    onClick={() => {
+                                                        setFormData((prev) => {
+                                                            const updated = {
+                                                                ...prev,
+                                                                variants: {
+                                                                    ...prev.variants!,
+                                                                    [type]: prev.variants?.[type]?.filter(
+                                                                        (_, idx) => idx !== i
+                                                                    ),
+                                                                },
+                                                            };
+                                                            setTimeout(() => validateForm(), 0);
+                                                            return updated;
+                                                        });
+                                                    }}
                                                     className='text-sm font-bold text-red-500'
                                                 >
                                                     ✕
@@ -646,6 +798,9 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
                                     </div>
                                 ))}
                             </div>
+                            {formErrors.variants && (
+                                <p className='text-xs text-red-500 mt-1'>{formErrors.variants}</p>
+                            )}
                         </div>
 
                         {/* Switches */}

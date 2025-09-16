@@ -107,14 +107,14 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
           )}
         />
         <Button
-          className="mt-2"
+          className="mt-2 mb-4"
           disabled={loginMutation.isPending}
           type="submit"
         >
           {loginMutation.isPending ? 'Logging in...' : 'Login'}
         </Button>
 
-        <div className='relative my-2'>
+        {/* <div className='relative my-2'>
           <div className='absolute inset-0 flex items-center'>
             <span className='w-full border-t' />
           </div>
@@ -123,7 +123,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
               Or
             </span>
           </div>
-        </div>
+        </div> */}
 
         {/* <div className='grid grid-cols-2 gap-2'>
           <Button variant='outline' type='button' disabled={loginMutation.isPending}>
