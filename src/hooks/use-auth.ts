@@ -55,6 +55,15 @@ interface AuthResponse {
 
 
 // API functions
+interface ForgotPasswordData {
+  email: string;
+}
+
+interface ResetPasswordData {
+  token: string;
+  password: string;
+}
+
 const loginApi = async (data: LoginData): Promise<AuthResponse> => {
   const response = await api.post('/auth/login', data);
   return response.data;
@@ -70,6 +79,17 @@ const getUsersApi = async () => {
   return response.data;
 };
 
+const forgotPasswordApi = async (data: ForgotPasswordData) => {
+  const response = await api.post('/auth/forgot-password', data);
+  return response.data as { success?: boolean; message?: string };
+};
+
+const resetPasswordApi = async (data: ResetPasswordData) => {
+  const response = await api.post(`/auth/reset-password?token=${encodeURIComponent(data.token)}`, {
+    password: data.password,
+  });
+  return response.data as { success?: boolean; message?: string };
+};
 
 
 // Custom hooks
@@ -105,6 +125,16 @@ export function useLogin() {
     },
     onError: (error) => {
       toast.error(error.message);
+    },
+  });
+}
+
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: resetPasswordApi,
+    onSuccess: (data) => {
+      const message = data?.message || 'Password has been reset successfully.';
+      toast.success(message);
     },
   });
 }
@@ -169,6 +199,24 @@ export function useLogout() {
         delete errorCommonHeaders.Authorization;
       }
       navigate({ to: '/sign-in', replace: true });
+    },
+  });
+}
+
+export function useForgotPassword() {
+  return useMutation({
+    mutationFn: forgotPasswordApi,
+    onSuccess: (data) => {
+      const message = data?.message || 'If that email exists, a reset link was sent.';
+      toast.success(message);
+    },
+    onError: (error: unknown) => {
+      let message = 'Failed to send reset email';
+      if (typeof error === 'object' && error !== null) {
+        const maybeAxiosError = error as { response?: { data?: { message?: string } }; message?: string };
+        message = maybeAxiosError.response?.data?.message || maybeAxiosError.message || message;
+      }
+      toast.error(message);
     },
   });
 }
