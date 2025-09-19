@@ -2,7 +2,7 @@ import { ColumnDef } from '@tanstack/react-table';
 // import { Badge } from '@/components/ui/badge';
 import { DataTableColumnHeader } from './data-table-column-header';
 import { DataTableRowActions, type OrderRow } from './data-table-row-actions';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,  } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, } from '@/components/ui/dialog';
 import { PaymentStatusCell, StatusCell } from './data-table-column-status';
 // import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 // import { Button } from '@/components/ui/button';
@@ -53,13 +53,19 @@ export const columns: ColumnDef<OrderRow>[] = [
         cell: ({ row }) => {
             const base = import.meta.env.VITE_IMAGE_BASE_URL ?? '';
             const images = ((row.original.productsDetails ?? []) as Array<{
-                productId?: { images?: Array<string | { url: string }>; };
+                productId?: { images?: Array<string | { url: string; }>; };
             }>).flatMap((p) => {
                 const imgs = p.productId?.images ?? [];
                 return imgs
                     .map((i) => (typeof i === 'string' ? i : (i && typeof i.url === 'string' ? i.url : '')))
                     .filter(Boolean)
-                    .map((path) => `${base}${path}`);
+                    .map((path) => {
+                        // Check if path already contains the base URL or is already a complete URL
+                        if (path.startsWith(base) || path.startsWith('http://') || path.startsWith('https://')) {
+                            return path;
+                        }
+                        return `${base}${path}`;
+                    });
             });
             if (!images.length) return <span>—</span>;
             const first = images[0];
