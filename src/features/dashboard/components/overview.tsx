@@ -25,21 +25,21 @@ function formatINR(amount: number) {
 export function Overview({ data }: { data: OverviewDatum[]; }) {
   return (
     <>
-    <ResponsiveContainer width='100%' height={350}>
-      <BarChart data={data}>
+      <ResponsiveContainer width='100%' height={350}>
+        <BarChart data={data}>
           <CartesianGrid stroke='#f1f1f3' vertical={false} />
-        <XAxis
-          dataKey='name'
-          stroke='#888888'
-          fontSize={12}
-          tickLine={false}
-          axisLine={false}
-        />
-        <YAxis
-          stroke='#888888'
-          fontSize={12}
-          tickLine={false}
-          axisLine={false}
+          <XAxis
+            dataKey='name'
+            stroke='#888888'
+            fontSize={12}
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis
+            stroke='#888888'
+            fontSize={12}
+            tickLine={false}
+            axisLine={false}
             tickFormatter={(value) => `${formatINR(Number(value))}`}
           />
           <Tooltip
@@ -136,15 +136,15 @@ export function Overview({ data }: { data: OverviewDatum[]; }) {
                 </div>
               );
             }}
-        />
-        <Bar
-          dataKey='total'
-          fill='currentColor'
-          radius={[4, 4, 0, 0]}
-          className='fill-primary'
-        />
-      </BarChart>
-    </ResponsiveContainer>
+          />
+          <Bar
+            dataKey='total'
+            fill='currentColor'
+            radius={[4, 4, 0, 0]}
+            className='fill-primary'
+          />
+        </BarChart>
+      </ResponsiveContainer>
     </>
   );
 }

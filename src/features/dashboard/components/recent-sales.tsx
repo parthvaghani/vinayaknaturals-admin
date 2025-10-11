@@ -44,7 +44,6 @@ function getCountryCode(countryInput: string | undefined | null): string | null 
 // Build a circular SVG flag URL from ISO code using circle-flags
 function getCountryFlagUrl(isoAlpha2: string | null): string | null {
   if (!isoAlpha2) return null;
-  // Circle flags SVGs
   return `https://hatscripts.github.io/circle-flags/flags/${isoAlpha2.toLowerCase()}.svg`;
 }
 
@@ -73,7 +72,6 @@ export function RecentSales() {
     return <div className='text-sm text-muted-foreground'>No recent placed orders.</div>;
   }
 
-
   return (
     <div className='space-y-8'>
       {orders.map((order) => {
@@ -88,15 +86,23 @@ export function RecentSales() {
 
         const products = order.productsDetails || [];
         const base = import.meta.env.VITE_IMAGE_BASE_URL ?? '';
-        const firstImage = products[0]?.productId?.images?.[0] as unknown as string | { url: string } | undefined;
+        const firstImage = products[0]?.productId?.images?.[0] as unknown as string | { url: string; } | undefined;
         const avatarImageUrlRaw = typeof firstImage === 'string' ? firstImage : firstImage?.url || '';
         const avatarImageUrl = /^https?:\/\//i.test(avatarImageUrlRaw) || !base ? avatarImageUrlRaw : `${base}${avatarImageUrlRaw}`;
 
-        const total = products.reduce((sum, item) => {
+        // Calculate subtotal (after individual product discounts)
+        const subtotal = products.reduce((sum, item) => {
           const effectiveUnitPrice = typeof item.discount === 'number' ? (item.pricePerUnit - item.discount) : item.pricePerUnit;
           const lineTotal = Math.max(0, effectiveUnitPrice) * (item.totalUnit ?? 1);
           return sum + lineTotal;
         }, 0);
+
+        // Get coupon discount amount
+        const couponDiscount = order.applyCoupon?.discountAmount ?? 0;
+        const couponPercentage = order.applyCoupon?.discountPercentage ?? null;
+
+        // Calculate final total: subtotal - coupon discount + shipping
+        const total = subtotal - couponDiscount + (order.shippingCharge ?? 0);
 
         let createdAt = order.createdAt;
         try {
@@ -144,7 +150,6 @@ export function RecentSales() {
                             ) : (
                               <span>{countryFlagEmoji || '🌐'}</span>
                             )}
-                            {/* <span>{country}</span> */}
                           </span>
                         ) : null}
                       </p>
@@ -164,7 +169,7 @@ export function RecentSales() {
                   {products.map((p) => {
                     const effectiveUnitPrice = typeof p.discount === 'number' ? (p.pricePerUnit - p.discount) : p.pricePerUnit;
                     const lineTotal = Math.max(0, effectiveUnitPrice) * (p.totalUnit ?? 1);
-                    const raw = p.productId?.images?.[0] as unknown as string | { url: string } | undefined;
+                    const raw = p.productId?.images?.[0] as unknown as string | { url: string; } | undefined;
                     const img = typeof raw === 'string' ? raw : raw?.url || '';
                     const imageUrl = /^https?:\/\//i.test(img) || !base ? img : `${base}${img}`;
                     return (
@@ -187,7 +192,7 @@ export function RecentSales() {
                 <div className='border-t pt-2'>
                   <div className='flex items-center justify-between'>
                     <p className='text-sm text-muted-foreground'>Subtotal</p>
-                    <p className='text-sm font-medium'>{formatCurrency(total)}</p>
+                    <p className='text-sm font-medium'>{formatCurrency(subtotal)}</p>
                   </div>
                   {order.shippingCharge ? (
                     <div className='flex items-center justify-between'>
@@ -195,11 +200,22 @@ export function RecentSales() {
                       <p className='text-sm font-medium'>{formatCurrency(order.shippingCharge)}</p>
                     </div>
                   ) : null}
-                  <div className='flex items-center justify-between'>
+                  {couponDiscount > 0 && order.applyCoupon?.couponId ? (
+                    <div className='flex items-center justify-between text-green-600 dark:text-green-500'>
+                      <p className='text-sm flex items-center gap-1'>
+                        <span>Coupon Discount</span>
+                        {couponPercentage ? (
+                          <span className='font-mono text-xs bg-green-100 dark:bg-green-950 px-1.5 py-0.5 rounded'>
+                            {couponPercentage}
+                          </span>
+                        ) : null}
+                      </p>
+                      <p className='text-sm font-medium'>-{formatCurrency(couponDiscount)}</p>
+                    </div>
+                  ) : null}
+                  <div className='flex items-center justify-between border-t pt-2 mt-2'>
                     <p className='text-sm font-semibold'>Total</p>
-                    <p className='text-sm font-semibold'>
-                      {formatCurrency(total + (order.shippingCharge ?? 0))}
-                    </p>
+                    <p className='text-sm font-semibold'>{formatCurrency(total)}</p>
                   </div>
                 </div>
                 {order.address ? (

@@ -92,14 +92,32 @@ export const columns: ColumnDef<OrderRow>[] = [
         id: 'amount',
         header: ({ column }) => <DataTableColumnHeader column={column} title='Amount' />,
         cell: ({ row }) => {
+            const couponDiscount = row.original?.applyCoupon?.discountAmount || 0;
+            const couponPersentage = row.original?.applyCoupon?.discountPercentage || 0;
             const orig = row.original.originalTotal ?? row.original.totalAmount ?? 0;
             const total = row.original.totalAmount ?? 0;
             const fmt = (n: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
             const hasDiscount = (row.original.originalTotal ?? 0) > (row.original.totalAmount ?? 0);
             return (
-                <div className='flex items-center gap-2'>
-                    {hasDiscount && <span className='line-through text-muted-foreground'>{fmt(orig)}</span>}
-                    <span className='font-semibold'>{fmt(total)}</span>
+                <div className='flex flex-col items-start gap-0'>
+                    <div className='flex items-center gap-2'>
+                        {hasDiscount ? <span className='line-through text-muted-foreground'>{fmt(orig)}</span> : couponDiscount ? <span className='line-through text-muted-foreground'>{fmt(orig)}</span> : null}
+                        <span className='font-semibold'>{fmt(total - couponDiscount)}</span>
+                    </div>
+                    {hasDiscount ? (
+                        <div className='flex items-center gap-1'>
+                            <span className='text-xs text-green-600 font-medium'>
+                                Savings on Item {fmt(orig - total)}
+                            </span>
+                        </div>
+                    ) : null}
+                    {couponPersentage ? (
+                        <div className='flex items-center gap-1'>
+                            <span className='text-xs text-green-600 font-medium'>
+                                Coupon Offer {couponPersentage}
+                            </span>
+                        </div>
+                    ) : null}
                 </div>
             );
         },

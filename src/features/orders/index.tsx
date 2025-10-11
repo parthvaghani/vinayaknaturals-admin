@@ -86,6 +86,7 @@ export default function Orders() {
                 productsDetails: normalizedProductsDetails,
                 updatedAt: o.updatedAt ?? '',
                 cancelDetails: o.cancelDetails,
+                applyCoupon: o.applyCoupon
             }
         });
     }, [orders]);

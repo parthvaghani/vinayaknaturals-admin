@@ -11,9 +11,7 @@ import { Main } from '@/components/layout/main';
 import { TopNav } from '@/components/layout/top-nav';
 import { ProfileDropdown } from '@/components/profile-dropdown';
 import { Search } from '@/components/search';
-// import { ThemeSwitch } from '@/components/theme-switch'
 import { Overview } from './components/overview';
-// import { RecentSales } from './components/recent-sales';
 import { useMemo, useState } from 'react';
 import type { Order } from '@/hooks/use-orders';
 import DateRangePicker from '@/components/date-range-picker';
@@ -22,6 +20,7 @@ import { useOrdersList } from '@/hooks/use-orders';
 import { ClockArrowDown, HandCoins, IndianRupee, PackageOpen, PackageCheck, XCircle } from 'lucide-react';
 import { RecentSales } from './components/recent-sales';
 
+
 function formatDate(date: Date): string {
   const day = String(date.getDate()).padStart(2, '0');
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -29,15 +28,17 @@ function formatDate(date: Date): string {
   return `${day}/${month}/${year}`;
 }
 
+
 export default function Dashboard() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const { data: placedOrdersData, isLoading: isPlacedLoading } = useOrdersList({ page: 1, limit: 1, status: 'placed' });
   const { data: deliveredOrdersData, isLoading: isDeliveredLoading } = useOrdersList({ page: 1, limit: 1, status: 'delivered' });
   const { data: cancelledOrdersData, isLoading: isCancelledLoading } = useOrdersList({ page: 1, limit: 1, status: 'cancelled' });
-  const { data: allOrdersData, isLoading: isAllOrdersLoading } = useOrdersList({ page: 1, limit: 1000000, sortBy: 'createdAt:desc' });
+  const { data: allOrdersData, isLoading: isAllOrdersLoading } = useOrdersList({ page: 1, limit: 1000000000, sortBy: 'createdAt:desc' });
   const placedOrdersCount = placedOrdersData?.total ?? 0;
   const deliveredOrdersCount = deliveredOrdersData?.total ?? 0;
   const cancelledOrdersCount = cancelledOrdersData?.total ?? 0;
+
 
   const formatINR = (amount: number) =>
     new Intl.NumberFormat('en-IN', {
@@ -46,10 +47,12 @@ export default function Dashboard() {
       maximumFractionDigits: 0,
     }).format(amount);
 
+
   const revenueBreakdown = useMemo(() => {
     const orders = (allOrdersData?.results ?? []) as Order[];
     const from = dateRange?.from ? new Date(dateRange.from).getTime() : undefined;
     const to = dateRange?.to ? new Date(dateRange.to).getTime() : undefined;
+
 
     const inRange = (iso?: string) => {
       if (!from && !to) return true;
@@ -61,6 +64,7 @@ export default function Dashboard() {
       return true;
     };
 
+
     const computeDiscountedTotal = (o: Order) => {
       const lines = (o.productsDetails ?? []).map((p) => {
         const unit = Number(p.pricePerUnit || 0);
@@ -68,8 +72,11 @@ export default function Dashboard() {
         const qty = Number(p.totalUnit || 1);
         return (unit - off) * qty;
       });
-      return lines.reduce((sum, v) => sum + v, 0);
+      const subtotal = lines.reduce((sum, v) => sum + v, 0);
+      const couponDiscount = Number(o.applyCoupon?.discountAmount || 0);
+      return subtotal - couponDiscount;
     };
+
 
     const filtered = orders.filter((o) => inRange(o.createdAt));
     const nonCancelled = filtered
@@ -89,10 +96,12 @@ export default function Dashboard() {
     return { nonCancelled, cancelled, total: nonCancelled + cancelled };
   }, [allOrdersData?.results, dateRange?.from, dateRange?.to]);
 
+
   const paidBreakdown = useMemo(() => {
     const orders = (allOrdersData?.results ?? []) as Order[];
     const from = dateRange?.from ? new Date(dateRange.from).getTime() : undefined;
     const to = dateRange?.to ? new Date(dateRange.to).getTime() : undefined;
+
 
     const inRange = (iso?: string) => {
       if (!from && !to) return true;
@@ -104,6 +113,7 @@ export default function Dashboard() {
       return true;
     };
 
+
     const computeDiscountedTotal = (o: Order) => {
       const lines = (o.productsDetails ?? []).map((p) => {
         const unit = Number(p.pricePerUnit || 0);
@@ -111,20 +121,26 @@ export default function Dashboard() {
         const qty = Number(p.totalUnit || 1);
         return (unit - off) * qty;
       });
-      return lines.reduce((sum, v) => sum + v, 0);
+      const subtotal = lines.reduce((sum, v) => sum + v, 0);
+      const couponDiscount = Number(o.applyCoupon?.discountAmount || 0);
+      return subtotal - couponDiscount;
     };
+
 
     const paidOrders = orders
       .filter((o) => String(o.paymentStatus || '').toLowerCase() === 'paid')
       .filter((o) => inRange(o.createdAt));
 
+
     const cancelledPaid = paidOrders
       .filter((o) => String(o.status).toLowerCase() === 'cancelled')
       .reduce((sum, o) => sum + computeDiscountedTotal(o) + Number(o.shippingCharge || 0), 0);
 
+
     const nonCancelledPaid = paidOrders
       .filter((o) => String(o.status).toLowerCase() !== 'cancelled')
       .reduce((sum, o) => sum + computeDiscountedTotal(o) + Number(o.shippingCharge || 0), 0);
+
 
     return {
       cancelledPaid,
@@ -133,10 +149,12 @@ export default function Dashboard() {
     };
   }, [allOrdersData?.results, dateRange?.from, dateRange?.to]);
 
+
   const unpaidBreakdown = useMemo(() => {
     const orders = (allOrdersData?.results ?? []) as Order[];
     const from = dateRange?.from ? new Date(dateRange.from).getTime() : undefined;
     const to = dateRange?.to ? new Date(dateRange.to).getTime() : undefined;
+
 
     const inRange = (iso?: string) => {
       if (!from && !to) return true;
@@ -148,6 +166,7 @@ export default function Dashboard() {
       return true;
     };
 
+
     const computeDiscountedTotal = (o: Order) => {
       const lines = (o.productsDetails ?? []).map((p) => {
         const unit = Number(p.pricePerUnit || 0);
@@ -155,20 +174,26 @@ export default function Dashboard() {
         const qty = Number(p.totalUnit || 1);
         return (unit - off) * qty;
       });
-      return lines.reduce((sum, v) => sum + v, 0);
+      const subtotal = lines.reduce((sum, v) => sum + v, 0);
+      const couponDiscount = Number(o.applyCoupon?.discountAmount || 0);
+      return subtotal - couponDiscount;
     };
+
 
     const unpaidOrders = orders
       .filter((o) => String(o.paymentStatus || '').toLowerCase() !== 'paid')
       .filter((o) => inRange(o.createdAt));
 
+
     const cancelledUnpaid = unpaidOrders
       .filter((o) => String(o.status).toLowerCase() === 'cancelled')
       .reduce((sum, o) => sum + computeDiscountedTotal(o) + Number(o.shippingCharge || 0), 0);
 
+
     const nonCancelledUnpaid = unpaidOrders
       .filter((o) => String(o.status).toLowerCase() !== 'cancelled')
       .reduce((sum, o) => sum + computeDiscountedTotal(o) + Number(o.shippingCharge || 0), 0);
+
 
     return {
       cancelledUnpaid,
@@ -177,10 +202,12 @@ export default function Dashboard() {
     };
   }, [allOrdersData?.results, dateRange?.from, dateRange?.to]);
 
+
   const overviewSeries = useMemo(() => {
     const orders = (allOrdersData?.results ?? []) as Order[];
     const from = dateRange?.from ? new Date(dateRange.from) : undefined;
     const to = dateRange?.to ? new Date(dateRange.to) : undefined;
+
 
     const inRange = (iso?: string) => {
       if (!from && !to) return true;
@@ -192,6 +219,7 @@ export default function Dashboard() {
       return true;
     };
 
+
     const computeDiscountedTotal = (o: Order) => {
       const lines = (o.productsDetails ?? []).map((p) => {
         const unit = Number(p.pricePerUnit || 0);
@@ -199,8 +227,11 @@ export default function Dashboard() {
         const qty = Number(p.totalUnit || 1);
         return (unit - off) * qty;
       });
-      return lines.reduce((sum, v) => sum + v, 0) + Number(o.shippingCharge || 0);
+      const subtotal = lines.reduce((sum, v) => sum + v, 0);
+      const couponDiscount = Number(o.applyCoupon?.discountAmount || 0);
+      return subtotal - couponDiscount + Number(o.shippingCharge || 0);
     };
+
 
     // choose bucket: daily if explicit range chosen and range <= 92 days, else monthly
     const useDaily = Boolean(from && to && (to.getTime() - from.getTime()) <= 1000 * 60 * 60 * 24 * 92);
@@ -214,6 +245,7 @@ export default function Dashboard() {
       // month label like Jan '25
       return d.toLocaleString('en-US', { month: 'short', year: '2-digit' });
     };
+
 
     // Aggregate totals per bucket (total, paid/unpaid, cancelled/non-cancelled)
     type Bucket = {
@@ -238,6 +270,7 @@ export default function Dashboard() {
       const isCancelled = String(o.status).toLowerCase() === 'cancelled';
       const isPaid = String(o.paymentStatus || '').toLowerCase() === 'paid';
 
+
       prev.total += amount;
       if (isCancelled) {
         prev.cancelled += amount;
@@ -248,8 +281,10 @@ export default function Dashboard() {
       }
       if (isPaid) prev.paid += amount; else prev.unpaid += amount;
 
+
       map.set(k, prev);
     }
+
 
     // If using daily and a full range is provided, ensure all days exist in the series
     if (useDaily && from && to) {
@@ -260,6 +295,7 @@ export default function Dashboard() {
         cur.setDate(cur.getDate() + 1);
       }
     }
+
 
     // If using monthly, fill month gaps over a sensible window
     if (!useDaily) {
@@ -279,6 +315,7 @@ export default function Dashboard() {
       }
     }
 
+
     // Sort chronologically
     const parseKey = (k: string) => {
       if (useDaily) {
@@ -286,16 +323,19 @@ export default function Dashboard() {
         return new Date(Number(`20${yy}`), Number(mm) - 1, Number(dd)).getTime();
       }
       const [mon, y] = k.split(' '); // e.g., "Jan 25"
-      const monthIndex = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].indexOf(mon);
+      const monthIndex = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(mon);
       return new Date(Number(`20${y}`), monthIndex, 1).getTime();
     };
+
 
     const series = Array.from(map.entries())
       .sort((a, b) => parseKey(a[0]) - parseKey(b[0]))
       .map(([name, bucket]) => ({ name, ...bucket }));
 
+
     return series;
   }, [allOrdersData?.results, dateRange?.from, dateRange?.to]);
+
 
 
   return (
@@ -305,10 +345,10 @@ export default function Dashboard() {
         <TopNav links={topNav} />
         <div className='ml-auto flex items-center space-x-4'>
           <Search />
-          {/* <ThemeSwitch /> */}
           <ProfileDropdown />
         </div>
       </Header>
+
 
       {/* ===== Main ===== */}
       <Main>
@@ -329,18 +369,6 @@ export default function Dashboard() {
         >
           <div className='w-full overflow-x-auto pb-2'>
             <DateRangePicker value={dateRange} onChange={setDateRange} />
-            {/* <TabsList>
-              <TabsTrigger value='overview'>Overview</TabsTrigger>
-              <TabsTrigger value='analytics' disabled>
-                Analytics
-              </TabsTrigger>
-              <TabsTrigger value='reports' disabled>
-                Reports
-              </TabsTrigger>
-              <TabsTrigger value='notifications' disabled>
-                Notifications
-              </TabsTrigger>
-            </TabsList> */}
           </div>
           <TabsContent value='overview' className='space-y-4'>
             <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
@@ -494,13 +522,8 @@ export default function Dashboard() {
   );
 }
 
+
 const topNav = [
-  // {
-  //   title: 'Overview',
-  //   href: 'dashboard/overview',
-  //   isActive: true,
-  //   disabled: false,
-  // },
   {
     title: 'Customers',
     href: 'users',

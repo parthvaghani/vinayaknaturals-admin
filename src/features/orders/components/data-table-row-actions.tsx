@@ -1,5 +1,5 @@
 import { Row } from '@tanstack/react-table';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,7 @@ import { ContentLoader } from '@/components/content-loader';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
+// Types remain the same
 export interface OrderRow {
   _id: string;
   userId: string | {
@@ -55,6 +56,7 @@ export interface OrderRow {
   updatedAt?: string;
   cancelDetails?: { reason?: string | null; };
   paymentStatus: string;
+  applyCoupon: { couponId: string; discountAmount: number; discountPercentage: string; };
 }
 
 type StatusHistoryEntry = {
@@ -84,14 +86,15 @@ type NormalizedOrder = {
   statusHistory?: StatusHistoryEntry[];
 };
 
+// Constants moved outside component for better performance
 const ORDER_STEPS = [
   { key: "placed", label: "Your order has been placed", text: "Order received in kitchen", icon: ShoppingCart },
   { key: "accepted", label: "Order confirmed and accepted", text: "Chef has accepted your order", icon: CheckCircle2 },
-  { key: "inprogress", label: "Your order is being prepared", text: "We’re preparing your order with care", icon: Hourglass },
+  { key: "inprogress", label: "Your order is being prepared", text: "We're preparing your order with care", icon: Hourglass },
   { key: "completed", label: "Order is ready for delivery", text: "Your order is ready to go!", icon: Package },
   { key: "cancelled", label: "Order has been cancelled", text: "Oops! Order was cancelled", icon: XCircle },
   { key: "delivered", label: "Order has been delivered", text: "Order successfully delivered", icon: PackageCheck },
-];
+] as const;
 
 const STATUS_VARIANTS = {
   placed: 'placed',
@@ -102,42 +105,321 @@ const STATUS_VARIANTS = {
   delivered: 'delivered',
 } as const;
 
+// Helper functions moved outside component
+const formatINR = (amount: number) =>
+  new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(amount);
+
+// Fixed normalizeOrderFromApi function - preserve actual values
+const normalizeOrderFromApi = (o: Order): NormalizedOrder => ({
+  _id: o._id,
+  userId: o.userId as NormalizedOrder['userId'],
+  phoneNumber: o.phoneNumber,
+  status: o.status,
+  createdAt: o.createdAt,
+  cancelDetails: o.cancelDetails,
+  address: o.address,
+  productsDetails: o.productsDetails as NormalizedOrder['productsDetails'],
+  totalAmount: o.totalAmount, // Keep the actual value instead of undefined
+  originalTotal: o.originalTotal, // Keep the actual value instead of undefined
+  shippingCharge: o.shippingCharge,
+  statusHistory: (o as unknown as { statusHistory?: StatusHistoryEntry[]; }).statusHistory,
+});
+
+// Add helper function to calculate product-level discount from line items
+const calculateProductDiscount = (productsDetails?: OrderRow['productsDetails']): number => {
+  if (!productsDetails || productsDetails.length === 0) return 0;
+
+  return productsDetails.reduce((totalDiscount, product) => {
+    const discount = Number(product.discount || 0);
+    const quantity = Number(product.totalUnit || 1);
+    return totalDiscount + (discount * quantity);
+  }, 0);
+};
+
+const getImageUrl = (images: unknown): string => {
+  const base = import.meta.env.VITE_IMAGE_BASE_URL ?? '';
+  const raw = images as unknown;
+  const path = typeof raw === 'string'
+    ? raw
+    : (raw && typeof (raw as { url?: unknown; }).url === 'string'
+      ? (raw as { url: string; }).url
+      : '');
+  return path ? `${base}${path}` : '';
+};
+
+const getUserDisplayName = (userId: NormalizedOrder['userId']): string => {
+  if (typeof userId === 'object' && userId !== null) {
+    return userId.user_details?.name ||
+      userId.email ||
+      userId._id ||
+      userId.id ||
+      '—';
+  }
+  return String(userId);
+};
+
+const getUserEmail = (userId: NormalizedOrder['userId']): string => {
+  return (typeof userId === 'object' && userId?.email)
+    ? userId.email
+    : '—';
+};
+
+// Sub-components for better organization
+const ShippingChargeEditor = memo(({
+  isEditing,
+  value,
+  onValueChange,
+  onSave,
+  onCancel,
+  onEdit,
+  isLoading,
+  currentStatus
+}: {
+  isEditing: boolean;
+  value: number;
+  onValueChange: (value: number) => void;
+  onSave: () => void;
+  onCancel: () => void;
+  onEdit: () => void;
+  isLoading: boolean;
+  currentStatus: string;
+}) => {
+  if (isEditing) {
+    return (
+      <>
+        <Input
+          type="number"
+          value={value}
+          onChange={(e) => onValueChange(Number(e.target.value))}
+          className="w-20 h-8 text-sm"
+          min="0"
+          step="0.01"
+        />
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={onSave}
+          disabled={isLoading}
+          className="h-8 w-8 p-0"
+        >
+          <Save className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={onCancel}
+          className="h-8 w-8 p-0"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <span className="font-medium">{formatINR(value)}</span>
+      {currentStatus !== 'delivered' && currentStatus !== 'cancelled' && (
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={onEdit}
+          className="h-8 w-8 p-0"
+        >
+          <Edit2 className="h-4 w-4" />
+        </Button>
+      )}
+    </>
+  );
+});
+
+ShippingChargeEditor.displayName = 'ShippingChargeEditor';
+
+const TrackingStep = memo(({
+  step,
+  index,
+  isLast,
+  stepIndex,
+  isCancelled,
+  historyEntry,
+}: {
+  step: typeof ORDER_STEPS[number];
+  index: number;
+  isLast: boolean;
+  stepIndex: number;
+  isCancelled: boolean;
+  historyEntry?: StatusHistoryEntry;
+}) => {
+  const isCompleted = !isCancelled && index < stepIndex;
+  const isActive = !isCancelled && index === stepIndex;
+  const Icon = step.icon;
+
+  const classes = useMemo(() => {
+    if (isCancelled && index === stepIndex) {
+      return {
+        circle: "bg-destructive border-destructive text-destructive-foreground",
+        connector: "bg-destructive",
+        label: "text-destructive"
+      };
+    }
+    if (isCompleted) {
+      return {
+        circle: "bg-muted border-muted text-primary",
+        connector: "bg-foreground",
+        label: "text-foreground"
+      };
+    }
+    if (isActive) {
+      return {
+        circle: "border-primary text-primary-foreground bg-primary",
+        connector: "bg-primary",
+        label: "text-foreground"
+      };
+    }
+    return {
+      circle: "bg-white border-border text-muted",
+      connector: "bg-border",
+      label: "text-muted"
+    };
+  }, [isCancelled, isCompleted, isActive, index, stepIndex]);
+
+  const hasTrackingDetails = historyEntry && (
+    historyEntry?.trackingNumber ||
+    historyEntry?.trackingLink ||
+    historyEntry?.courierName
+  );
+
+  return (
+    <div className="flex flex-col items-center text-center relative min-h-[120px] justify-start flex-1">
+      <div className={`relative z-10 h-12 w-12 rounded-full border-2 flex items-center justify-center mb-3 ${classes.circle}`}>
+        <Icon className="h-5 w-5" />
+      </div>
+
+      <div className="flex flex-col items-center space-y-1 max-w-[140px]">
+        <span className={`text-xs font-semibold leading-tight ${classes.label}`}>
+          {step.label}
+        </span>
+
+        {historyEntry?.date && (
+          <span className="text-[10px] text-muted-foreground">
+            {new Date(historyEntry.date).toLocaleString('en-IN', {
+              day: '2-digit',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </span>
+        )}
+
+        {historyEntry?.note && (
+          <span className="text-[10px] text-muted-foreground italic leading-tight">
+            {historyEntry.note}
+          </span>
+        )}
+
+        {hasTrackingDetails && (
+          <div className="mt-2 space-y-1 text-[10px] text-muted-foreground">
+            {historyEntry?.trackingNumber && (
+              <div className="font-medium text-foreground">
+                Tracking: {historyEntry.trackingNumber}
+              </div>
+            )}
+            {historyEntry?.courierName && (
+              <div>Courier: {historyEntry.courierName}</div>
+            )}
+            {historyEntry?.trackingLink && (
+              <div>
+                <a
+                  href={historyEntry.trackingLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline"
+                >
+                  Track Order
+                </a>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {!isLast && (
+        <div
+          className={`absolute top-6 left-1/2 h-0.5 z-0 ${classes.connector}`}
+          style={{
+            width: 'calc(100% - 24px)',
+            transform: 'translateX(12px)'
+          }}
+        />
+      )}
+    </div>
+  );
+});
+
+TrackingStep.displayName = 'TrackingStep';
+
+const ProductTableRow = memo(({ product }: { product: NonNullable<OrderRow['productsDetails']>[number]; }) => {
+  const unit = Number(product.pricePerUnit || 0);
+  const off = Number(product.discount || 0);
+  const qty = Number(product.totalUnit || 1);
+  const line = (unit - off) * qty;
+  const thumb = useMemo(() => getImageUrl(product.productId?.images?.[0]), [product.productId?.images]);
+
+  return (
+    <UiTR>
+      <TableCell>
+        <div className="flex items-center gap-3">
+          {thumb && (
+            <img
+              src={thumb}
+              alt={product.productId?.name || 'Product'}
+              className="h-10 w-10 rounded object-cover border flex-shrink-0"
+            />
+          )}
+          <div className="flex flex-col min-w-0">
+            <span className="font-medium truncate">{product.productId?.name || '—'}</span>
+            <span className="text-xs text-muted-foreground truncate">{product.productId?._id || ''}</span>
+          </div>
+        </div>
+      </TableCell>
+      <TableCell>{product.weight ? `${product.weight}${product.weightVariant || ''}` : '—'}</TableCell>
+      <TableCell className="text-right">{formatINR(unit)}</TableCell>
+      <TableCell className="text-right text-red-600">
+        {off ? `- ${formatINR(off)}` : `- ${formatINR(0)}`}
+      </TableCell>
+      <TableCell className="text-right">{qty}</TableCell>
+      <TableCell className="text-right font-medium">{formatINR(line)}</TableCell>
+    </UiTR>
+  );
+});
+
+ProductTableRow.displayName = 'ProductTableRow';
+
+// Main component
 export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
   const order = row.original;
   const [open, setOpen] = useState(false);
   const [isEditingShipping, setIsEditingShipping] = useState(false);
   const [shippingChargeValue, setShippingChargeValue] = useState<number>(0);
+
   const { data: fetchedOrder, isLoading: isLoadingOrder, refetch } = useIdByOrder(open ? order._id : undefined);
   const updateShippingChargeMutation = useUpdateOrderShippingCharge();
 
+  // Fixed: Removed duplicate useEffect
   useEffect(() => {
     if (open) {
       refetch();
     }
   }, [open, refetch]);
 
-  useEffect(() => {
-    if (open) {
-      refetch();
-    }
-  }, [open, refetch]);
-
-  const normalizeOrderFromApi = (o: Order): NormalizedOrder => ({
-    _id: o._id,
-    userId: o.userId as NormalizedOrder['userId'],
-    phoneNumber: o.phoneNumber,
-    status: o.status,
-    createdAt: o.createdAt,
-    cancelDetails: o.cancelDetails,
-    address: o.address,
-    productsDetails: o.productsDetails as NormalizedOrder['productsDetails'],
-    totalAmount: undefined,
-    originalTotal: undefined,
-    shippingCharge: o.shippingCharge,
-    statusHistory: (o as unknown as { statusHistory?: StatusHistoryEntry[]; }).statusHistory,
-  });
-
-  const detail: NormalizedOrder = fetchedOrder ? normalizeOrderFromApi(fetchedOrder) : order;
+  const detail: NormalizedOrder = useMemo(
+    () => fetchedOrder ? normalizeOrderFromApi(fetchedOrder) : order,
+    [fetchedOrder, order]
+  );
 
   useEffect(() => {
     if (detail?.shippingCharge !== undefined) {
@@ -145,11 +427,72 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
     }
   }, [detail?.shippingCharge]);
 
-  const handleShippingChargeEdit = () => {
-    setIsEditingShipping(true);
-  };
+  // Memoized computed values
+  const currentStatus = useMemo(() => String(detail.status ?? order.status), [detail.status, order.status]);
+  const status = useMemo(() => STATUS_VARIANTS[currentStatus as keyof typeof STATUS_VARIANTS] || 'default', [currentStatus]);
 
-  const handleShippingChargeSave = async () => {
+  const displayName = useMemo(() => getUserDisplayName(detail?.userId), [detail?.userId]);
+  const email = useMemo(() => getUserEmail(detail?.userId), [detail?.userId]);
+
+  const filteredSteps = useMemo(() => {
+    const current = currentStatus.toLowerCase();
+    if (current === "delivered") {
+      return ORDER_STEPS.filter((s) => s.key !== "cancelled");
+    }
+    if (current === "cancelled") {
+      return ORDER_STEPS.filter((s) => s.key !== "delivered");
+    }
+    return ORDER_STEPS.filter((s) => s.key !== "cancelled");
+  }, [currentStatus]);
+
+  const trackingInfo = useMemo(() => {
+    return detail.statusHistory?.find(h =>
+      h.trackingNumber || h.trackingLink || h.courierName || h.customMessage
+    );
+  }, [detail.statusHistory]);
+
+  const stepIndex = useMemo(() => {
+    const current = currentStatus.toLowerCase();
+    return filteredSteps.findIndex((s) => s.key === current);
+  }, [currentStatus, filteredSteps]);
+
+  const isCancelled = useMemo(() => currentStatus.toLowerCase() === "cancelled", [currentStatus]);
+
+  // Inside the main component, update orderTotals calculation
+  const orderTotals = useMemo(() => {
+    // Calculate product-level discount from line items
+    const productDiscount = calculateProductDiscount(detail.productsDetails);
+
+    // Get subtotal (original price before any discounts)
+    const subtotal = order.originalTotal ?? order.totalAmount ?? 0;
+
+    // Coupon discount
+    const couponDiscount = order.applyCoupon?.discountAmount ?? 0;
+
+    // Total after product discount
+    const afterProductDiscount = (detail.totalAmount ?? order.totalAmount ?? 0);
+
+    // Total savings
+    const totalSavings = productDiscount + couponDiscount;
+
+    // Final total including shipping
+    const finalTotal = afterProductDiscount + (detail?.shippingCharge ?? 0) - couponDiscount;
+
+    return {
+      subtotal,
+      productDiscount,
+      couponDiscount,
+      totalSavings,
+      afterProductDiscount,
+      finalTotal
+    };
+  }, [order.originalTotal, order.totalAmount, detail.totalAmount, detail.productsDetails, detail.shippingCharge, order.applyCoupon]);
+  // useCallback for event handlers
+  const handleShippingChargeEdit = useCallback(() => {
+    setIsEditingShipping(true);
+  }, []);
+
+  const handleShippingChargeSave = useCallback(async () => {
     try {
       await updateShippingChargeMutation.mutateAsync({
         id: detail._id,
@@ -161,193 +504,12 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
     } catch (_error) {
       toast.error('Failed to update shipping charge');
     }
-  };
+  }, [detail._id, shippingChargeValue, updateShippingChargeMutation, refetch]);
 
-  const handleShippingChargeCancel = () => {
+  const handleShippingChargeCancel = useCallback(() => {
     setShippingChargeValue(detail?.shippingCharge ?? 0);
     setIsEditingShipping(false);
-  };
-
-  const formatINR = (amount: number) =>
-    new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(amount);
-
-  const currentStatus = String(detail.status ?? order.status);
-  const status = STATUS_VARIANTS[currentStatus as keyof typeof STATUS_VARIANTS] || 'default';
-  const getUserDisplayName = () => {
-    if (typeof detail?.userId === 'object' && detail?.userId !== null) {
-      return detail?.userId.user_details?.name ||
-        detail?.userId.email ||
-        detail?.userId._id ||
-        detail?.userId.id ||
-        '—';
-    }
-    return String(detail?.userId);
-  };
-
-  const getUserEmail = () => {
-    return (typeof detail?.userId === 'object' && detail?.userId?.email)
-      ? detail?.userId.email
-      : '—';
-  };
-
-  const getFilteredSteps = () => {
-    const current = currentStatus.toLowerCase();
-    if (current === "delivered") {
-      return ORDER_STEPS.filter((s) => s.key !== "cancelled");
-    }
-    if (current === "cancelled") {
-      return ORDER_STEPS.filter((s) => s.key !== "delivered");
-    }
-    return ORDER_STEPS.filter((s) => s.key !== "cancelled");
-  };
-
-  const TrackingStep = ({
-    step,
-    index,
-    isLast,
-    stepIndex,
-    isCancelled,
-    historyEntry,
-  }: {
-    step: typeof ORDER_STEPS[0];
-    index: number;
-    isLast: boolean;
-    currentStatus: string;
-    stepIndex: number;
-    isCancelled: boolean;
-    historyEntry?: StatusHistoryEntry;
-    totalSteps: number;
-  }) => {
-    const isCompleted = !isCancelled && index < stepIndex;
-    const isActive = !isCancelled && index === stepIndex;
-    const Icon = step.icon;
-
-    const getStepClasses = () => {
-      if (isCancelled && index === stepIndex) {
-        return {
-          circle: "bg-destructive border-destructive text-destructive-foreground",
-          connector: "bg-destructive",
-          label: "text-destructive"
-        };
-      }
-      if (isCompleted) {
-        return {
-          circle: "bg-muted border-muted text-primary",
-          connector: "bg-foreground",
-          label: "text-foreground"
-        };
-      }
-      if (isActive) {
-        return {
-          circle: "border-primary text-primary-foreground bg-primary",
-          connector: "bg-primary",
-          label: "text-foreground"
-        };
-      }
-      return {
-        circle: "bg-white border-border text-muted",
-        connector: "bg-border",
-        label: "text-muted"
-      };
-    };
-
-    const classes = getStepClasses();
-
-    // Check if this step has tracking details (for any status)
-    const hasTrackingDetails = historyEntry && (
-      historyEntry?.trackingNumber ||
-      historyEntry?.trackingLink ||
-      historyEntry?.courierName
-    );
-
-    return (
-      <div className="flex flex-col items-center text-center relative min-h-[120px] justify-start flex-1">
-        {/* Step circle with icon */}
-        <div className={`
-          relative z-10 h-12 w-12 rounded-full border-2
-          flex items-center justify-center mb-3
-          ${classes.circle}
-        `}>
-          <Icon className={`h-5 w-5 ${isActive && step.key === "inprogress" ? "" : ""}`} />
-        </div>
-
-        {/* Step content */}
-        <div className="flex flex-col items-center space-y-1 max-w-[140px]">
-          <span className={`text-xs font-semibold leading-tight ${classes.label}`}>
-            {step.label}
-          </span>
-
-          {historyEntry?.date && (
-            <span className="text-[10px] text-muted-foreground">
-              {new Date(historyEntry.date).toLocaleString('en-IN', {
-                day: '2-digit',
-                month: 'short',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}
-            </span>
-          )}
-
-          {historyEntry?.note && (
-            <span className="text-[10px] text-muted-foreground italic leading-tight">
-              {historyEntry.note}
-            </span>
-          )}
-
-          {/* Tracking Details - Show for any status with tracking info */}
-          {hasTrackingDetails && (
-            <div className="mt-2 space-y-1 text-[10px] text-muted-foreground">
-              {historyEntry?.trackingNumber && (
-                <div className="font-medium text-foreground">
-                  Tracking: {historyEntry.trackingNumber}
-                </div>
-              )}
-              {historyEntry?.courierName && (
-                <div>
-                  Courier: {historyEntry.courierName}
-                </div>
-              )}
-              {historyEntry?.trackingLink && (
-                <div>
-                  <a
-                    href={historyEntry.trackingLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 underline"
-                  >
-                    Track Order
-                  </a>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Connector line to next step */}
-        {!isLast && (
-          <div className={`
-            absolute top-6 left-1/2 h-0.5 z-0
-            ${classes.connector}
-          `}
-            style={{
-              width: 'calc(100% - 24px)',
-              transform: 'translateX(12px)'
-            }} />
-        )}
-      </div>
-    );
-  };
-
-  const allSteps = getFilteredSteps();
-  const current = currentStatus.toLowerCase();
-  const stepIndex = allSteps.findIndex((s) => s.key === current);
-  const isCancelled = current === "cancelled";
-  // const currentStep = ORDER_STEPS.find((s) => s.key === current);
-  // const CurrentStatusIcon = currentStep?.icon;
+  }, [detail?.shippingCharge]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -364,7 +526,9 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <span>Order Details</span>
-                <Badge variant={order.paymentStatus === 'paid' ? 'enable' : 'destructive'} className='shadow-xl/15'>{order.paymentStatus}</Badge>
+                <Badge variant={order.paymentStatus === 'paid' ? 'enable' : 'destructive'} className='shadow-xl/15'>
+                  {order.paymentStatus}
+                </Badge>
               </DialogTitle>
             </DialogHeader>
 
@@ -380,11 +544,11 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">User</span>
-                      <span className="font-medium truncate max-w-[280px]">{getUserDisplayName()}</span>
+                      <span className="font-medium truncate max-w-[280px]">{displayName}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Email</span>
-                      <span className="font-medium">{getUserEmail()}</span>
+                      <span className="font-medium">{email}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Phone</span>
@@ -399,49 +563,16 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Shipping Charge</span>
                       <div className="flex items-center gap-2">
-                        {isEditingShipping ? (
-                          <>
-                            <Input
-                              type="number"
-                              value={shippingChargeValue}
-                              onChange={(e) => setShippingChargeValue(Number(e.target.value))}
-                              className="w-20 h-8 text-sm"
-                              min="0"
-                              step="0.01"
-                            />
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={handleShippingChargeSave}
-                              disabled={updateShippingChargeMutation.isPending}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Save className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={handleShippingChargeCancel}
-                              className="h-8 w-8 p-0"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <span className="font-medium">{formatINR(detail?.shippingCharge ?? 0)}</span>
-                            {currentStatus !== 'delivered' && currentStatus !== 'cancelled' && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={handleShippingChargeEdit}
-                                className="h-8 w-8 p-0"
-                              >
-                                <Edit2 className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </>
-                        )}
+                        <ShippingChargeEditor
+                          isEditing={isEditingShipping}
+                          value={shippingChargeValue}
+                          onValueChange={setShippingChargeValue}
+                          onSave={handleShippingChargeSave}
+                          onCancel={handleShippingChargeCancel}
+                          onEdit={handleShippingChargeEdit}
+                          isLoading={updateShippingChargeMutation.isPending}
+                          currentStatus={currentStatus}
+                        />
                       </div>
                     </div>
                     {detail?.cancelDetails?.reason && (
@@ -454,62 +585,54 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
                 </div>
 
                 {/* Tracking Details Section */}
-                {(() => {
-                  const trackingEntry = detail.statusHistory?.find(h =>
-                    h.trackingNumber || h.trackingLink || h.courierName || h.customMessage
-                  );
-
-                  if (!trackingEntry) return null;
-
-                  return (
-                    <div className="space-y-3">
-                      <h3 className="font-semibold text-base">Tracking Information</h3>
-                      <div className="rounded-lg border p-4 bg-blue-50 dark:bg-blue-950/20">
-                        <div className="space-y-2">
-                          {trackingEntry.trackingNumber && (
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Tracking Number</span>
-                              <span className="font-medium">{trackingEntry.trackingNumber}</span>
-                            </div>
-                          )}
-                          {trackingEntry.courierName && (
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Courier</span>
-                              <span className="font-medium">{trackingEntry.courierName}</span>
-                            </div>
-                          )}
-                          {trackingEntry.trackingLink && (
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Tracking Link</span>
-                              <a
-                                href={trackingEntry.trackingLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:text-blue-800 underline font-medium"
-                              >
-                                Track Order
-                              </a>
-                            </div>
-                          )}
-                          {trackingEntry.customMessage && (
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Custom Message</span>
-                              <span className="font-medium">{trackingEntry.customMessage}</span>
-                            </div>
-                          )}
-                          {trackingEntry.date && (
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Updated</span>
-                              <span className="text-sm text-muted-foreground">
-                                {new Date(trackingEntry.date).toLocaleString('en-IN')}
-                              </span>
-                            </div>
-                          )}
-                        </div>
+                {trackingInfo && (
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-base">Tracking Information</h3>
+                    <div className="rounded-lg border p-4 bg-blue-50 dark:bg-blue-950/20">
+                      <div className="space-y-2">
+                        {trackingInfo.trackingNumber && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Tracking Number</span>
+                            <span className="font-medium">{trackingInfo.trackingNumber}</span>
+                          </div>
+                        )}
+                        {trackingInfo.courierName && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Courier</span>
+                            <span className="font-medium">{trackingInfo.courierName}</span>
+                          </div>
+                        )}
+                        {trackingInfo.trackingLink && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Tracking Link</span>
+                            <a
+                              href={trackingInfo.trackingLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 underline font-medium"
+                            >
+                              Track Order
+                            </a>
+                          </div>
+                        )}
+                        {trackingInfo.customMessage && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Custom Message</span>
+                            <span className="font-medium">{trackingInfo.customMessage}</span>
+                          </div>
+                        )}
+                        {trackingInfo.date && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Updated</span>
+                            <span className="text-sm text-muted-foreground">
+                              {new Date(trackingInfo.date).toLocaleString('en-IN')}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  );
-                })()}
+                  </div>
+                )}
 
                 {/* Shipping Address */}
                 <div className="space-y-3">
@@ -531,7 +654,6 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
                     )}
                   </div>
                 </div>
-
               </div>
 
               <Separator />
@@ -555,183 +677,65 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
                         </UiTR>
                       </TableHeader>
                       <TableBody>
-                        {(detail.productsDetails || []).map((p) => {
-                          const unit = Number(p.pricePerUnit || 0);
-                          const off = Number(p.discount || 0);
-                          const qty = Number(p.totalUnit || 1);
-                          const line = (unit - off) * qty;
-                          const base = import.meta.env.VITE_IMAGE_BASE_URL ?? '';
-                          const raw = (p.productId?.images?.[0] ?? '') as unknown;
-                          const path = typeof raw === 'string' ? raw : (raw && typeof (raw as { url?: unknown; }).url === 'string' ? (raw as { url: string; }).url : '');
-                          const thumb = path ? `${base}${path}` : '';
-
-                          return (
-                            <UiTR key={String(p._id || p.productId?._id || Math.random())}>
-                              <TableCell>
-                                <div className="flex items-center gap-3">
-                                  {thumb && (
-                                    <img
-                                      src={thumb}
-                                      alt={p.productId?.name || 'Product'}
-                                      className="h-10 w-10 rounded object-cover border flex-shrink-0"
-                                    />
-                                  )}
-                                  <div className="flex flex-col min-w-0">
-                                    <span className="font-medium truncate">{p.productId?.name || '—'}</span>
-                                    <span className="text-xs text-muted-foreground truncate">{p.productId?._id || ''}</span>
-                                  </div>
-                                </div>
-                              </TableCell>
-                              <TableCell>{p.weight ? `${p.weight}${p.weightVariant || ''}` : '—'}</TableCell>
-                              <TableCell className="text-right">{formatINR(unit)}</TableCell>
-                              <TableCell className="text-right text-red-600">
-                                {off ? `- ${formatINR(off)}` : `- ${formatINR(0)}`}
-                              </TableCell>
-                              <TableCell className="text-right">{qty}</TableCell>
-                              <TableCell className="text-right font-medium">{formatINR(line)}</TableCell>
-                            </UiTR>
-                          );
-                        })}
+                        {(detail.productsDetails || []).map((p) => (
+                          <ProductTableRow
+                            key={String(p._id || p.productId?._id || Math.random())}
+                            product={p}
+                          />
+                        ))}
                       </TableBody>
                     </Table>
                   </div>
                 </div>
 
-                {/* Tablet View (Medium screens) */}
-                <div className="hidden md:block lg:hidden rounded-lg border overflow-hidden">
-                  <div className="max-h-60 overflow-auto">
-                    <Table>
-                      <TableHeader>
-                        <UiTR>
-                          <TableHead>Product</TableHead>
-                          <TableHead className="w-[80px] text-center">Qty</TableHead>
-                          <TableHead className="w-[100px] text-right">Unit</TableHead>
-                          <TableHead className="w-[100px] text-right">Total</TableHead>
-                        </UiTR>
-                      </TableHeader>
-                      <TableBody>
-                        {(detail.productsDetails || []).map((p) => {
-                          const unit = Number(p.pricePerUnit || 0);
-                          const off = Number(p.discount || 0);
-                          const qty = Number(p.totalUnit || 1);
-                          const line = (unit - off) * qty;
-                          const base = import.meta.env.VITE_IMAGE_BASE_URL ?? '';
-                          const raw = (p.productId?.images?.[0] ?? '') as unknown;
-                          const path = typeof raw === 'string' ? raw : (raw && typeof (raw as { url?: unknown; }).url === 'string' ? (raw as { url: string; }).url : '');
-                          const thumb = path ? `${base}${path}` : '';
+                {/* Tablet and Mobile views remain similar but should also be extracted to separate components */}
 
-                          return (
-                            <UiTR key={String(p._id || p.productId?._id || Math.random())}>
-                              <TableCell>
-                                <div className="flex items-start gap-3">
-                                  {thumb && (
-                                    <img
-                                      src={thumb}
-                                      alt={p.productId?.name || 'Product'}
-                                      className="h-12 w-12 rounded object-cover border flex-shrink-0"
-                                    />
-                                  )}
-                                  <div className="flex flex-col min-w-0">
-                                    <span className="font-medium text-sm leading-tight">{p.productId?.name || '—'}</span>
-                                    <span className="text-xs text-muted-foreground">{p.weight ? `${p.weight}${p.weightVariant || ''}` : ''}</span>
-                                    {off > 0 && (
-                                      <span className="text-xs text-red-600">-{formatINR(off)} discount</span>
-                                    )}
-                                  </div>
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-center font-medium">{qty}</TableCell>
-                              <TableCell className="text-right text-sm">{formatINR(unit)}</TableCell>
-                              <TableCell className="text-right font-medium">{formatINR(line)}</TableCell>
-                            </UiTR>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
-
-                {/* Mobile Card View */}
-                <div className="block md:hidden space-y-3">
-                  <div className="max-h-60 overflow-auto">
-                    {(detail.productsDetails || []).map((p) => {
-                      const unit = Number(p.pricePerUnit || 0);
-                      const off = Number(p.discount || 0);
-                      const qty = Number(p.totalUnit || 1);
-                      const line = (unit - off) * qty;
-                      const base = import.meta.env.VITE_IMAGE_BASE_URL ?? '';
-                      const raw = (p.productId?.images?.[0] ?? '') as unknown;
-                      const path = typeof raw === 'string' ? raw : (raw && typeof (raw as { url?: unknown; }).url === 'string' ? (raw as { url: string; }).url : '');
-                      const thumb = path ? `${base}${path}` : '';
-
-                      return (
-                        <div key={String(p._id || p.productId?._id || Math.random())} className="border rounded-lg p-3 bg-background">
-                          <div className="flex gap-3">
-                            {thumb && (
-                              <img
-                                src={thumb}
-                                alt={p.productId?.name || 'Product'}
-                                className="h-14 w-14 rounded object-cover border flex-shrink-0"
-                              />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-sm leading-tight mb-1">{p.productId?.name || '—'}</h4>
-                              <p className="text-xs text-muted-foreground mb-2">{p.productId?._id || ''}</p>
-
-                              <div className="grid grid-cols-2 gap-2 text-xs">
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Weight:</span>
-                                  <span>{p.weight ? `${p.weight}${p.weightVariant || ''}` : '—'}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Qty:</span>
-                                  <span className="font-medium">{qty}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Unit Price:</span>
-                                  <span>{formatINR(unit)}</span>
-                                </div>
-                                {off > 0 && (
-                                  <div className="flex justify-between text-red-600">
-                                    <span>Discount:</span>
-                                    <span>-{formatINR(off)}</span>
-                                  </div>
-                                )}
-                              </div>
-
-                              <div className="flex justify-between items-center mt-2 pt-2 border-t">
-                                <span className="text-sm font-medium">Total:</span>
-                                <span className="text-sm font-bold">{formatINR(line)}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Order Summary - Responsive */}
+                {/* Order Summary */}
                 <div className="flex justify-end mt-4">
                   <div className="border rounded-lg p-4 w-full sm:max-w-sm bg-muted/20">
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm sm:text-base">
                         <span>Subtotal:</span>
-                        <span>{formatINR(order.originalTotal ?? order.totalAmount ?? 0)}</span>
+                        <span>{formatINR(orderTotals.subtotal)}</span>
                       </div>
-                      <div className="flex justify-between text-red-600 text-sm sm:text-base">
-                        <span>Discount:</span>
-                        <span>- {formatINR((order.originalTotal ?? 0) - (detail.totalAmount ?? 0))}</span>
-                      </div>
+
+                      {/* Product-level Discount - Fixed */}
+                      {orderTotals.productDiscount > 0 && (
+                        <div className="flex justify-between text-orange-600 text-sm sm:text-base">
+                          <span>Product Discount:</span>
+                          <span>- {formatINR(orderTotals.productDiscount)}</span>
+                        </div>
+                      )}
+
+                      {/* Coupon Discount */}
+                      {orderTotals.couponDiscount > 0 && (
+                        <div className="flex justify-between text-green-600 text-sm sm:text-base">
+                          <span>Coupon Discount</span>
+                          <span>- {formatINR(orderTotals.couponDiscount)}</span>
+                        </div>
+                      )}
+
                       <div className="flex justify-between text-sm sm:text-base">
                         <span>Shipping:</span>
                         <span>{formatINR(detail?.shippingCharge ?? 0)}</span>
                       </div>
+
                       <Separator />
+
                       <div className="flex justify-between text-base sm:text-lg font-bold">
                         <span>Total:</span>
-                        <span>{formatINR((order.totalAmount ?? 0) + (detail?.shippingCharge ?? 0))}</span>
+                        <span>{formatINR(orderTotals.finalTotal)}</span>
                       </div>
+
+                      {/* Total Savings Summary */}
+                      {orderTotals.totalSavings > 0 && (
+                        <div className="pt-2 border-t border-dashed">
+                          <div className="flex justify-between text-sm text-green-600 font-semibold">
+                            <span>Total Savings:</span>
+                            <span>{formatINR(orderTotals.totalSavings)}</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -739,15 +743,15 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
 
               <Separator />
 
-              {/* Optimized Tracking Section */}
+              {/* Order Tracking */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-base">Order Tracking</h3>
-                  <Badge variant={status} className='shadow-xl/15' >{currentStatus}</Badge>
+                  <Badge variant={status} className='shadow-xl/15'>{currentStatus}</Badge>
                 </div>
                 <div className="flex flex-col justify-center items-center bg-muted/20 dark:bg-accent/15 rounded-lg p-6">
                   <div className="flex items-start justify-between relative w-full">
-                    {allSteps.map((step, index) => {
+                    {filteredSteps.map((step, index) => {
                       const historyEntry = detail.statusHistory?.find(
                         (h) => h.status.toLowerCase() === step.key.toLowerCase()
                       );
@@ -757,26 +761,14 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
                           key={step.key}
                           step={step}
                           index={index}
-                          isLast={index === allSteps.length - 1}
-                          currentStatus={current}
+                          isLast={index === filteredSteps.length - 1}
                           stepIndex={stepIndex}
                           isCancelled={isCancelled}
                           historyEntry={historyEntry}
-                          totalSteps={allSteps.length}
                         />
                       );
                     })}
                   </div>
-                  {/* <div className="mt-8 text-center">
-                    <Badge variant={currentStatus !== 'cancelled' ? 'trackDelivered' : 'trackCancelled'} className='shadow-xl/25' >
-                      <span className="flex items-center justify-center gap-1">
-                        {CurrentStatusIcon ? (
-                          <CurrentStatusIcon className="h-5 w-h-5 animate-bounce" />
-                        ) : null}
-                        {currentStep?.text || ''}
-                      </span>
-                    </Badge>
-                  </div> */}
                 </div>
               </div>
             </div>

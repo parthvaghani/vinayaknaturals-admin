@@ -54,6 +54,9 @@ export interface Order {
     date: string; // ISO timestamp
   }[];
   productsDetails: OrderProductDetail[];
+  applyCoupon: { couponId: string; discountAmount: number; discountPercentage: string; };
+  totalAmount: number;
+  originalTotal: number;
 }
 
 export interface GetOrdersParams {
