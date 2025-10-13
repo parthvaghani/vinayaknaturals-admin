@@ -97,7 +97,7 @@ export const sidebarData: SidebarData = {
         },
         {
           title: 'Coupons',
-          url: '/coupon',
+          url: '/coupons',
           icon: TicketPercent,
         },
         // {
