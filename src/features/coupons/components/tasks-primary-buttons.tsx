@@ -28,6 +28,8 @@ export function CouponsPrimaryButtons() {
     type: 'generic', // unique/generic
     userType: '',
     maxUsage: 1,
+    maxUsagePerUser: 1,           // Add this
+    firstOrderOnly: false,         // Add this
     isActive: true,
   });
 
@@ -48,6 +50,7 @@ export function CouponsPrimaryButtons() {
       type,
       userType,
       maxUsage,
+      maxUsagePerUser,              // Add this
     } = couponData;
 
     if (!couponCode.trim()) e.couponCode = 'Coupon code is required';
@@ -59,10 +62,12 @@ export function CouponsPrimaryButtons() {
     if (minCartValue < 0) e.minCartValue = 'Minimum cart value cannot be negative';
     if (maxDiscountValue <= 0) e.maxDiscountValue = 'Enter a valid discount percentage';
     if (!maxUsage || maxUsage <= 0) e.maxUsage = 'Max usage must be greater than 0';
+    if (!maxUsagePerUser || maxUsagePerUser <= 0) e.maxUsagePerUser = 'Max usage per user must be greater than 0';  // Add this
     if (type === 'unique' && !userType.trim()) e.userType = 'User Type is required for unique coupons';
 
     return e;
   };
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -105,6 +110,8 @@ export function CouponsPrimaryButtons() {
             type: 'generic',
             userType: '',
             maxUsage: 1,
+            maxUsagePerUser: 1,           // Add this
+            firstOrderOnly: false,         // Add this
             isActive: true,
           });
           setOpenSheet(false);
@@ -232,7 +239,6 @@ export function CouponsPrimaryButtons() {
               </div>
             </div>
 
-
             <div className="space-y-2 flex gap-2">
               {/* Max Discount Value (Percentage) */}
               <div className="space-y-2">
@@ -305,6 +311,37 @@ export function CouponsPrimaryButtons() {
                 error={errors.userType}
               />
             )}
+
+            {/* Add this new section */}
+            <div className="space-y-2">
+              <Label htmlFor="maxUsagePerUser">Max Usage Per User</Label>
+              <Input
+                type="number"
+                id="maxUsagePerUser"
+                name="maxUsagePerUser"
+                value={couponData.maxUsagePerUser}
+                onChange={handleChange}
+                required
+                aria-invalid={!!errors.maxUsagePerUser}
+              />
+              {errors.maxUsagePerUser && <p className="text-xs text-red-500">{errors.maxUsagePerUser}</p>}
+            </div>
+
+            {/* Add this switch after the Type/Level section and before Active Status */}
+            <div className="flex items-center justify-between border rounded-lg px-3 py-2">
+              <div>
+                <Label className="text-sm font-medium">First Order Only</Label>
+                <p className="text-xs text-muted-foreground">
+                  Coupon is only valid for first-time orders.
+                </p>
+              </div>
+              <Switch
+                checked={couponData.firstOrderOnly}
+                onCheckedChange={(val) =>
+                  setCouponData({ ...couponData, firstOrderOnly: val })
+                }
+              />
+            </div>
 
             {/* Active Switch */}
             <div className="flex items-center justify-between border rounded-lg px-3 py-2">

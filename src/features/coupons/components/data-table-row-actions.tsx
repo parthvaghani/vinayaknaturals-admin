@@ -18,6 +18,7 @@ import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from '@
 import { UserDropdown } from './user-dropDown';
 import { useUsersList } from '@/hooks/use-users';
 
+
 // Types
 interface ValidationErrors {
   couponCode?: string;
@@ -28,17 +29,21 @@ interface ValidationErrors {
   expiryDate?: string;
 }
 
+
 interface DataTableRowActionsProps {
   row: { original: Coupon; };
 }
+
 
 // Constants
 const MAX_DESCRIPTION_LENGTH = 200;
 const USERS_FETCH_LIMIT = 10000000000;
 
+
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const queryClient = useQueryClient();
   const coupon = row.original;
+
 
   // State management
   const [editOpen, setEditOpen] = useState(false);
@@ -46,7 +51,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [formData, setFormData] = useState<Coupon>(coupon);
   const [errors, setErrors] = useState<ValidationErrors>({});
-  const [dateErrors, setDateErrors] = useState<{[key: string]: boolean}>({});
+  const [dateErrors, setDateErrors] = useState<{ [key: string]: boolean; }>({});
 
   // Mutations
   const { mutate: updateCoupon, isPending: isUpdating } = useUpdateCoupon();
@@ -115,6 +120,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
     const typeValue = (data.type || '').trim();
     const userTypeValue = data.userType?._id?.trim() || '';
 
+
     if (!codeValue) nextErrors.couponCode = 'Coupon code is required';
     if (!descValue) nextErrors.description = 'Description is required';
     else if (descValue.length > MAX_DESCRIPTION_LENGTH) {
@@ -136,6 +142,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
     return Object.keys(nextErrors).length === 0;
   }, []);
 
+
   // Handlers
   const handleEditSubmit = useCallback(() => {
     const trimmed: Coupon = {
@@ -144,7 +151,9 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
       description: (formData.description || '').trim(),
     };
 
+
     if (!validateForm(trimmed)) return;
+
 
     const payload: Partial<CreateCoupon> & { id: string; } = {
       id: trimmed._id,
@@ -156,10 +165,13 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
       minCartValue: trimmed.minCartValue,
       maxDiscountValue: trimmed.maxDiscountValue,
       maxUsage: trimmed.maxUsage,
+      maxUsagePerUser: trimmed.maxUsagePerUser,
+      firstOrderOnly: trimmed.firstOrderOnly,
       type: trimmed.type,
       level: trimmed.level,
       isActive: trimmed.isActive,
     };
+
 
     if (trimmed.couponCode !== coupon.couponCode) {
       payload.couponCode = trimmed.couponCode;
@@ -167,6 +179,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
     if (trimmed.type === 'unique') {
       payload.userType = trimmed.userType?._id;
     }
+
 
     updateCoupon(payload as unknown as Partial<Coupon> & { id: string; }, {
       onSuccess: () => {
@@ -177,6 +190,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
       onError: () => toast.error('Failed to update coupon'),
     });
   }, [formData, validateForm, coupon.couponCode, updateCoupon, queryClient]);
+
 
   const handleDelete = useCallback(() => {
     deleteCoupon(coupon._id, {
@@ -189,12 +203,18 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
     });
   }, [coupon._id, deleteCoupon, queryClient]);
 
+
   const handleEditOpen = useCallback(() => {
-    setFormData(coupon);
+    setFormData({
+      ...coupon,
+      maxUsagePerUser: coupon.maxUsagePerUser || 1,
+      firstOrderOnly: coupon.firstOrderOnly || false,
+    });
     setErrors({});
     setDateErrors({});
     setEditOpen(true);
   }, [coupon]);
+
 
   const handleUserChange = useCallback((val: string) => {
     const selectedUser = userMap.get(val);
@@ -212,6 +232,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
         : { _id: '', email: '', id: '', user_details: { name: '' } },
     }));
   }, [userMap]);
+
 
   // Update handlers for form fields
   const updateField = useCallback(<K extends keyof Coupon>(field: K, value: Coupon[K]) => {
@@ -253,6 +274,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
     </div>
   );
 
+
   return (
     <div className='flex items-center justify-center gap-2'>
       {/* Action Buttons */}
@@ -260,13 +282,16 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
         <SquarePen className='h-4 w-4 text-blue-600' />
       </Button>
 
+
       <Button variant='ghost' size='icon' onClick={() => setDeleteConfirm(true)} className='h-8 w-8'>
         <Trash className='h-4 w-4 text-red-600' />
       </Button>
 
+
       <Button variant='ghost' size='icon' onClick={() => setDetailsOpen(true)} className='h-8 w-8'>
         <Eye className='h-4 w-4 text-gray-700' />
       </Button>
+
 
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -274,6 +299,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
           <DialogHeader>
             <DialogTitle>Edit Coupon</DialogTitle>
           </DialogHeader>
+
 
           <div className='space-y-4 max-h-[500px] overflow-y-auto pr-2'>
             <div className='space-y-2'>
@@ -289,6 +315,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
               )}
             </div>
 
+
             <div className='space-y-2'>
               <Label>Description</Label>
               <Input
@@ -303,6 +330,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
               )}
             </div>
 
+
             <div className='space-y-2'>
               <Label>Terms & Conditions</Label>
               <Input
@@ -311,6 +339,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
                 placeholder='e.g. Applicable on first order only'
               />
             </div>
+
 
             <div className='grid grid-cols-2 gap-4'>
               {renderDateInput('Start Date', formData.startDate, 'startDate')}
@@ -328,6 +357,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
                 />
               </div>
 
+
               <div className='space-y-2'>
                 <Label>Minimum Cart Value</Label>
                 <Input
@@ -338,6 +368,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
                 />
               </div>
             </div>
+
 
             <div className='grid grid-cols-2 gap-4'>
               <div className='space-y-2'>
@@ -351,6 +382,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
                 />
               </div>
 
+
               <div className='space-y-2'>
                 <Label>Max Usage</Label>
                 <Input
@@ -361,6 +393,18 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
                 />
               </div>
             </div>
+
+
+            <div className='space-y-2'>
+              <Label>Max Usage Per User</Label>
+              <Input
+                type='number'
+                value={formData.maxUsagePerUser || 1}
+                onChange={(e) => updateField('maxUsagePerUser', Number(e.target.value))}
+                min={1}
+              />
+            </div>
+
 
             <div className='grid grid-cols-2 gap-4'>
               <div className='space-y-2'>
@@ -379,6 +423,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
                 </Select>
               </div>
 
+
               <div className='space-y-2'>
                 <Label>Level</Label>
                 <Select
@@ -396,6 +441,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
               </div>
             </div>
 
+
             {formData.type === 'unique' && (
               <UserDropdown
                 value={formData.userType?._id || ''}
@@ -403,6 +449,24 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
                 error={errors.userType}
               />
             )}
+
+
+            <div className='flex items-center justify-between border rounded-lg px-3 py-2'>
+              <div>
+                <Label htmlFor='firstOrderOnly' className='text-sm font-medium'>
+                  First Order Only
+                </Label>
+                <p className='text-xs text-muted-foreground'>
+                  Coupon is only valid for first-time orders.
+                </p>
+              </div>
+              <Switch
+                id='firstOrderOnly'
+                checked={formData.firstOrderOnly || false}
+                onCheckedChange={(val) => updateField('firstOrderOnly', val)}
+              />
+            </div>
+
 
             <div className='flex items-center justify-between border rounded-lg px-3 py-2'>
               <div>
@@ -421,6 +485,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
             </div>
           </div>
 
+
           <DialogFooter>
             <Button variant='outline' onClick={() => setEditOpen(false)}>
               Cancel
@@ -431,6 +496,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
 
       {/* Delete Dialog */}
       <Dialog open={deleteConfirm} onOpenChange={setDeleteConfirm}>
@@ -452,6 +518,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
         </DialogContent>
       </Dialog>
 
+
       {/* Details Dialog */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogContent className="max-w-lg rounded-2xl shadow-lg border p-6">
@@ -461,16 +528,19 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
             </DialogTitle>
           </DialogHeader>
 
+
           <div className="space-y-6">
             <div>
               <p className="text-sm font-semibold text-gray-600">Description</p>
               <p className="text-gray-700 mt-1">{coupon.description || '—'}</p>
             </div>
 
+
             <div>
               <p className="text-sm font-semibold text-gray-600">Terms & Conditions</p>
               <p className="text-gray-700 mt-1">{coupon.termsAndConditions || '—'}</p>
             </div>
+
 
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -505,23 +575,40 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
                 <p className="text-gray-800 font-medium mt-1">{coupon.maxUsage}</p>
               </div>
               <div>
+                <p className="text-xs uppercase text-gray-400">Max Usage Per User</p>
+                <p className="text-gray-800 font-medium mt-1">{coupon.maxUsagePerUser || 1}</p>
+              </div>
+              <div>
                 <p className="text-xs uppercase text-gray-400">Usage Count</p>
                 <p className="text-gray-800 font-medium mt-1">{coupon.usageCount}</p>
               </div>
+              <div>
+                <p className="text-xs uppercase text-gray-400">First Order Only</p>
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${coupon.firstOrderOnly
+                    ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                    : 'bg-gray-100 text-gray-700 border border-gray-300'
+                    }`}
+                >
+                  {coupon.firstOrderOnly ? 'Yes' : 'No'}
+                </span>
+              </div>
             </div>
+
 
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
               <div>
                 <p className="text-xs uppercase text-gray-400 mb-1">Status</p>
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${coupon.isActive
-                      ? 'bg-green-100 text-green-700 border border-green-300'
-                      : 'bg-red-100 text-red-700 border border-red-300'
+                    ? 'bg-green-100 text-green-700 border border-green-300'
+                    : 'bg-red-100 text-red-700 border border-red-300'
                     }`}
                 >
                   {coupon.isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
+
 
               <div className="grid grid-cols-2 gap-4 flex-1">
                 <div>
@@ -534,6 +621,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
                 </div>
               </div>
             </div>
+
 
             <div className="grid grid-cols-2 gap-4">
               <div>

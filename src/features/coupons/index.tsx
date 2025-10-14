@@ -40,6 +40,8 @@ export default function Coupons() {
       userType: coupon.userType,
       maxUsage: coupon.maxUsage,
       usageCount: coupon.usageCount,
+      maxUsagePerUser: coupon.maxUsagePerUser,
+      firstOrderOnly: coupon.firstOrderOnly,
       isActive: coupon.isActive ?? false,
       startDate: coupon.startDate || '-',
       createdAt: coupon.createdAt

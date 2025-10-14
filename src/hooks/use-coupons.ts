@@ -22,6 +22,8 @@ export interface Coupon {
     };
     maxUsage?: number;
     usageCount?: number;
+    maxUsagePerUser?: number;
+    firstOrderOnly?: boolean;
     isActive?: boolean;
     createdAt?: string;
     updatedAt?: string;
@@ -42,6 +44,8 @@ export interface CreateCoupon {
     userType?: string;
     maxUsage?: number;
     usageCount?: number;
+    maxUsagePerUser?: number;
+    firstOrderOnly?: boolean;
     isActive?: boolean;
     createdAt?: string;
     updatedAt?: string;
