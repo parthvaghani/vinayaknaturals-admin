@@ -26,7 +26,7 @@ import {
 // import { Command } from 'lucide-react'
 // import { ClerkLogo } from '@/assets/clerk-logo'
 import { type SidebarData } from '../types';
-import { TicketPercent } from 'lucide-react';
+import { Handshake, ShoppingBag, TicketPercent } from 'lucide-react';
 
 export const sidebarData: SidebarData = {
   user: {
@@ -96,9 +96,19 @@ export const sidebarData: SidebarData = {
           icon: IconShoppingCart,
         },
         {
+          title: 'Bulk Orders',
+          url: '/bulk-orders',
+          icon: ShoppingBag,
+        },
+        {
           title: 'Coupons',
           url: '/coupons',
           icon: TicketPercent,
+        },
+        {
+          title: 'Partners Requests',
+          url: '/partners-requests',
+          icon: Handshake,
         },
         // {
         //   title: 'Secured by Clerk',
