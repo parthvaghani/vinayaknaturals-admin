@@ -275,6 +275,9 @@ export function ProductsPrimaryButtons() {
     form.append('isPremium', String(productData.isPremium));
     form.append('isPopular', String(productData.isPopular));
 
+    const generatedSlug = productData.name.toLowerCase().replace(/ /g, '-');
+    form.append('product_slug', generatedSlug);
+
     // Ingredients and benefits as repeated fields
     productData.ingredients.forEach((ing) => form.append('ingredients', ing));
     productData.benefits.forEach((ben) => form.append('benefits', ben));

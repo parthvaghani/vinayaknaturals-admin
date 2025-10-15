@@ -107,6 +107,7 @@ export default function Products() {
                   images: Array.isArray(product.images) ? product.images : [],
                   ingredients: Array.isArray(product.ingredients) ? product.ingredients : [],
                   benefits: Array.isArray(product.benefits) ? product.benefits : [],
+                  product_slug: product.product_slug || '',
                 }));
               })() as {
                 _id: string;
@@ -120,6 +121,7 @@ export default function Products() {
                 images?: string[];
                 ingredients?: string[];
                 benefits?: string[];
+                product_slug?: string;
               }[]
               }
               columns={columns as import('@tanstack/react-table').ColumnDef<{
@@ -134,6 +136,7 @@ export default function Products() {
                 images?: string[];
                 ingredients?: string[];
                 benefits?: string[];
+                product_slug?: string;
               }, unknown>[]}
               search={search}
               onSearchChange={(val) => {

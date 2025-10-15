@@ -86,6 +86,7 @@ const createProductApi = async (
         category: string; // category ID
         name: string;
         description?: string;
+        product_slug?: string;
         isPremium?: boolean;
         isPopular?: boolean;
         variants?: Variants;
@@ -123,6 +124,7 @@ const updateProductApi = async (
         // When provided, we will build multipart/form-data
         files?: File[] | Blob[]
         imagesToRemove?: string[]
+        product_slug?: string
       }
     | { id: string; data: FormData }
 ): Promise<Product> => {
@@ -152,6 +154,7 @@ const updateProductApi = async (
     benefits?: string[]
     files?: File[] | Blob[]
     imagesToRemove?: string[]
+    product_slug?: string
   }
 
   // Case 2: If files or imagesToRemove are present, build multipart matching curl
@@ -183,6 +186,7 @@ const updateProductApi = async (
     if (jsonPayload.description !== undefined) formData.append('description', String(jsonPayload.description))
     if (jsonPayload.isPremium !== undefined) formData.append('isPremium', String(jsonPayload.isPremium))
     if (jsonPayload.isPopular !== undefined) formData.append('isPopular', String(jsonPayload.isPopular))
+    if (jsonPayload.product_slug !== undefined) formData.append('product_slug', String(jsonPayload.product_slug))
     // Variants: append as structured object-like keys (backend expects object, not JSON string)
     if (jsonPayload.variants !== undefined) {
       (['gm', 'kg'] as const).forEach((type) => {
@@ -218,6 +222,7 @@ const updateProductApi = async (
     images: jsonPayload.images || [],
     ingredients: jsonPayload.ingredients || [],
     benefits: jsonPayload.benefits || [],
+    product_slug: jsonPayload.product_slug,
   }
 
   const response = await api.put(`/products/product/${jsonPayload.id}`, updatedPayload)

@@ -283,6 +283,7 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
                     isPopular: formData.isPopular ?? false,
                     ingredients: formData.ingredients || [],
                     benefits: formData.benefits || [],
+                    product_slug: formData.name?.toLowerCase().replace(/ /g, '-') || '',
                     variants: {
                         gm:
                             formData.variants?.gm?.map(({ weight, price, discount }) => ({
@@ -322,6 +323,7 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
             isPremium: formData.isPremium ?? false,
             isPopular: formData.isPopular ?? false,
             images: formData.images || [],
+            product_slug: formData.name?.toLowerCase().replace(/ /g, '-') || '',
             ingredients: formData.ingredients || [],
             benefits: formData.benefits || [],
             variants: {
