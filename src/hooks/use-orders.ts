@@ -58,6 +58,7 @@ export interface Order {
   applyCoupon: { couponId: string; discountAmount: number; discountPercentage: string; };
   totalAmount: number;
   originalTotal: number;
+  posOrder?: boolean; // Field to identify POS orders
 }
 
 export interface GetOrdersParams {

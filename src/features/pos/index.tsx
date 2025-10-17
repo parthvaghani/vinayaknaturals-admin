@@ -210,8 +210,8 @@ export default function POSScreen() {
                     weightVariant: 'gm',
                     weight: '100',
                     totalProduct: item.quantity,
-                    discountedPrice: 0,
-                    originalPrice: 0
+                    // discountedPrice: 0,
+                    // originalPrice: 0
                 };
             }),
             address,
@@ -300,7 +300,15 @@ export default function POSScreen() {
                         <div className="space-y-2">
                             <div className="flex items-center gap-2">
                                 <Select
-                                    value={selectedVariants[product._id] || ''}
+                                    value={selectedVariants[product._id] || (() => {
+                                        // Auto-select first variant if none selected
+                                        if (variants.gm?.length > 0) {
+                                            return 'gm-0';
+                                        } else if (variants.kg?.length > 0) {
+                                            return 'kg-0';
+                                        }
+                                        return '';
+                                    })()}
                                     onValueChange={(value) => {
                                         setSelectedVariants(prev => ({
                                             ...prev,
@@ -349,7 +357,16 @@ export default function POSScreen() {
                                 <Button
                                     size="sm"
                                     onClick={() => {
-                                        const selectedVariantKey = selectedVariants[product._id];
+                                        const selectedVariantKey = selectedVariants[product._id] || (() => {
+                                            // Auto-select first variant if none selected
+                                            if (variants.gm?.length > 0) {
+                                                return 'gm-0';
+                                            } else if (variants.kg?.length > 0) {
+                                                return 'kg-0';
+                                            }
+                                            return '';
+                                        })();
+
                                         if (selectedVariantKey) {
                                             const [type, index] = selectedVariantKey.split('-');
                                             const variant = type === 'gm'
@@ -361,7 +378,7 @@ export default function POSScreen() {
                                         }
                                     }}
                                     className="h-8 px-3 text-xs bg-green-600 hover:bg-green-700"
-                                    disabled={!selectedVariants[product._id]}
+                                    disabled={false}
                                 >
                                     Add
                                 </Button>
@@ -400,6 +417,10 @@ export default function POSScreen() {
                     </div>
                 </div>
                 <div className="flex items-center space-x-4">
+                    {/* <Button variant="outline" onClick={() => navigate({ to: '/pos-orders' })}>
+                        <List className="w-4 h-4 mr-2" />
+                        Order List
+                    </Button> */}
                     <Button variant="outline" onClick={handleBackToAdmin}>
                         <User className="w-4 h-4 mr-2" />
                         Back to Admin

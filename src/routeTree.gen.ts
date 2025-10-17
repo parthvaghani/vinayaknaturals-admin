@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PosOrdersRouteImport } from './routes/pos-orders'
 import { Route as PosRouteImport } from './routes/pos'
 import { Route as ClerkRouteRouteImport } from './routes/clerk/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -47,6 +48,11 @@ import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_auth
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
 
+const PosOrdersRoute = PosOrdersRouteImport.update({
+  id: '/pos-orders',
+  path: '/pos-orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PosRoute = PosRouteImport.update({
   id: '/pos',
   path: '/pos',
@@ -249,6 +255,7 @@ const AuthenticatedSettingsAccountRoute =
 export interface FileRoutesByFullPath {
   '/clerk': typeof ClerkAuthenticatedRouteRouteWithChildren
   '/pos': typeof PosRoute
+  '/pos-orders': typeof PosOrdersRoute
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/clerk/': typeof ClerkauthRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
@@ -285,6 +292,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/pos': typeof PosRoute
+  '/pos-orders': typeof PosOrdersRoute
   '/clerk': typeof ClerkAuthenticatedRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
   '/otp': typeof authOtpRoute
@@ -323,6 +331,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/clerk': typeof ClerkRouteRouteWithChildren
   '/pos': typeof PosRoute
+  '/pos-orders': typeof PosOrdersRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/clerk/(auth)': typeof ClerkauthRouteRouteWithChildren
   '/clerk/_authenticated': typeof ClerkAuthenticatedRouteRouteWithChildren
@@ -363,6 +372,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/clerk'
     | '/pos'
+    | '/pos-orders'
     | '/settings'
     | '/clerk/'
     | '/forgot-password'
@@ -399,6 +409,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/pos'
+    | '/pos-orders'
     | '/clerk'
     | '/forgot-password'
     | '/otp'
@@ -436,6 +447,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/clerk'
     | '/pos'
+    | '/pos-orders'
     | '/_authenticated/settings'
     | '/clerk/(auth)'
     | '/clerk/_authenticated'
@@ -476,6 +488,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   ClerkRouteRoute: typeof ClerkRouteRouteWithChildren
   PosRoute: typeof PosRoute
+  PosOrdersRoute: typeof PosOrdersRoute
   authForgotPasswordRoute: typeof authForgotPasswordRoute
   authOtpRoute: typeof authOtpRoute
   authResetPasswordRoute: typeof authResetPasswordRoute
@@ -490,6 +503,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/pos-orders': {
+      id: '/pos-orders'
+      path: '/pos-orders'
+      fullPath: '/pos-orders'
+      preLoaderRoute: typeof PosOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pos': {
       id: '/pos'
       path: '/pos'
@@ -860,6 +880,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   ClerkRouteRoute: ClerkRouteRouteWithChildren,
   PosRoute: PosRoute,
+  PosOrdersRoute: PosOrdersRoute,
   authForgotPasswordRoute: authForgotPasswordRoute,
   authOtpRoute: authOtpRoute,
   authResetPasswordRoute: authResetPasswordRoute,
