@@ -35,6 +35,7 @@ export interface Order {
   status: string;
   paymentStatus?: string;
   shippingCharge?: number;
+  invoiceNumber?: string;
   createdAt: string;
   updatedAt?: string;
   cancelDetails?: { reason?: string | null; };
@@ -140,6 +141,14 @@ const updateOrderShippingChargeApi = async ({ id, shippingCharge }: UpdateOrderS
   return response.data;
 };
 
+// Download invoice
+const downloadInvoiceApi = async (id: string): Promise<Blob> => {
+  const response = await api.get(`/orders/${id}/invoice`, {
+    responseType: 'blob',
+  });
+  return response.data;
+};
+
 export function useOrdersList(params: GetOrdersParams) {
   const { page = 1, limit = 10, search = '', status, sortBy } = params;
   const accessToken = useAuthStore((state) => state.auth.accessToken);
@@ -193,4 +202,10 @@ export function useUpdateOrderShippingCharge() {
   });
 }
 
+// Mutation hook to download invoice
+export function useDownloadInvoice() {
+  return useMutation({
+    mutationFn: downloadInvoiceApi,
+  });
+}
 

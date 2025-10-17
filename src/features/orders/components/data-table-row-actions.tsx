@@ -5,8 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow as UiTR } from '@/components/ui/table';
-import { useIdByOrder, useUpdateOrderShippingCharge, type Order } from '@/hooks/use-orders';
-import { ShoppingCart, CheckCircle2, Package, XCircle, Hourglass, PackageCheck, Edit2, Save, X } from 'lucide-react';
+import { useIdByOrder, useUpdateOrderShippingCharge, useDownloadInvoice, type Order } from '@/hooks/use-orders';
+import { ShoppingCart, CheckCircle2, Package, XCircle, Hourglass, PackageCheck, Edit2, Save, X, RefreshCcw, CreditCard, Download } from 'lucide-react';
 import { ContentLoader } from '@/components/content-loader';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -408,6 +408,7 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
 
   const { data: fetchedOrder, isLoading: isLoadingOrder, refetch } = useIdByOrder(open ? order._id : undefined);
   const updateShippingChargeMutation = useUpdateOrderShippingCharge();
+  const downloadInvoiceMutation = useDownloadInvoice();
 
   // Fixed: Removed duplicate useEffect
   useEffect(() => {
@@ -511,6 +512,24 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
     setIsEditingShipping(false);
   }, [detail?.shippingCharge]);
 
+  const handleDownloadInvoice = useCallback(async () => {
+    if (!detail._id) return;
+    try {
+      const blob = await downloadInvoiceMutation.mutateAsync(detail._id);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `invoice-${fetchedOrder?.invoiceNumber || detail._id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success('Invoice downloaded successfully');
+    } catch {
+      toast.error('Failed to download invoice');
+    }
+  }, [detail._id, downloadInvoiceMutation, fetchedOrder]);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -524,12 +543,20 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <span>Order Details</span>
-                <Badge variant={order.paymentStatus === 'paid' ? 'enable' : 'destructive'} className='shadow-xl/15'>
-                  {order.paymentStatus}
-                </Badge>
-              </DialogTitle>
+              <div className="flex items-center justify-between">
+                <DialogTitle className="flex items-center gap-2">
+                  <span>Order Details</span>
+                  <Badge variant={order.paymentStatus === 'paid' ? 'enable' : 'destructive'} className='shadow-xl/15'>
+                    {order.paymentStatus}
+                  </Badge>
+                </DialogTitle>
+                {fetchedOrder?.invoiceNumber && (
+                  <Button variant="outline" size="sm" onClick={handleDownloadInvoice} disabled={downloadInvoiceMutation.isPending} className="gap-2 mr-2">
+                    <Download className="h-4 w-4" />
+                    {downloadInvoiceMutation.isPending ? 'Downloading...' : 'Download Invoice'}
+                  </Button>
+                )}
+              </div>
             </DialogHeader>
 
             <div className="space-y-6 text-sm">
