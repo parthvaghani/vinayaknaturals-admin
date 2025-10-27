@@ -170,8 +170,8 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
       type: trimmed.type,
       level: trimmed.level,
       isActive: trimmed.isActive,
+      couponType: trimmed.couponType,
     };
-
 
     if (trimmed.couponCode !== coupon.couponCode) {
       payload.couponCode = trimmed.couponCode;
@@ -481,6 +481,20 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
                 id='isActive'
                 checked={formData.isActive}
                 onCheckedChange={(val) => updateField('isActive', val)}
+              />
+            </div>
+            <div className="flex items-center justify-between border rounded-lg px-3 py-2">
+              <div>
+                <Label className="text-sm font-medium">POS Only</Label>
+                <p className="text-xs text-muted-foreground">
+                  Toggle to enable or disable the POS only coupon.
+                </p>
+              </div>
+              <Switch
+                checked={formData.couponType === 'pos'}
+                onCheckedChange={(val: boolean) =>
+                  updateField('couponType', val ? 'pos' : 'normal')
+                }
               />
             </div>
           </div>
