@@ -690,12 +690,12 @@ export default function POSScreen() {
                     <div className="items-center justify-center">
                         <img
                             src="/images/logo.png"
-                            alt="Aavkar Mukhwas Logo"
+                            alt="Drizzle Bites Logo"
                             className="w-8 h-8 sm:w-12 sm:h-12 object-contain"
                         />
                     </div>
                     <div>
-                        <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Aavkar Mukhwas POS</h1>
+                        <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Drizzle Bites POS</h1>
                     </div>
                 </div>
 
