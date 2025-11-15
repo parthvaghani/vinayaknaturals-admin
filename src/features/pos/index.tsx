@@ -691,11 +691,11 @@ export default function POSScreen() {
                         <img
                             src="/images/logo.png"
                             alt="Vinayak Naturals Logo"
-                            className="w-8 h-8 sm:w-12 sm:h-12 object-contain"
+                            className="w-8 h-8 sm:w-auto sm:h-8 object-contain"
                         />
                     </div>
                     <div>
-                        <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Vinayak Naturals POS</h1>
+                        <h1 className="text-lg sm:text-2xl font-bold text-gray-900">POS</h1>
                     </div>
                 </div>
 
