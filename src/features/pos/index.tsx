@@ -155,9 +155,9 @@ export default function POSScreen() {
       acc[categoryId].push(product)
       return acc
     },
-     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     {} as Record<string, any[]>
-  ) 
+  )
 
   // Get products for selected category or all products
   let products = selectedCategory
