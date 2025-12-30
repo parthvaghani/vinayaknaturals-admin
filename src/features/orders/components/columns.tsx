@@ -94,15 +94,18 @@ export const columns: ColumnDef<OrderRow>[] = [
         cell: ({ row }) => {
             const couponDiscount = row.original?.applyCoupon?.discountAmount || 0;
             const couponPersentage = row.original?.applyCoupon?.discountPercentage || 0;
+            const prepaidDiscount = row.original?.prepaidDiscount || 0;
+            const codFee = row.original?.codFee || 0;
             const orig = row.original.originalTotal ?? row.original.totalAmount ?? 0;
             const total = row.original.totalAmount ?? 0;
+            const finalAmount = row.original.finalAmount ?? (total - couponDiscount);
             const fmt = (n: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
             const hasDiscount = (row.original.originalTotal ?? 0) > (row.original.totalAmount ?? 0);
             return (
                 <div className='flex flex-col items-start gap-0'>
                     <div className='flex items-center gap-2'>
                         {hasDiscount ? <span className='line-through text-muted-foreground'>{fmt(orig)}</span> : couponDiscount ? <span className='line-through text-muted-foreground'>{fmt(orig)}</span> : null}
-                        <span className='font-semibold'>{fmt(total - couponDiscount)}</span>
+                        <span className='font-semibold'>{fmt(finalAmount)}</span>
                     </div>
                     {hasDiscount ? (
                         <div className='flex items-center gap-1'>
@@ -115,6 +118,20 @@ export const columns: ColumnDef<OrderRow>[] = [
                         <div className='flex items-center gap-1'>
                             <span className='text-xs text-green-600 font-medium'>
                                 Coupon Offer {couponPersentage}
+                            </span>
+                        </div>
+                    ) : null}
+                    {prepaidDiscount > 0 ? (
+                        <div className='flex items-center gap-1'>
+                            <span className='text-xs text-green-600 font-medium'>
+                                Additional 10% discount {fmt(prepaidDiscount)}
+                            </span>
+                        </div>
+                    ) : null}
+                    {codFee > 0 ? (
+                        <div className='flex items-center gap-1'>
+                            <span className='text-xs text-orange-600 font-medium'>
+                                COD Fee {fmt(codFee)}
                             </span>
                         </div>
                     ) : null}
@@ -135,6 +152,34 @@ export const columns: ColumnDef<OrderRow>[] = [
         accessorKey: 'paymentStatus',
         header: ({ column }) => <DataTableColumnHeader column={column} title='Payment Status' />,
         cell: ({ row }) => <PaymentStatusCell order={row.original} />,
+    },
+    {
+        accessorKey: 'paymentMethod',
+        header: ({ column }) => <DataTableColumnHeader column={column} title='Payment Method' />,
+        cell: ({ row }) => {
+            const method = row.original.paymentMethod || 'cod';
+            return (
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    method === 'prepaid'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-orange-100 text-orange-800'
+                }`}>
+                    {method === 'prepaid' ? 'Prepaid' : 'COD'}
+                </span>
+            );
+        },
+    },
+    {
+        accessorKey: 'razorpayPaymentId',
+        header: ({ column }) => <DataTableColumnHeader column={column} title='Transaction ID' />,
+        cell: ({ row }) => {
+            const txnId = row.original.razorpayPaymentId;
+            return txnId ? (
+                <span className='font-mono text-xs'>{txnId}</span>
+            ) : (
+                <span className='text-muted-foreground'>—</span>
+            );
+        },
     },
     {
         accessorKey: 'createdAt',

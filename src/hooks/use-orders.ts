@@ -59,6 +59,13 @@ export interface Order {
   totalAmount: number;
   originalTotal: number;
   posOrder?: boolean; // Field to identify POS orders
+  paymentMethod?: 'prepaid' | 'cod';
+  prepaidDiscount?: number;
+  codFee?: number;
+  finalAmount?: number;
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  razorpaySignature?: string;
 }
 
 export interface GetOrdersParams {

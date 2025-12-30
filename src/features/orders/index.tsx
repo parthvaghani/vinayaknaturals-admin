@@ -87,7 +87,14 @@ export default function Orders() {
                 productsDetails: normalizedProductsDetails,
                 updatedAt: o.updatedAt ?? '',
                 cancelDetails: o.cancelDetails,
-                applyCoupon: o.applyCoupon
+                applyCoupon: o.applyCoupon,
+                paymentMethod: o.paymentMethod,
+                prepaidDiscount: o.prepaidDiscount,
+                codFee: o.codFee,
+                finalAmount: o.finalAmount,
+                razorpayOrderId: o.razorpayOrderId,
+                razorpayPaymentId: o.razorpayPaymentId,
+                razorpaySignature: o.razorpaySignature
             }
         });
     }, [orders]);

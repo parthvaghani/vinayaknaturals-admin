@@ -57,6 +57,13 @@ export interface OrderRow {
   cancelDetails?: { reason?: string | null; };
   paymentStatus: string;
   applyCoupon: { couponId: string; discountAmount: number; discountPercentage: string; };
+  paymentMethod?: 'prepaid' | 'cod';
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  razorpaySignature?: string;
+  prepaidDiscount?: number;
+  codFee?: number;
+  finalAmount?: number;
 }
 
 type StatusHistoryEntry = {
@@ -470,24 +477,34 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
     // Coupon discount
     const couponDiscount = order.applyCoupon?.discountAmount ?? 0;
 
+    // Payment method discounts/fees
+    const prepaidDiscount = order.prepaidDiscount ?? 0;
+    const codFee = order.codFee ?? 0;
+
     // Total after product discount
     const afterProductDiscount = (detail.totalAmount ?? order.totalAmount ?? 0);
 
-    // Total savings
-    const totalSavings = productDiscount + couponDiscount;
+    // Total savings (product discount + coupon discount + prepaid discount)
+    const totalSavings = productDiscount + couponDiscount + prepaidDiscount;
+
+    // Final amount (what user actually paid) - use finalAmount from order if available, otherwise calculate
+    const finalAmount = order.finalAmount ?? (afterProductDiscount - couponDiscount - prepaidDiscount + codFee);
 
     // Final total including shipping
-    const finalTotal = afterProductDiscount + (detail?.shippingCharge ?? 0) - couponDiscount;
+    const finalTotal = finalAmount + (detail?.shippingCharge ?? 0);
 
     return {
       subtotal,
       productDiscount,
       couponDiscount,
+      prepaidDiscount,
+      codFee,
       totalSavings,
       afterProductDiscount,
+      finalAmount,
       finalTotal
     };
-  }, [order.originalTotal, order.totalAmount, detail.totalAmount, detail.productsDetails, detail.shippingCharge, order.applyCoupon]);
+  }, [order.originalTotal, order.totalAmount, order.finalAmount, order.prepaidDiscount, order.codFee, detail.totalAmount, detail.productsDetails, detail.shippingCharge, order.applyCoupon]);
   // useCallback for event handlers
   const handleShippingChargeEdit = useCallback(() => {
     setIsEditingShipping(true);
@@ -739,6 +756,32 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
                         <div className="flex justify-between text-green-600 text-sm sm:text-base">
                           <span>Coupon Discount</span>
                           <span>- {formatINR(orderTotals.couponDiscount)}</span>
+                        </div>
+                      )}
+
+                      {/* Additional 10% Discount for Prepaid - shown above Total Discount */}
+                      {orderTotals.prepaidDiscount > 0 && (
+                        <div className="flex justify-between text-orange-600 text-sm sm:text-base">
+                          <span>Additional 10% discount</span>
+                          <span>- {formatINR(orderTotals.prepaidDiscount)}</span>
+                        </div>
+                      )}
+
+                      {/* Total Discount - includes all discounts (product + coupon + prepaid) */}
+                      {(orderTotals.productDiscount > 0 || orderTotals.couponDiscount > 0 || orderTotals.prepaidDiscount > 0) && (
+                        <div className="flex justify-between text-sm sm:text-base font-medium">
+                          <span>Total Discount:</span>
+                          <span className="text-green-600">
+                            {formatINR(orderTotals.productDiscount + orderTotals.couponDiscount + orderTotals.prepaidDiscount)}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* COD Fee */}
+                      {orderTotals.codFee > 0 && (
+                        <div className="flex justify-between text-orange-600 text-sm sm:text-base">
+                          <span>COD Fee</span>
+                          <span>+ {formatINR(orderTotals.codFee)}</span>
                         </div>
                       )}
 
