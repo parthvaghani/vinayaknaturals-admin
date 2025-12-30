@@ -1,8 +1,7 @@
 import { createContext, useContext, type ReactNode } from 'react';
 
-interface PartnershipRequestsContextType {
-  // Add any context values needed for partnership requests
-}
+// Use object instead of empty interface to resolve lint error
+type PartnershipRequestsContextType = object;
 
 const PartnershipRequestsContext = createContext<PartnershipRequestsContextType | undefined>(undefined);
 

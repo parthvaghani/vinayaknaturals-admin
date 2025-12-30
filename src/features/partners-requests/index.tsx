@@ -62,7 +62,7 @@ export default function PartnershipRequests() {
           ) : isError ? (
             <p className='text-red-500'>Error: {(error as Error)?.message ?? 'Failed to load partnership requests'}</p>
           ) : (
-            <DataTable<TablePartnershipRequest, any>
+            <DataTable<TablePartnershipRequest, any>// eslint-disable-line @typescript-eslint/no-explicit-any
               data={partnershipRequests}
               columns={columns}
               search={search}

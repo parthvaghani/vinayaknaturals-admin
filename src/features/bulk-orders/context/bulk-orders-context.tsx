@@ -1,8 +1,6 @@
 import { createContext, useContext, ReactNode } from 'react';
 
-interface BulkOrdersContextType {
-  // Add any context values here if needed in the future
-}
+type BulkOrdersContextType = Record<string, never>;
 
 const BulkOrdersContext = createContext<BulkOrdersContextType | undefined>(undefined);
 
@@ -11,9 +9,7 @@ interface BulkOrdersProviderProps {
 }
 
 export default function BulkOrdersProvider({ children }: BulkOrdersProviderProps) {
-  const value: BulkOrdersContextType = {
-    // Add any context values here if needed in the future
-  };
+  const value: BulkOrdersContextType = {};
 
   return (
     <BulkOrdersContext.Provider value={value}>
@@ -22,6 +18,7 @@ export default function BulkOrdersProvider({ children }: BulkOrdersProviderProps
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useBulkOrdersContext() {
   const context = useContext(BulkOrdersContext);
   if (context === undefined) {

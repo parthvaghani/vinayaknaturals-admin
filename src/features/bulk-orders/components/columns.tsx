@@ -114,7 +114,7 @@ function OrderDetailsDialog({ order }: { order: BulkOrderRow; }) {
                                 {order.products.map((product) => (
                                     <div key={product._id} className="flex items-center space-x-3 sm:space-x-4 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
                                         {product.images && product.images.length > 0 && (
-                                            <div className="flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden shadow-sm">
+                                            <div className="shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden shadow-sm">
                                                 <img
                                                     src={`${base}${product.images[0].url}`}
                                                     alt={product.name}
@@ -133,6 +133,63 @@ function OrderDetailsDialog({ order }: { order: BulkOrderRow; }) {
                 </div>
             </DialogContent>
         </Dialog>
+    );
+}
+
+function ActionsCell({ bulkOrder }: { bulkOrder: BulkOrderRow }) {
+    const deleteBulkOrder = useDeleteBulkOrder();
+    const downloadSummary = useDownloadBulkOrderSummary();
+
+    const handleDelete = async () => {
+        try {
+            await deleteBulkOrder.mutateAsync(bulkOrder._id);
+            toast.success('Bulk order deleted successfully');
+        } catch (_error) {
+            toast.error('Failed to delete bulk order');
+        }
+    };
+
+    const handleDownload = async () => {
+        try {
+            const blob = await downloadSummary.mutateAsync(bulkOrder._id);
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `bulk-order-${bulkOrder._id}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            toast.success('Summary downloaded successfully');
+        } catch (_error) {
+            toast.error('Failed to download summary');
+        }
+    };
+
+    return (
+        <div className="flex items-center space-x-2">
+            <OrderDetailsDialog order={bulkOrder} />
+            <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDownload}
+                disabled={downloadSummary.isPending}
+                className="h-8 w-8 p-0"
+            >
+                <span className="sr-only">Download summary</span>
+                <Download className="h-4 w-4" />
+            </Button>
+            <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDelete}
+                disabled={deleteBulkOrder.isPending}
+                className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+                <span className="sr-only">Delete bulk order</span>
+                <Trash2 className="h-4 w-4" />
+            </Button>
+        </div>
     );
 }
 
@@ -198,60 +255,7 @@ export const columns: ColumnDef<BulkOrderRow>[] = [
         header: 'Actions',
         cell: ({ row }) => {
             const bulkOrder = row.original;
-            const deleteBulkOrder = useDeleteBulkOrder();
-            const downloadSummary = useDownloadBulkOrderSummary();
-
-            const handleDelete = async () => {
-                try {
-                    await deleteBulkOrder.mutateAsync(bulkOrder._id);
-                    toast.success('Bulk order deleted successfully');
-                } catch (error) {
-                    toast.error('Failed to delete bulk order');
-                }
-            };
-
-            const handleDownload = async () => {
-                try {
-                    const blob = await downloadSummary.mutateAsync(bulkOrder._id);
-                    const url = window.URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `bulk-order-${bulkOrder._id}.pdf`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    window.URL.revokeObjectURL(url);
-                    toast.success('Summary downloaded successfully');
-                } catch (error) {
-                    toast.error('Failed to download summary');
-                }
-            };
-
-            return (
-                <div className="flex items-center space-x-2">
-                    <OrderDetailsDialog order={bulkOrder} />
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleDownload}
-                        disabled={downloadSummary.isPending}
-                        className="h-8 w-8 p-0"
-                    >
-                        <span className="sr-only">Download summary</span>
-                        <Download className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleDelete}
-                        disabled={deleteBulkOrder.isPending}
-                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                        <span className="sr-only">Delete bulk order</span>
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                </div>
-            );
+            return <ActionsCell bulkOrder={bulkOrder} />;
         },
     },
 ];
