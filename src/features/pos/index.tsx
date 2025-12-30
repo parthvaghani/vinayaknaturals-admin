@@ -155,8 +155,9 @@ export default function POSScreen() {
       acc[categoryId].push(product)
       return acc
     },
+     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     {} as Record<string, any[]>
-  ) // eslint-disable-line @typescript-eslint/no-explicit-any
+  ) 
 
   // Get products for selected category or all products
   let products = selectedCategory
@@ -429,8 +430,8 @@ export default function POSScreen() {
     return <ChefHat className='h-4 w-4' />
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const renderProductCard = (product: any) => {
-    // eslint-disable-line @typescript-eslint/no-explicit-any
     const base = import.meta.env.VITE_IMAGE_BASE_URL ?? ''
     const imageUrl = product.images?.[0]
       ? `${base}${typeof product.images[0] === 'string' ? product.images[0] : (product.images[0] as { url: string })?.url || ''}`
