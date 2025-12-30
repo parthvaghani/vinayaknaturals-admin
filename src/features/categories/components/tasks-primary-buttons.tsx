@@ -1,14 +1,21 @@
 // import { IconDownload } from '@tabler/icons-react'
+import { useState } from 'react'
+// ✅ Import mutation hook
+import { useQueryClient } from '@tanstack/react-query'
 import { IconPlus } from '@tabler/icons-react'
+import { toast } from 'sonner'
+import { useCreateProductCategory } from '@/hooks/use-categories'
 import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
-import { useState } from 'react'
-import { useCreateProductCategory } from '@/hooks/use-categories' // ✅ Import mutation hook
-import { useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
 
 export function TasksPrimaryButtons() {
   const [openSheet, setOpenSheet] = useState(false)
@@ -21,13 +28,20 @@ export function TasksPrimaryButtons() {
     pricingEnabled: false,
   })
 
-  const [errors, setErrors] = useState<{ category?: string; name?: string; description?: string }>({})
-
+  const [errors, setErrors] = useState<{
+    category?: string
+    name?: string
+    description?: string
+  }>({})
 
   const { mutate: createCategory, isPending } = useCreateProductCategory()
 
   const validate = () => {
-    const nextErrors: { category?: string; name?: string; description?: string } = {}
+    const nextErrors: {
+      category?: string
+      name?: string
+      description?: string
+    } = {}
 
     const category = categoryData.category.trim()
     const name = categoryData.name.trim()
@@ -36,8 +50,10 @@ export function TasksPrimaryButtons() {
     if (!category) {
       nextErrors.category = 'Category is required'
     } else {
-      if (category.length < 2) nextErrors.category = 'Category must be at least 2 characters'
-      else if (category.length > 32) nextErrors.category = 'Category must be at most 32 characters'
+      if (category.length < 2)
+        nextErrors.category = 'Category must be at least 2 characters'
+      else if (category.length > 32)
+        nextErrors.category = 'Category must be at most 32 characters'
       else if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(category))
         nextErrors.category = 'Use lowercase letters, numbers, and hyphens only'
     }
@@ -45,15 +61,19 @@ export function TasksPrimaryButtons() {
     if (!name) {
       nextErrors.name = 'Name is required'
     } else {
-      if (name.length < 3) nextErrors.name = 'Name must be at least 3 characters'
-      else if (name.length > 64) nextErrors.name = 'Name must be at most 64 characters'
+      if (name.length < 3)
+        nextErrors.name = 'Name must be at least 3 characters'
+      else if (name.length > 64)
+        nextErrors.name = 'Name must be at most 64 characters'
     }
 
     if (!description) {
       nextErrors.description = 'Description is required'
     } else {
-      if (description.length < 10) nextErrors.description = 'Description must be at least 10 characters'
-      else if (description.length > 200) nextErrors.description = 'Description must be at most 200 characters'
+      if (description.length < 10)
+        nextErrors.description = 'Description must be at least 10 characters'
+      else if (description.length > 200)
+        nextErrors.description = 'Description must be at most 200 characters'
     }
 
     return nextErrors
@@ -83,112 +103,123 @@ export function TasksPrimaryButtons() {
         description: categoryData.description.trim(),
       },
       {
-      onSuccess: () => {
-        toast.success('Category created successfully!')
-        queryClient.invalidateQueries({ queryKey: ['product-categories'] })
-        setCategoryData({ category: '', name: '', description: '', pricingEnabled: false })
-        setErrors({})
-        setOpenSheet(false)
-      },
-      onError: (error: Error) => {
-        toast.error(error.message || 'Failed to create category')
-      },
-    }
+        onSuccess: () => {
+          toast.success('Category created successfully!')
+          queryClient.invalidateQueries({ queryKey: ['product-categories'] })
+          setCategoryData({
+            category: '',
+            name: '',
+            description: '',
+            pricingEnabled: false,
+          })
+          setErrors({})
+          setOpenSheet(false)
+        },
+        onError: (error: Error) => {
+          toast.error(error.message || 'Failed to create category')
+        },
+      }
     )
   }
 
   return (
-    <div className="flex gap-2">
+    <div className='flex gap-2'>
       {/* Import Button */}
       {/* <Button variant="outline" className="space-x-1">
         <span>Import</span> <IconDownload size={18} />
       </Button> */}
 
       {/* Create Category Button */}
-      <Button className="space-x-1" onClick={() => setOpenSheet(true)}>
+      <Button className='space-x-1' onClick={() => setOpenSheet(true)}>
         <span>Create Category</span> <IconPlus size={18} />
       </Button>
 
       {/* Sheet for Creating Category */}
       <Sheet open={openSheet} onOpenChange={setOpenSheet}>
-        <SheetContent className="sm:max-w-lg">
+        <SheetContent className='sm:max-w-lg'>
           <SheetHeader>
-            <SheetTitle className="text-xl font-semibold">Create New Category</SheetTitle>
-            <p className="text-sm text-muted-foreground">
+            <SheetTitle className='text-xl font-semibold'>
+              Create New Category
+            </SheetTitle>
+            <p className='text-muted-foreground text-sm'>
               Fill out the details below to add a new product category.
             </p>
           </SheetHeader>
 
-          <div className="space-y-5 mt-6 mx-2">
+          <div className='mx-2 mt-6 space-y-5'>
             {/* Category */}
-            <div className="space-y-2">
-              <Label htmlFor="category" className="text-sm font-medium">
-                Category <span className="text-red-500">*</span>
+            <div className='space-y-2'>
+              <Label htmlFor='category' className='text-sm font-medium'>
+                Category <span className='text-red-500'>*</span>
               </Label>
               <Input
-                id="category"
-                name="category"
+                id='category'
+                name='category'
                 value={categoryData.category}
                 onChange={handleChange}
-                placeholder="e.g. electronics"
+                placeholder='e.g. electronics'
                 required
                 maxLength={32}
                 aria-invalid={!!errors.category}
               />
               {errors.category ? (
-                <p className="text-xs text-red-500">{errors.category}</p>
+                <p className='text-xs text-red-500'>{errors.category}</p>
               ) : null}
             </div>
 
             {/* Name */}
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm font-medium">
-                Name <span className="text-red-500">*</span>
+            <div className='space-y-2'>
+              <Label htmlFor='name' className='text-sm font-medium'>
+                Name <span className='text-red-500'>*</span>
               </Label>
               <Input
-                id="name"
-                name="name"
+                id='name'
+                name='name'
                 value={categoryData.name}
                 onChange={handleChange}
-                placeholder="e.g. Electronics & Gadgets"
+                placeholder='e.g. Electronics & Gadgets'
                 required
                 maxLength={64}
                 aria-invalid={!!errors.name}
               />
               {errors.name ? (
-                <p className="text-xs text-red-500">{errors.name}</p>
+                <p className='text-xs text-red-500'>{errors.name}</p>
               ) : null}
             </div>
 
             {/* Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description" className="text-sm font-medium">Description <span className="text-red-500">*</span></Label>
+            <div className='space-y-2'>
+              <Label htmlFor='description' className='text-sm font-medium'>
+                Description <span className='text-red-500'>*</span>
+              </Label>
               <Input
-                id="description"
-                name="description"
+                id='description'
+                name='description'
                 value={categoryData.description}
                 onChange={handleChange}
-                placeholder="Short description about this category"
+                placeholder='Short description about this category'
                 required
                 minLength={10}
                 maxLength={200}
                 aria-invalid={!!errors.description}
               />
               {errors.description ? (
-                <p className="text-xs text-red-500">{errors.description}</p>
+                <p className='text-xs text-red-500'>{errors.description}</p>
               ) : null}
             </div>
 
             {/* Pricing Enabled Switch */}
-            <div className="flex items-center justify-between border rounded-lg px-3 py-2">
+            <div className='flex items-center justify-between rounded-lg border px-3 py-2'>
               <div>
-                <Label htmlFor="pricingEnabled" className="text-sm font-medium">Pricing Enabled</Label>
-                <p className="text-xs text-muted-foreground">
+                <Label htmlFor='pricingEnabled' className='text-sm font-medium'>
+                  Pricing Enabled
+                </Label>
+                <p className='text-muted-foreground text-xs'>
                   Enable pricing options for products in this category.
                 </p>
               </div>
               <Switch
-                id="pricingEnabled"
+                id='pricingEnabled'
                 checked={categoryData.pricingEnabled}
                 onCheckedChange={(val) =>
                   setCategoryData({ ...categoryData, pricingEnabled: val })
@@ -197,11 +228,19 @@ export function TasksPrimaryButtons() {
             </div>
           </div>
 
-          <SheetFooter className="mt-6 flex gap-2">
-            <Button variant="outline" onClick={() => setOpenSheet(false)} className="w-full">
+          <SheetFooter className='mt-6 flex gap-2'>
+            <Button
+              variant='outline'
+              onClick={() => setOpenSheet(false)}
+              className='w-full'
+            >
               Cancel
             </Button>
-            <Button onClick={handleSubmit} disabled={isPending} className="w-full">
+            <Button
+              onClick={handleSubmit}
+              disabled={isPending}
+              className='w-full'
+            >
               {isPending ? 'Saving...' : 'Save Category'}
             </Button>
           </SheetFooter>

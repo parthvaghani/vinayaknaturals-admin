@@ -1,9 +1,9 @@
+import { useState, useEffect } from 'react'
 import { Cross2Icon } from '@radix-ui/react-icons'
 import { Table } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DataTableViewOptions } from '../components/data-table-view-options'
-import { useState, useEffect } from 'react'
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
@@ -11,7 +11,11 @@ interface DataTableToolbarProps<TData> {
   onSearchChange: (value: string) => void
 }
 
-export function DataTableToolbar<TData>({ table, search, onSearchChange }: DataTableToolbarProps<TData>) {
+export function DataTableToolbar<TData>({
+  table,
+  search,
+  onSearchChange,
+}: DataTableToolbarProps<TData>) {
   // Local state for debounce UX
   const [localSearch, setLocalSearch] = useState(search)
 

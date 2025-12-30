@@ -80,8 +80,19 @@ export function useWhatsappLeadsList(params: GetWhatsappLeadsParams) {
     whatsappSent,
   } = params
   return useQuery({
-    queryKey: ['whatsapp-leads', { page, limit, search, status, whatsappIntent, whatsappSent }],
-    queryFn: () => getWhatsappLeadsApi({ page, limit, search, status, whatsappIntent, whatsappSent }),
+    queryKey: [
+      'whatsapp-leads',
+      { page, limit, search, status, whatsappIntent, whatsappSent },
+    ],
+    queryFn: () =>
+      getWhatsappLeadsApi({
+        page,
+        limit,
+        search,
+        status,
+        whatsappIntent,
+        whatsappSent,
+      }),
     placeholderData: keepPreviousData,
     staleTime: 1000 * 30,
     retry: 3,
@@ -96,5 +107,3 @@ export function useWhatsappLeadById(id: string) {
     enabled: !!id,
   })
 }
-
-

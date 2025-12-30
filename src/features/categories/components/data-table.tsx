@@ -107,9 +107,7 @@ export function DataTable<TData, TValue>({
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                >
+                <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(
@@ -134,7 +132,11 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
       {showPagination && pagination && onPaginationChange ? (
-        <DataTablePagination table={table} pagination={pagination} onChange={onPaginationChange} />
+        <DataTablePagination
+          table={table}
+          pagination={pagination}
+          onChange={onPaginationChange}
+        />
       ) : null}
     </div>
   )

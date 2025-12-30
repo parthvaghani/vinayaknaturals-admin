@@ -1,4 +1,9 @@
-import { useQuery, keepPreviousData, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  useQuery,
+  keepPreviousData,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query'
 import api from '@/lib/api'
 
 export interface UserDetails {
@@ -58,7 +63,10 @@ const getUsersApi = async (
     : (payload?.results ?? [])
 
   const total: number | undefined =
-    payload?.total ?? payload?.count ?? payload?.totalResults ?? (Array.isArray(payload) ? results.length : undefined)
+    payload?.total ??
+    payload?.count ??
+    payload?.totalResults ??
+    (Array.isArray(payload) ? results.length : undefined)
   const currentPage: number | undefined = payload?.page ?? payload?.currentPage
   const currentLimit: number | undefined = payload?.limit ?? payload?.pageSize
 
@@ -74,7 +82,8 @@ export function useUsersList(params: GetUsersParams) {
   const { page = 1, limit = 10, searchTerm } = params
   return useQuery({
     queryKey: ['users', { page, limit, searchTerm: searchTerm || undefined }],
-    queryFn: () => getUsersApi({ page, limit, searchTerm: searchTerm || undefined }),
+    queryFn: () =>
+      getUsersApi({ page, limit, searchTerm: searchTerm || undefined }),
     placeholderData: keepPreviousData,
     staleTime: 1000 * 30,
     retry: 3,
@@ -85,9 +94,13 @@ export function useUsersList(params: GetUsersParams) {
 // Mutations
 export type UpdateUserPayload = Partial<
   Pick<User, 'role' | 'isActive' | 'phoneNumber' | 'user_details'>
-> & Record<string, unknown>
+> &
+  Record<string, unknown>
 
-const updateUserApi = async (params: { id: string; data: UpdateUserPayload }) => {
+const updateUserApi = async (params: {
+  id: string
+  data: UpdateUserPayload
+}) => {
   const { id, data } = params
   const response = await api.patch(`/users/${id}`, data)
   return response.data
@@ -117,5 +130,3 @@ export function useDeleteUser() {
     },
   })
 }
-
-

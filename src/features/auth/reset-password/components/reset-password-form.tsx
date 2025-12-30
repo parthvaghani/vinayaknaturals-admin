@@ -2,7 +2,9 @@ import { HTMLAttributes, useMemo, useState } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
+import { useResetPassword } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -13,8 +15,6 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { PasswordInput } from '@/components/password-input'
-import { useResetPassword } from '@/hooks/use-auth'
-import { useNavigate, useSearch } from '@tanstack/react-router'
 
 type ResetFormProps = HTMLAttributes<HTMLFormElement>
 
@@ -48,7 +48,9 @@ function useStrength(password: string) {
 }
 
 export function ResetPasswordForm({ className, ...props }: ResetFormProps) {
-  const { token } = useSearch({ from: '/(auth)/reset-password' }) as { token?: string }
+  const { token } = useSearch({ from: '/(auth)/reset-password' }) as {
+    token?: string
+  }
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
   const resetPassword = useResetPassword()
@@ -114,7 +116,7 @@ export function ResetPasswordForm({ className, ...props }: ResetFormProps) {
             <span>Password Strength:</span>
             <span className='text-green-600'>{strength.label}</span>
           </div>
-          <div className='h-1.5 w-full rounded bg-muted'>
+          <div className='bg-muted h-1.5 w-full rounded'>
             <div
               className='h-1.5 rounded bg-green-600 transition-all'
               style={{ width: `${(strength.score / 5) * 100}%` }}
@@ -122,8 +124,13 @@ export function ResetPasswordForm({ className, ...props }: ResetFormProps) {
           </div>
         </div>
 
-        <Button className='mt-1' disabled={isLoading || resetPassword.isPending}>
-          {isLoading || resetPassword.isPending ? 'Resetting...' : 'Reset Password'}
+        <Button
+          className='mt-1'
+          disabled={isLoading || resetPassword.isPending}
+        >
+          {isLoading || resetPassword.isPending
+            ? 'Resetting...'
+            : 'Reset Password'}
         </Button>
       </form>
     </Form>
@@ -131,5 +138,3 @@ export function ResetPasswordForm({ className, ...props }: ResetFormProps) {
 }
 
 export default ResetPasswordForm
-
-

@@ -14,7 +14,9 @@ export default function SignIn() {
     <AuthLayout>
       <Card className='gap-4'>
         <CardHeader>
-          <CardTitle className='text-lg tracking-tight text-center'>Login</CardTitle>
+          <CardTitle className='text-center text-lg tracking-tight'>
+            Login
+          </CardTitle>
           <CardDescription className='text-center'>
             Enter your email and password below to <br />
             log into your account
@@ -41,7 +43,7 @@ export default function SignIn() {
             </a>
             .
           </p> */}
-          {/* <p className='text-muted-foreground text-center text-sm'>
+        {/* <p className='text-muted-foreground text-center text-sm'>
             Don't have an account?{' '}
             <Link
               to='/sign-up'

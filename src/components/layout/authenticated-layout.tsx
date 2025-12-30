@@ -3,8 +3,8 @@ import { Outlet } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { SearchProvider } from '@/context/search-context'
 import { SidebarProvider } from '@/components/ui/sidebar'
-import { AppSidebar } from '@/components/layout/app-sidebar'
 import { ContentLoader } from '@/components/content-loader'
+import { AppSidebar } from '@/components/layout/app-sidebar'
 import SkipToMain from '@/components/skip-to-main'
 
 interface Props {

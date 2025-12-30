@@ -1,4 +1,9 @@
-import { useQuery, keepPreviousData, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  useQuery,
+  keepPreviousData,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query'
 import api from '@/lib/api'
 
 export interface ProductVariant {
@@ -74,7 +79,10 @@ const getBulkOrdersApi = async (
     : (payload?.results ?? [])
 
   const total: number | undefined =
-    payload?.total ?? payload?.count ?? payload?.totalResults ?? (Array.isArray(payload) ? results.length : undefined)
+    payload?.total ??
+    payload?.count ??
+    payload?.totalResults ??
+    (Array.isArray(payload) ? results.length : undefined)
   const currentPage: number | undefined = payload?.page ?? payload?.currentPage
   const currentLimit: number | undefined = payload?.limit ?? payload?.pageSize
 
@@ -89,8 +97,12 @@ const getBulkOrdersApi = async (
 export function useBulkOrdersList(params: GetBulkOrdersParams) {
   const { page = 1, limit = 10, searchTerm } = params
   return useQuery({
-    queryKey: ['bulk-orders', { page, limit, searchTerm: searchTerm || undefined }],
-    queryFn: () => getBulkOrdersApi({ page, limit, searchTerm: searchTerm || undefined }),
+    queryKey: [
+      'bulk-orders',
+      { page, limit, searchTerm: searchTerm || undefined },
+    ],
+    queryFn: () =>
+      getBulkOrdersApi({ page, limit, searchTerm: searchTerm || undefined }),
     placeholderData: keepPreviousData,
     staleTime: 1000 * 30,
     retry: 3,
@@ -100,10 +112,17 @@ export function useBulkOrdersList(params: GetBulkOrdersParams) {
 
 // Mutations
 export type UpdateBulkOrderPayload = Partial<
-  Pick<BulkOrder, 'fullName' | 'emailAddress' | 'phoneNumber' | 'deliveryAddress'>
-> & Record<string, unknown>
+  Pick<
+    BulkOrder,
+    'fullName' | 'emailAddress' | 'phoneNumber' | 'deliveryAddress'
+  >
+> &
+  Record<string, unknown>
 
-const updateBulkOrderApi = async (params: { id: string; data: UpdateBulkOrderPayload }) => {
+const updateBulkOrderApi = async (params: {
+  id: string
+  data: UpdateBulkOrderPayload
+}) => {
   const { id, data } = params
   const response = await api.patch(`/bulk-orders/${id}`, data)
   return response.data

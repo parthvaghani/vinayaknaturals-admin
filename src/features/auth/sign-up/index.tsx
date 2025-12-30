@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import AuthLayout from '../auth-layout'
+
 // import { SignUpForm } from './components/sign-up-form'
 
 export default function SignUp() {
@@ -29,9 +30,7 @@ export default function SignUp() {
             </Link>
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          {/* <SignUpForm /> */}
-        </CardContent>
+        <CardContent>{/* <SignUpForm /> */}</CardContent>
         <CardFooter>
           <p className='text-muted-foreground px-8 text-center text-sm'>
             By creating an account, you agree to our{' '}

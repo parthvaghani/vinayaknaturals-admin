@@ -11,6 +11,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
+import type { ColumnDef } from '@tanstack/react-table'
 import {
   Table,
   TableBody,
@@ -22,7 +23,6 @@ import {
 import { DataTablePagination } from '../components/data-table-pagination'
 import { DataTableToolbar } from '../components/data-table-toolbar'
 import { Product } from '../data/schema'
-import type { ColumnDef } from '@tanstack/react-table'
 
 interface PaginationState {
   page: number
@@ -51,8 +51,11 @@ export function DataTable({
   search,
   onSearchChange,
 }: DataTableProps) {
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({})
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  )
   const [sorting, setSorting] = React.useState<SortingState>([])
 
   const table = useReactTable({
@@ -108,14 +111,20 @@ export function DataTable({
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className='h-24 text-center'>
+                <TableCell
+                  colSpan={columns.length}
+                  className='h-24 text-center'
+                >
                   No results.
                 </TableCell>
               </TableRow>
@@ -124,7 +133,11 @@ export function DataTable({
         </Table>
       </div>
       {showPagination && pagination && onPaginationChange ? (
-        <DataTablePagination table={table} pagination={pagination} onChange={onPaginationChange} />
+        <DataTablePagination
+          table={table}
+          pagination={pagination}
+          onChange={onPaginationChange}
+        />
       ) : null}
     </div>
   )

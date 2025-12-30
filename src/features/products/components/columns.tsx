@@ -1,30 +1,45 @@
-import { ColumnDef } from '@tanstack/react-table';
-import { Badge } from '@/components/ui/badge';
-import { DataTableColumnHeader } from './data-table-column-header';
-import { DataTableRowActions } from './data-table-row-actions';
-import { Button } from '@/components/ui/button';
-import { Eye, IndianRupee } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-
+import { ColumnDef } from '@tanstack/react-table'
+import { Eye, IndianRupee } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { DataTableColumnHeader } from './data-table-column-header'
+import { DataTableRowActions } from './data-table-row-actions'
 
 // Product Interface (based on your schema)
 export interface Product {
-  _id: string;
-  id: string;
-  category: { id: string; name: string; };
-  name: string;
-  description?: string;
-  images?: string[];
-  ingredients?: string[];
-  benefits?: string[];
-  isPremium: boolean;
-  isPopular: boolean;
+  _id: string
+  id: string
+  category: { id: string; name: string }
+  name: string
+  description?: string
+  images?: string[]
+  ingredients?: string[]
+  benefits?: string[]
+  isPremium: boolean
+  isPopular: boolean
   variants: {
-    gm: { weight: string; price: number; discount: number; }[];
-    kg: { weight: string; price: number; discount: number; }[];
-  };
+    gm: { weight: string; price: number; discount: number }[]
+    kg: { weight: string; price: number; discount: number }[]
+  }
 }
 
 export const columns: ColumnDef<Product>[] = [
@@ -50,27 +65,34 @@ export const columns: ColumnDef<Product>[] = [
   // },
   {
     accessorKey: 'name',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Name" className='text-center' />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title='Name'
+        className='text-center'
+      />
+    ),
     cell: ({ row }) => {
-      const name = row.getValue('name') as string;
-      const maxLength = 25; // reduced length to prevent scroll
-      const truncated = name?.length > maxLength ? `${name.slice(0, maxLength)}...` : name || '—';
+      const name = row.getValue('name') as string
+      const maxLength = 25 // reduced length to prevent scroll
+      const truncated =
+        name?.length > maxLength
+          ? `${name.slice(0, maxLength)}...`
+          : name || '—'
       return (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="font-semibold">
-                {truncated}
-              </span>
+              <span className='font-semibold'>{truncated}</span>
             </TooltipTrigger>
             {name && (
-              <TooltipContent className="max-w-xs">
+              <TooltipContent className='max-w-xs'>
                 <p>{name}</p>
               </TooltipContent>
             )}
           </Tooltip>
         </TooltipProvider>
-      );
+      )
     },
     filterFn: (row, id, value) => value.includes(row.getValue(id)),
   },
@@ -78,153 +100,204 @@ export const columns: ColumnDef<Product>[] = [
   // ✅ Category
   {
     accessorKey: 'category',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Category" className='text-center' />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title='Category'
+        className='text-center'
+      />
+    ),
     cell: ({ row }) => {
-      return <span className="font-medium">{row.original.category?.name || '—'}</span>;
+      return (
+        <span className='font-medium'>
+          {row.original.category?.name || '—'}
+        </span>
+      )
     },
   },
 
   // ✅ Description
   {
     accessorKey: 'description',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Description" className='text-center' />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title='Description'
+        className='text-center'
+      />
+    ),
     cell: ({ row }) => {
-      const description = row.getValue('description') as string;
-      const maxLength = 25; // reduced length to prevent scroll
-      const truncated = description?.length > maxLength ? `${description.slice(0, maxLength)}...` : description || '—';
+      const description = row.getValue('description') as string
+      const maxLength = 25 // reduced length to prevent scroll
+      const truncated =
+        description?.length > maxLength
+          ? `${description.slice(0, maxLength)}...`
+          : description || '—'
       return (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="truncate block max-w-[200px] text-sm text-muted-foreground cursor-help">
+              <span className='text-muted-foreground block max-w-[200px] cursor-help truncate text-sm'>
                 {truncated}
               </span>
             </TooltipTrigger>
             {description && (
-              <TooltipContent className="max-w-xs">
+              <TooltipContent className='max-w-xs'>
                 <p>{description}</p>
               </TooltipContent>
             )}
           </Tooltip>
         </TooltipProvider>
-      );
+      )
     },
   },
 
   // ✅ Ingredients
   {
     accessorKey: 'ingredients',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Ingredients" className='text-center' />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title='Ingredients'
+        className='text-center'
+      />
+    ),
     cell: ({ row }) => {
-      const ingredients = row.original.ingredients || [];
-      const content = ingredients.length > 0 ? ingredients.join(', ') : '—';
-      const maxLength = 25;
-      const truncated = content.length > maxLength ? `${content.slice(0, maxLength)}...` : content;
+      const ingredients = row.original.ingredients || []
+      const content = ingredients.length > 0 ? ingredients.join(', ') : '—'
+      const maxLength = 25
+      const truncated =
+        content.length > maxLength
+          ? `${content.slice(0, maxLength)}...`
+          : content
 
       return (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="truncate block max-w-[200px] text-sm text-muted-foreground cursor-help">
+              <span className='text-muted-foreground block max-w-[200px] cursor-help truncate text-sm'>
                 {truncated}
               </span>
             </TooltipTrigger>
             {ingredients.length > 0 && (
-              <TooltipContent className="max-w-xs">
+              <TooltipContent className='max-w-xs'>
                 <p>{content}</p>
               </TooltipContent>
             )}
           </Tooltip>
         </TooltipProvider>
-      );
+      )
     },
   },
 
   // ✅ Benefits
   {
     accessorKey: 'benefits',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Benefits" className='text-center' />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title='Benefits'
+        className='text-center'
+      />
+    ),
     cell: ({ row }) => {
-      const benefits = row.original.benefits || [];
-      const content = benefits.length > 0 ? benefits.join(', ') : '—';
-      const maxLength = 25;
-      const truncated = content.length > maxLength ? `${content.slice(0, maxLength)}...` : content;
+      const benefits = row.original.benefits || []
+      const content = benefits.length > 0 ? benefits.join(', ') : '—'
+      const maxLength = 25
+      const truncated =
+        content.length > maxLength
+          ? `${content.slice(0, maxLength)}...`
+          : content
 
       return (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="truncate block max-w-[200px] text-sm text-muted-foreground cursor-help">
+              <span className='text-muted-foreground block max-w-[200px] cursor-help truncate text-sm'>
                 {truncated}
               </span>
             </TooltipTrigger>
             {benefits.length > 0 && (
-              <TooltipContent className="max-w-xs">
+              <TooltipContent className='max-w-xs'>
                 <p>{content}</p>
               </TooltipContent>
             )}
           </Tooltip>
         </TooltipProvider>
-      );
+      )
     },
   },
   // ✅ Image (Eye Button Preview)
   {
     id: 'images',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Images" className='text-center' />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title='Images'
+        className='text-center'
+      />
+    ),
     cell: ({ row }) => {
-      const images = row.original.images || [];
-      if (images.length === 0) return <span>—</span>;
+      const images = row.original.images || []
+      if (images.length === 0) return <span>—</span>
       return (
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="outline" size="icon">
-              <Eye className="h-4 w-4 !bg-transparent" />
+            <Button variant='outline' size='icon'>
+              <Eye className='h-4 w-4 !bg-transparent' />
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]">
+          <DialogContent className='sm:max-w-[600px]'>
             <DialogHeader>
               <DialogTitle>Product Images</DialogTitle>
             </DialogHeader>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
+            <div className='mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3'>
               {(() => {
-                type ImageLike = string | { url: string };
+                type ImageLike = string | { url: string }
                 const hasUrl = (value: unknown): value is { url: string } =>
-                  typeof value === 'object' && value !== null &&
-                  typeof (value as { url?: unknown }).url === 'string';
-                const imgs = (images ?? []) as unknown as ImageLike[];
-                const base = import.meta.env.VITE_IMAGE_BASE_URL ?? '';
+                  typeof value === 'object' &&
+                  value !== null &&
+                  typeof (value as { url?: unknown }).url === 'string'
+                const imgs = (images ?? []) as unknown as ImageLike[]
+                const base = import.meta.env.VITE_IMAGE_BASE_URL ?? ''
                 return imgs.map((img, index) => {
-                  const path = typeof img === 'string' ? img : hasUrl(img) ? img.url : '';
-                  const src = `${base}${path}`;
+                  const path =
+                    typeof img === 'string' ? img : hasUrl(img) ? img.url : ''
+                  const src = `${base}${path}`
                   return (
                     <img
                       key={index}
                       src={src}
                       alt={`Product Image ${index + 1}`}
-                      className="w-full h-32 object-cover rounded border"
+                      className='h-32 w-full rounded border object-cover'
                     />
-                  );
-                });
+                  )
+                })
               })()}
             </div>
           </DialogContent>
         </Dialog>
-      );
+      )
     },
   },
 
   // ✅ Premium Badge
   {
     accessorKey: 'isPremium',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Premium" className='text-center' />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title='Premium'
+        className='text-center'
+      />
+    ),
     cell: ({ row }) => {
-      const isPremium = row.getValue('isPremium') as boolean;
+      const isPremium = row.getValue('isPremium') as boolean
       return (
         <Badge variant={isPremium ? 'enable' : 'destructive'}>
           {isPremium ? 'Yes' : 'No'}
         </Badge>
-      );
+      )
     },
     enableSorting: true,
   },
@@ -232,30 +305,42 @@ export const columns: ColumnDef<Product>[] = [
   // ✅ Popular Badge
   {
     accessorKey: 'isPopular',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Popular" className='text-center' />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title='Popular'
+        className='text-center'
+      />
+    ),
     cell: ({ row }) => {
-      const isPopular = row.getValue('isPopular') as boolean;
+      const isPopular = row.getValue('isPopular') as boolean
       return (
         <Badge variant={isPopular ? 'enable' : 'destructive'}>
           {isPopular ? 'Yes' : 'No'}
         </Badge>
-      );
+      )
     },
     enableSorting: true,
   },
 
   // ✅ Variants
   {
-    id: "variants",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Variants" className='text-center' />,
+    id: 'variants',
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title='Variants'
+        className='text-center'
+      />
+    ),
     cell: ({ row }) => {
-      const variants = row.original.variants;
-      const gmVariants = variants?.gm || [];
-      const kgVariants = variants?.kg || [];
+      const variants = row.original.variants
+      const gmVariants = variants?.gm || []
+      const kgVariants = variants?.kg || []
 
       // ✅ Helper to clean weight suffix (avoids duplicate "g" or "kg")
       const formatWeight = (weight: string, unit: string) =>
-        weight.toLowerCase().endsWith(unit) ? weight : `${weight}${unit}`;
+        weight.toLowerCase().endsWith(unit) ? weight : `${weight}${unit}`
 
       // ✅ Format INR like the mock (e.g. ₹2,940)
       const formatINR = (amount: number) =>
@@ -263,46 +348,53 @@ export const columns: ColumnDef<Product>[] = [
           style: 'currency',
           currency: 'INR',
           maximumFractionDigits: 0,
-        }).format(amount);
+        }).format(amount)
 
       return (
         <div className='flex justify-center'>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <IndianRupee className="h-4 w-4" />
+              <Button variant='ghost' size='icon' className='h-8 w-8'>
+                <IndianRupee className='h-4 w-4' />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-72 pt-4">
+            <DropdownMenuContent align='center' className='w-72 pt-4'>
               {/* Gram Variants */}
               {gmVariants.length > 0 && (
                 <>
-                  <p className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 rounded-md mx-2 mb-1">
+                  <p className='mx-2 mb-1 rounded-md bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700'>
                     Gram Variants
                   </p>
                   {gmVariants.map((v, i) => {
-                    const discountPercent = Math.max(0, Math.min(100, v.discount || 0));
+                    const discountPercent = Math.max(
+                      0,
+                      Math.min(100, v.discount || 0)
+                    )
                     return (
                       <DropdownMenuItem
                         key={`gm-${i}`}
-                        className="text-sm px-3 py-2 rounded-lg border flex items-center justify-between gap-3 mx-2 my-1 hover:bg-muted/50"
+                        className='hover:bg-muted/50 mx-2 my-1 flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm'
                       >
-                        <span className="font-medium">{formatWeight(v.weight, "g")}</span>
-                        <span className="ml-auto flex items-center gap-2">
+                        <span className='font-medium'>
+                          {formatWeight(v.weight, 'g')}
+                        </span>
+                        <span className='ml-auto flex items-center gap-2'>
                           {discountPercent > 0 && (
-                            <span className="line-through text-muted-red">
+                            <span className='text-muted-red line-through'>
                               {formatINR(v.price)}
                             </span>
                           )}
-                          <span className="font-semibold">{formatINR(v.price - v.discount)}</span>
+                          <span className='font-semibold'>
+                            {formatINR(v.price - v.discount)}
+                          </span>
                           {discountPercent > 0 && (
-                            <span className="text-xs rounded-full px-2 py-0.5 bg-red-600 text-white">
+                            <span className='rounded-full bg-red-600 px-2 py-0.5 text-xs text-white'>
                               - {formatINR(v.discount)} OFF
                             </span>
                           )}
                         </span>
                       </DropdownMenuItem>
-                    );
+                    )
                   })}
                 </>
               )}
@@ -310,53 +402,68 @@ export const columns: ColumnDef<Product>[] = [
               {/* Kilogram Variants */}
               {kgVariants.length > 0 && (
                 <>
-                  <p className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 rounded-md mx-2 mt-2 mb-1">
+                  <p className='mx-2 mt-2 mb-1 rounded-md bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700'>
                     Kilogram Variants
                   </p>
                   {kgVariants.map((v, i) => {
-                    const discountPercent = Math.max(0, Math.min(100, v.discount || 0));
+                    const discountPercent = Math.max(
+                      0,
+                      Math.min(100, v.discount || 0)
+                    )
                     return (
                       <DropdownMenuItem
                         key={`kg-${i}`}
-                        className="text-sm px-3 py-2 rounded-lg border flex items-center justify-between gap-3 mx-2 my-1 hover:bg-muted/50"
+                        className='hover:bg-muted/50 mx-2 my-1 flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm'
                       >
-                        <span className="font-medium">{formatWeight(v.weight, "kg")}</span>
-                        <span className="ml-auto flex items-center gap-2">
+                        <span className='font-medium'>
+                          {formatWeight(v.weight, 'kg')}
+                        </span>
+                        <span className='ml-auto flex items-center gap-2'>
                           {discountPercent > 0 && (
-                            <span className="line-through text-muted-red hover:text-l">
+                            <span className='text-muted-red hover:text-l line-through'>
                               {formatINR(v.price)}
                             </span>
                           )}
-                          <span className="font-semibold">{formatINR(v.price - v.discount)}</span>
+                          <span className='font-semibold'>
+                            {formatINR(v.price - v.discount)}
+                          </span>
                           {discountPercent > 0 && (
-                            <span className="text-xs rounded-full px-2 py-0.5 bg-red-600 text-white">
+                            <span className='rounded-full bg-red-600 px-2 py-0.5 text-xs text-white'>
                               - {formatINR(v.discount)} OFF
                             </span>
                           )}
                         </span>
                       </DropdownMenuItem>
-                    );
+                    )
                   })}
                 </>
               )}
 
               {/* No Variants */}
               {!gmVariants.length && !kgVariants.length && (
-                <p className="px-2 py-2 text-sm text-gray-500 text-center">No variants available</p>
+                <p className='px-2 py-2 text-center text-sm text-gray-500'>
+                  No variants available
+                </p>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      );
+      )
     },
   },
 
   // ✅ Actions
   {
     id: 'actions',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" className='text-center' />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title='Actions'
+        className='text-center'
+      />
+    ),
     cell: ({ row }) => <DataTableRowActions row={row} />,
     enableSorting: false,
     enableHiding: false,
   },
-];
+]

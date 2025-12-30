@@ -1,4 +1,9 @@
-import { useQuery, keepPreviousData, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  useQuery,
+  keepPreviousData,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query'
 import api from '@/lib/api'
 
 export interface PartnershipRequest {
@@ -47,7 +52,10 @@ const getPartnershipRequestsApi = async (
     : (payload?.results ?? [])
 
   const total: number | undefined =
-    payload?.total ?? payload?.count ?? payload?.totalResults ?? (Array.isArray(payload) ? results.length : undefined)
+    payload?.total ??
+    payload?.count ??
+    payload?.totalResults ??
+    (Array.isArray(payload) ? results.length : undefined)
   const currentPage: number | undefined = payload?.page ?? payload?.currentPage
   const currentLimit: number | undefined = payload?.limit ?? payload?.pageSize
 
@@ -59,11 +67,21 @@ const getPartnershipRequestsApi = async (
   }
 }
 
-export function usePartnershipRequestsList(params: GetPartnershipRequestsParams) {
+export function usePartnershipRequestsList(
+  params: GetPartnershipRequestsParams
+) {
   const { page = 1, limit = 10, searchTerm } = params
   return useQuery({
-    queryKey: ['partnership-requests', { page, limit, searchTerm: searchTerm || undefined }],
-    queryFn: () => getPartnershipRequestsApi({ page, limit, searchTerm: searchTerm || undefined }),
+    queryKey: [
+      'partnership-requests',
+      { page, limit, searchTerm: searchTerm || undefined },
+    ],
+    queryFn: () =>
+      getPartnershipRequestsApi({
+        page,
+        limit,
+        searchTerm: searchTerm || undefined,
+      }),
     placeholderData: keepPreviousData,
     staleTime: 1000 * 30,
     retry: 3,
@@ -73,10 +91,17 @@ export function usePartnershipRequestsList(params: GetPartnershipRequestsParams)
 
 // Mutations
 export type UpdatePartnershipRequestPayload = Partial<
-  Pick<PartnershipRequest, 'fullName' | 'emailAddress' | 'phoneNumber' | 'additionalInformation'>
-> & Record<string, unknown>
+  Pick<
+    PartnershipRequest,
+    'fullName' | 'emailAddress' | 'phoneNumber' | 'additionalInformation'
+  >
+> &
+  Record<string, unknown>
 
-const updatePartnershipRequestApi = async (params: { id: string; data: UpdatePartnershipRequestPayload }) => {
+const updatePartnershipRequestApi = async (params: {
+  id: string
+  data: UpdatePartnershipRequestPayload
+}) => {
   const { id, data } = params
   const response = await api.patch(`/partnership-requests/${id}`, data)
   return response.data

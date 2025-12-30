@@ -1,8 +1,8 @@
 import Cookies from 'js-cookie'
-import { create } from 'zustand'
 import { QueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import { create } from 'zustand'
 import api from '@/lib/api'
-import { toast } from 'sonner';
 
 const ACCESS_TOKEN = 'thisisjustarandomstring'
 
@@ -84,26 +84,27 @@ export const useAuthStore = create<AuthState>()((set) => {
       fetchUser: async () => {
         set((state) => ({
           ...state,
-          auth: { ...state.auth, isLoading: true, error: null }
+          auth: { ...state.auth, isLoading: true, error: null },
         }))
         try {
           const userData = await queryClient.fetchQuery({
             queryKey: ['user'],
-            queryFn: getCurrentUser
+            queryFn: getCurrentUser,
           })
           set((state) => ({
             ...state,
-            auth: { ...state.auth, user: userData, isLoading: false }
+            auth: { ...state.auth, user: userData, isLoading: false },
           }))
         } catch (error) {
-          toast.error(error instanceof Error ? error.message : String(error));
+          toast.error(error instanceof Error ? error.message : String(error))
           set((state) => ({
             ...state,
             auth: {
               ...state.auth,
-              error: error instanceof Error ? error.message : 'Failed to fetch user',
-              isLoading: false
-            }
+              error:
+                error instanceof Error ? error.message : 'Failed to fetch user',
+              isLoading: false,
+            },
           }))
         }
       },

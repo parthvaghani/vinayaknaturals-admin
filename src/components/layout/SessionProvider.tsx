@@ -1,18 +1,18 @@
-import { useEffect } from 'react';
-import { useAuthStore } from '@/stores/authStore';
-import { useNavigate } from '@tanstack/react-router';
+import { useEffect } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import { useAuthStore } from '@/stores/authStore'
 
 interface SessionProviderProps {
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 export function SessionProvider({ children }: SessionProviderProps) {
-  const navigate = useNavigate();
-  const fetchUser = useAuthStore((state) => state.auth.fetchUser);
+  const navigate = useNavigate()
+  const fetchUser = useAuthStore((state) => state.auth.fetchUser)
 
   useEffect(() => {
-    fetchUser();
-  }, [fetchUser, navigate]);
+    fetchUser()
+  }, [fetchUser, navigate])
 
-  return <>{children}</>;
+  return <>{children}</>
 }

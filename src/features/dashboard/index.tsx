@@ -1,345 +1,382 @@
+import { useMemo, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import {
+  ClockArrowDown,
+  HandCoins,
+  IndianRupee,
+  PackageOpen,
+  PackageCheck,
+  XCircle,
+  Monitor,
+} from 'lucide-react'
+import type { DateRange } from 'react-day-picker'
+import type { Order } from '@/hooks/use-orders'
+import { useOrdersList } from '@/hooks/use-orders'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
-import { Header } from '@/components/layout/header';
-import { Main } from '@/components/layout/main';
-import { TopNav } from '@/components/layout/top-nav';
-import { ProfileDropdown } from '@/components/profile-dropdown';
-import { Search } from '@/components/search';
-import { Overview } from './components/overview';
-import { useMemo, useState } from 'react';
-import type { Order } from '@/hooks/use-orders';
-import DateRangePicker from '@/components/date-range-picker';
-import type { DateRange } from 'react-day-picker';
-import { useOrdersList } from '@/hooks/use-orders';
-import { ClockArrowDown, HandCoins, IndianRupee, PackageOpen, PackageCheck, XCircle, Monitor } from 'lucide-react';
-import { RecentSales } from './components/recent-sales';
-import { Button } from '@/components/ui/button';
-import { useNavigate } from '@tanstack/react-router';
-
+} from '@/components/ui/card'
+import { Tabs, TabsContent } from '@/components/ui/tabs'
+import DateRangePicker from '@/components/date-range-picker'
+import { Header } from '@/components/layout/header'
+import { Main } from '@/components/layout/main'
+import { TopNav } from '@/components/layout/top-nav'
+import { ProfileDropdown } from '@/components/profile-dropdown'
+import { Search } from '@/components/search'
+import { Overview } from './components/overview'
+import { RecentSales } from './components/recent-sales'
 
 function formatDate(date: Date): string {
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = String(date.getFullYear()).slice(-2);
-  return `${day}/${month}/${year}`;
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = String(date.getFullYear()).slice(-2)
+  return `${day}/${month}/${year}`
 }
 
-
 export default function Dashboard() {
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const navigate = useNavigate();
-  const { data: placedOrdersData, isLoading: isPlacedLoading } = useOrdersList({ page: 1, limit: 1, status: 'placed' });
-  const { data: deliveredOrdersData, isLoading: isDeliveredLoading } = useOrdersList({ page: 1, limit: 1, status: 'delivered' });
-  const { data: cancelledOrdersData, isLoading: isCancelledLoading } = useOrdersList({ page: 1, limit: 1, status: 'cancelled' });
-  const { data: allOrdersData, isLoading: isAllOrdersLoading } = useOrdersList({ page: 1, limit: 1000000000, sortBy: 'createdAt:desc' });
-  const placedOrdersCount = placedOrdersData?.total ?? 0;
-  const deliveredOrdersCount = deliveredOrdersData?.total ?? 0;
-  const cancelledOrdersCount = cancelledOrdersData?.total ?? 0;
-
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
+  const navigate = useNavigate()
+  const { data: placedOrdersData, isLoading: isPlacedLoading } = useOrdersList({
+    page: 1,
+    limit: 1,
+    status: 'placed',
+  })
+  const { data: deliveredOrdersData, isLoading: isDeliveredLoading } =
+    useOrdersList({ page: 1, limit: 1, status: 'delivered' })
+  const { data: cancelledOrdersData, isLoading: isCancelledLoading } =
+    useOrdersList({ page: 1, limit: 1, status: 'cancelled' })
+  const { data: allOrdersData, isLoading: isAllOrdersLoading } = useOrdersList({
+    page: 1,
+    limit: 1000000000,
+    sortBy: 'createdAt:desc',
+  })
+  const placedOrdersCount = placedOrdersData?.total ?? 0
+  const deliveredOrdersCount = deliveredOrdersData?.total ?? 0
+  const cancelledOrdersCount = cancelledOrdersData?.total ?? 0
 
   const formatINR = (amount: number) =>
     new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 0,
-    }).format(amount);
-
+    }).format(amount)
 
   const revenueBreakdown = useMemo(() => {
-    const orders = (allOrdersData?.results ?? []) as Order[];
-    const from = dateRange?.from ? new Date(dateRange.from).getTime() : undefined;
-    const to = dateRange?.to ? new Date(dateRange.to).getTime() : undefined;
-
+    const orders = (allOrdersData?.results ?? []) as Order[]
+    const from = dateRange?.from
+      ? new Date(dateRange.from).getTime()
+      : undefined
+    const to = dateRange?.to ? new Date(dateRange.to).getTime() : undefined
 
     const inRange = (iso?: string) => {
-      if (!from && !to) return true;
-      if (!iso) return false;
-      const t = new Date(iso).getTime();
-      if (Number.isNaN(t)) return false;
-      if (from && t < from) return false;
-      if (to && t > to) return false;
-      return true;
-    };
-
+      if (!from && !to) return true
+      if (!iso) return false
+      const t = new Date(iso).getTime()
+      if (Number.isNaN(t)) return false
+      if (from && t < from) return false
+      if (to && t > to) return false
+      return true
+    }
 
     const computeDiscountedTotal = (o: Order) => {
       const lines = (o.productsDetails ?? []).map((p) => {
-        const unit = Number(p.pricePerUnit || 0);
-        const off = Number(p.discount || 0);
-        const qty = Number(p.totalUnit || 1);
-        return (unit - off) * qty;
-      });
-      const subtotal = lines.reduce((sum, v) => sum + v, 0);
-      const couponDiscount = Number(o.applyCoupon?.discountAmount || 0);
-      return subtotal - couponDiscount;
-    };
+        const unit = Number(p.pricePerUnit || 0)
+        const off = Number(p.discount || 0)
+        const qty = Number(p.totalUnit || 1)
+        return (unit - off) * qty
+      })
+      const subtotal = lines.reduce((sum, v) => sum + v, 0)
+      const couponDiscount = Number(o.applyCoupon?.discountAmount || 0)
+      return subtotal - couponDiscount
+    }
 
-
-    const filtered = orders.filter((o) => inRange(o.createdAt));
+    const filtered = orders.filter((o) => inRange(o.createdAt))
     const nonCancelled = filtered
       .filter((o) => String(o.status).toLowerCase() !== 'cancelled')
       .reduce((sum, o) => {
-        const discounted = computeDiscountedTotal(o);
-        const shipping = Number(o.shippingCharge || 0);
-        return sum + discounted + shipping;
-      }, 0);
+        const discounted = computeDiscountedTotal(o)
+        const shipping = Number(o.shippingCharge || 0)
+        return sum + discounted + shipping
+      }, 0)
     const cancelled = filtered
       .filter((o) => String(o.status).toLowerCase() === 'cancelled')
       .reduce((sum, o) => {
-        const discounted = computeDiscountedTotal(o);
-        const shipping = Number(o.shippingCharge || 0);
-        return sum + discounted + shipping;
-      }, 0);
-    return { nonCancelled, cancelled, total: nonCancelled + cancelled };
-  }, [allOrdersData?.results, dateRange?.from, dateRange?.to]);
-
+        const discounted = computeDiscountedTotal(o)
+        const shipping = Number(o.shippingCharge || 0)
+        return sum + discounted + shipping
+      }, 0)
+    return { nonCancelled, cancelled, total: nonCancelled + cancelled }
+  }, [allOrdersData?.results, dateRange?.from, dateRange?.to])
 
   const paidBreakdown = useMemo(() => {
-    const orders = (allOrdersData?.results ?? []) as Order[];
-    const from = dateRange?.from ? new Date(dateRange.from).getTime() : undefined;
-    const to = dateRange?.to ? new Date(dateRange.to).getTime() : undefined;
-
+    const orders = (allOrdersData?.results ?? []) as Order[]
+    const from = dateRange?.from
+      ? new Date(dateRange.from).getTime()
+      : undefined
+    const to = dateRange?.to ? new Date(dateRange.to).getTime() : undefined
 
     const inRange = (iso?: string) => {
-      if (!from && !to) return true;
-      if (!iso) return false;
-      const t = new Date(iso).getTime();
-      if (Number.isNaN(t)) return false;
-      if (from && t < from) return false;
-      if (to && t > to) return false;
-      return true;
-    };
-
+      if (!from && !to) return true
+      if (!iso) return false
+      const t = new Date(iso).getTime()
+      if (Number.isNaN(t)) return false
+      if (from && t < from) return false
+      if (to && t > to) return false
+      return true
+    }
 
     const computeDiscountedTotal = (o: Order) => {
       const lines = (o.productsDetails ?? []).map((p) => {
-        const unit = Number(p.pricePerUnit || 0);
-        const off = Number(p.discount || 0);
-        const qty = Number(p.totalUnit || 1);
-        return (unit - off) * qty;
-      });
-      const subtotal = lines.reduce((sum, v) => sum + v, 0);
-      const couponDiscount = Number(o.applyCoupon?.discountAmount || 0);
-      return subtotal - couponDiscount;
-    };
-
+        const unit = Number(p.pricePerUnit || 0)
+        const off = Number(p.discount || 0)
+        const qty = Number(p.totalUnit || 1)
+        return (unit - off) * qty
+      })
+      const subtotal = lines.reduce((sum, v) => sum + v, 0)
+      const couponDiscount = Number(o.applyCoupon?.discountAmount || 0)
+      return subtotal - couponDiscount
+    }
 
     const paidOrders = orders
       .filter((o) => String(o.paymentStatus || '').toLowerCase() === 'paid')
-      .filter((o) => inRange(o.createdAt));
-
+      .filter((o) => inRange(o.createdAt))
 
     const cancelledPaid = paidOrders
       .filter((o) => String(o.status).toLowerCase() === 'cancelled')
-      .reduce((sum, o) => sum + computeDiscountedTotal(o) + Number(o.shippingCharge || 0), 0);
-
+      .reduce(
+        (sum, o) =>
+          sum + computeDiscountedTotal(o) + Number(o.shippingCharge || 0),
+        0
+      )
 
     const nonCancelledPaid = paidOrders
       .filter((o) => String(o.status).toLowerCase() !== 'cancelled')
-      .reduce((sum, o) => sum + computeDiscountedTotal(o) + Number(o.shippingCharge || 0), 0);
-
+      .reduce(
+        (sum, o) =>
+          sum + computeDiscountedTotal(o) + Number(o.shippingCharge || 0),
+        0
+      )
 
     return {
       cancelledPaid,
       nonCancelledPaid,
       totalPaid: cancelledPaid + nonCancelledPaid,
-    };
-  }, [allOrdersData?.results, dateRange?.from, dateRange?.to]);
-
+    }
+  }, [allOrdersData?.results, dateRange?.from, dateRange?.to])
 
   const unpaidBreakdown = useMemo(() => {
-    const orders = (allOrdersData?.results ?? []) as Order[];
-    const from = dateRange?.from ? new Date(dateRange.from).getTime() : undefined;
-    const to = dateRange?.to ? new Date(dateRange.to).getTime() : undefined;
-
+    const orders = (allOrdersData?.results ?? []) as Order[]
+    const from = dateRange?.from
+      ? new Date(dateRange.from).getTime()
+      : undefined
+    const to = dateRange?.to ? new Date(dateRange.to).getTime() : undefined
 
     const inRange = (iso?: string) => {
-      if (!from && !to) return true;
-      if (!iso) return false;
-      const t = new Date(iso).getTime();
-      if (Number.isNaN(t)) return false;
-      if (from && t < from) return false;
-      if (to && t > to) return false;
-      return true;
-    };
-
+      if (!from && !to) return true
+      if (!iso) return false
+      const t = new Date(iso).getTime()
+      if (Number.isNaN(t)) return false
+      if (from && t < from) return false
+      if (to && t > to) return false
+      return true
+    }
 
     const computeDiscountedTotal = (o: Order) => {
       const lines = (o.productsDetails ?? []).map((p) => {
-        const unit = Number(p.pricePerUnit || 0);
-        const off = Number(p.discount || 0);
-        const qty = Number(p.totalUnit || 1);
-        return (unit - off) * qty;
-      });
-      const subtotal = lines.reduce((sum, v) => sum + v, 0);
-      const couponDiscount = Number(o.applyCoupon?.discountAmount || 0);
-      return subtotal - couponDiscount;
-    };
-
+        const unit = Number(p.pricePerUnit || 0)
+        const off = Number(p.discount || 0)
+        const qty = Number(p.totalUnit || 1)
+        return (unit - off) * qty
+      })
+      const subtotal = lines.reduce((sum, v) => sum + v, 0)
+      const couponDiscount = Number(o.applyCoupon?.discountAmount || 0)
+      return subtotal - couponDiscount
+    }
 
     const unpaidOrders = orders
       .filter((o) => String(o.paymentStatus || '').toLowerCase() !== 'paid')
-      .filter((o) => inRange(o.createdAt));
-
+      .filter((o) => inRange(o.createdAt))
 
     const cancelledUnpaid = unpaidOrders
       .filter((o) => String(o.status).toLowerCase() === 'cancelled')
-      .reduce((sum, o) => sum + computeDiscountedTotal(o) + Number(o.shippingCharge || 0), 0);
-
+      .reduce(
+        (sum, o) =>
+          sum + computeDiscountedTotal(o) + Number(o.shippingCharge || 0),
+        0
+      )
 
     const nonCancelledUnpaid = unpaidOrders
       .filter((o) => String(o.status).toLowerCase() !== 'cancelled')
-      .reduce((sum, o) => sum + computeDiscountedTotal(o) + Number(o.shippingCharge || 0), 0);
-
+      .reduce(
+        (sum, o) =>
+          sum + computeDiscountedTotal(o) + Number(o.shippingCharge || 0),
+        0
+      )
 
     return {
       cancelledUnpaid,
       nonCancelledUnpaid,
       totalUnpaid: cancelledUnpaid + nonCancelledUnpaid,
-    };
-  }, [allOrdersData?.results, dateRange?.from, dateRange?.to]);
-
+    }
+  }, [allOrdersData?.results, dateRange?.from, dateRange?.to])
 
   const overviewSeries = useMemo(() => {
-    const orders = (allOrdersData?.results ?? []) as Order[];
-    const from = dateRange?.from ? new Date(dateRange.from) : undefined;
-    const to = dateRange?.to ? new Date(dateRange.to) : undefined;
-
+    const orders = (allOrdersData?.results ?? []) as Order[]
+    const from = dateRange?.from ? new Date(dateRange.from) : undefined
+    const to = dateRange?.to ? new Date(dateRange.to) : undefined
 
     const inRange = (iso?: string) => {
-      if (!from && !to) return true;
-      if (!iso) return false;
-      const t = new Date(iso).getTime();
-      if (Number.isNaN(t)) return false;
-      if (from && t < from.getTime()) return false;
-      if (to && t > to.getTime()) return false;
-      return true;
-    };
-
+      if (!from && !to) return true
+      if (!iso) return false
+      const t = new Date(iso).getTime()
+      if (Number.isNaN(t)) return false
+      if (from && t < from.getTime()) return false
+      if (to && t > to.getTime()) return false
+      return true
+    }
 
     const computeDiscountedTotal = (o: Order) => {
       const lines = (o.productsDetails ?? []).map((p) => {
-        const unit = Number(p.pricePerUnit || 0);
-        const off = Number(p.discount || 0);
-        const qty = Number(p.totalUnit || 1);
-        return (unit - off) * qty;
-      });
-      const subtotal = lines.reduce((sum, v) => sum + v, 0);
-      const couponDiscount = Number(o.applyCoupon?.discountAmount || 0);
-      return subtotal - couponDiscount + Number(o.shippingCharge || 0);
-    };
-
+        const unit = Number(p.pricePerUnit || 0)
+        const off = Number(p.discount || 0)
+        const qty = Number(p.totalUnit || 1)
+        return (unit - off) * qty
+      })
+      const subtotal = lines.reduce((sum, v) => sum + v, 0)
+      const couponDiscount = Number(o.applyCoupon?.discountAmount || 0)
+      return subtotal - couponDiscount + Number(o.shippingCharge || 0)
+    }
 
     // choose bucket: daily if explicit range chosen and range <= 92 days, else monthly
-    const useDaily = Boolean(from && to && (to.getTime() - from.getTime()) <= 1000 * 60 * 60 * 24 * 92);
+    const useDaily = Boolean(
+      from && to && to.getTime() - from.getTime() <= 1000 * 60 * 60 * 24 * 92
+    )
     const keyFor = (d: Date) => {
       if (useDaily) {
-        const dd = String(d.getDate()).padStart(2, '0');
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const yy = String(d.getFullYear()).slice(-2);
-        return `${dd}/${mm}/${yy}`;
+        const dd = String(d.getDate()).padStart(2, '0')
+        const mm = String(d.getMonth() + 1).padStart(2, '0')
+        const yy = String(d.getFullYear()).slice(-2)
+        return `${dd}/${mm}/${yy}`
       }
       // month label like Jan '25
-      return d.toLocaleString('en-US', { month: 'short', year: '2-digit' });
-    };
-
+      return d.toLocaleString('en-US', { month: 'short', year: '2-digit' })
+    }
 
     // Aggregate totals per bucket (total, paid/unpaid, cancelled/non-cancelled)
     type Bucket = {
-      total: number;
-      nonCancelled: number;
-      cancelled: number;
-      paid: number;
-      unpaid: number;
-      nonCancelledPaid: number;
-      nonCancelledUnpaid: number;
-      cancelledPaid: number;
-      cancelledUnpaid: number;
-    };
-    const empty: Bucket = { total: 0, nonCancelled: 0, cancelled: 0, paid: 0, unpaid: 0, nonCancelledPaid: 0, nonCancelledUnpaid: 0, cancelledPaid: 0, cancelledUnpaid: 0 };
-    const map = new Map<string, Bucket>();
-    for (const o of orders) {
-      if (!inRange(o.createdAt)) continue;
-      const d = new Date(o.createdAt);
-      const k = keyFor(d);
-      const prev = map.get(k) ?? { ...empty };
-      const amount = computeDiscountedTotal(o);
-      const isCancelled = String(o.status).toLowerCase() === 'cancelled';
-      const isPaid = String(o.paymentStatus || '').toLowerCase() === 'paid';
-
-
-      prev.total += amount;
-      if (isCancelled) {
-        prev.cancelled += amount;
-        if (isPaid) prev.cancelledPaid += amount; else prev.cancelledUnpaid += amount;
-      } else {
-        prev.nonCancelled += amount;
-        if (isPaid) prev.nonCancelledPaid += amount; else prev.nonCancelledUnpaid += amount;
-      }
-      if (isPaid) prev.paid += amount; else prev.unpaid += amount;
-
-
-      map.set(k, prev);
+      total: number
+      nonCancelled: number
+      cancelled: number
+      paid: number
+      unpaid: number
+      nonCancelledPaid: number
+      nonCancelledUnpaid: number
+      cancelledPaid: number
+      cancelledUnpaid: number
     }
+    const empty: Bucket = {
+      total: 0,
+      nonCancelled: 0,
+      cancelled: 0,
+      paid: 0,
+      unpaid: 0,
+      nonCancelledPaid: 0,
+      nonCancelledUnpaid: 0,
+      cancelledPaid: 0,
+      cancelledUnpaid: 0,
+    }
+    const map = new Map<string, Bucket>()
+    for (const o of orders) {
+      if (!inRange(o.createdAt)) continue
+      const d = new Date(o.createdAt)
+      const k = keyFor(d)
+      const prev = map.get(k) ?? { ...empty }
+      const amount = computeDiscountedTotal(o)
+      const isCancelled = String(o.status).toLowerCase() === 'cancelled'
+      const isPaid = String(o.paymentStatus || '').toLowerCase() === 'paid'
 
+      prev.total += amount
+      if (isCancelled) {
+        prev.cancelled += amount
+        if (isPaid) prev.cancelledPaid += amount
+        else prev.cancelledUnpaid += amount
+      } else {
+        prev.nonCancelled += amount
+        if (isPaid) prev.nonCancelledPaid += amount
+        else prev.nonCancelledUnpaid += amount
+      }
+      if (isPaid) prev.paid += amount
+      else prev.unpaid += amount
+
+      map.set(k, prev)
+    }
 
     // If using daily and a full range is provided, ensure all days exist in the series
     if (useDaily && from && to) {
-      const cur = new Date(from);
+      const cur = new Date(from)
       while (cur.getTime() <= to.getTime()) {
-        const k = keyFor(cur);
-        if (!map.has(k)) map.set(k, { ...empty });
-        cur.setDate(cur.getDate() + 1);
+        const k = keyFor(cur)
+        if (!map.has(k)) map.set(k, { ...empty })
+        cur.setDate(cur.getDate() + 1)
       }
     }
-
 
     // If using monthly, fill month gaps over a sensible window
     if (!useDaily) {
       // Decide window: if from/to provided, use their month span, else last 12 months
-      let start = from ? new Date(from.getFullYear(), from.getMonth(), 1) : new Date();
-      if (!from) start = new Date(start.getFullYear(), start.getMonth() - 11, 1);
-      let end = to ? new Date(to.getFullYear(), to.getMonth(), 1) : new Date();
+      let start = from
+        ? new Date(from.getFullYear(), from.getMonth(), 1)
+        : new Date()
+      if (!from) start = new Date(start.getFullYear(), start.getMonth() - 11, 1)
+      let end = to ? new Date(to.getFullYear(), to.getMonth(), 1) : new Date()
       // Ensure start <= end
       if (start.getTime() > end.getTime()) {
-        const tmp = start; start = end; end = tmp;
+        const tmp = start
+        start = end
+        end = tmp
       }
-      const cur = new Date(start);
+      const cur = new Date(start)
       while (cur.getTime() <= end.getTime()) {
-        const k = keyFor(cur);
-        if (!map.has(k)) map.set(k, { ...empty });
-        cur.setMonth(cur.getMonth() + 1);
+        const k = keyFor(cur)
+        if (!map.has(k)) map.set(k, { ...empty })
+        cur.setMonth(cur.getMonth() + 1)
       }
     }
-
 
     // Sort chronologically
     const parseKey = (k: string) => {
       if (useDaily) {
-        const [dd, mm, yy] = k.split('/');
-        return new Date(Number(`20${yy}`), Number(mm) - 1, Number(dd)).getTime();
+        const [dd, mm, yy] = k.split('/')
+        return new Date(Number(`20${yy}`), Number(mm) - 1, Number(dd)).getTime()
       }
-      const [mon, y] = k.split(' '); // e.g., "Jan 25"
-      const monthIndex = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(mon);
-      return new Date(Number(`20${y}`), monthIndex, 1).getTime();
-    };
-
+      const [mon, y] = k.split(' ') // e.g., "Jan 25"
+      const monthIndex = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ].indexOf(mon)
+      return new Date(Number(`20${y}`), monthIndex, 1).getTime()
+    }
 
     const series = Array.from(map.entries())
       .sort((a, b) => parseKey(a[0]) - parseKey(b[0]))
-      .map(([name, bucket]) => ({ name, ...bucket }));
+      .map(([name, bucket]) => ({ name, ...bucket }))
 
-
-    return series;
-  }, [allOrdersData?.results, dateRange?.from, dateRange?.to]);
-
-
+    return series
+  }, [allOrdersData?.results, dateRange?.from, dateRange?.to])
 
   return (
     <>
@@ -351,7 +388,6 @@ export default function Dashboard() {
           <ProfileDropdown />
         </div>
       </Header>
-
 
       {/* ===== Main ===== */}
       <Main>
@@ -366,9 +402,9 @@ export default function Dashboard() {
           </div>
           <Button
             onClick={() => navigate({ to: '/pos' })}
-            className="bg-primary hover:bg-primary-dark text-white"
+            className='bg-primary hover:bg-primary-dark text-white'
           >
-            <Monitor className="w-4 h-4 mr-2" />
+            <Monitor className='mr-2 h-4 w-4' />
             Open POS
           </Button>
         </div>
@@ -393,21 +429,26 @@ export default function Dashboard() {
                   <div className='text-2xl font-bold'>
                     {isPlacedLoading ? '...' : placedOrdersCount}
                   </div>
-                  <p className='text-muted-foreground text-xs mb-3'>
+                  <p className='text-muted-foreground mb-3 text-xs'>
                     Number of orders recently placed by customers
                   </p>
-                  <div className='space-y-1 pt-2 border-t'>
+                  <div className='space-y-1 border-t pt-2'>
                     <div className='flex items-center justify-between'>
-                      <span className='text-xs text-muted-foreground flex items-center gap-1'>
-                        <PackageCheck className='h-3.5 w-3.5' /> Delivered Orders
+                      <span className='text-muted-foreground flex items-center gap-1 text-xs'>
+                        <PackageCheck className='h-3.5 w-3.5' /> Delivered
+                        Orders
                       </span>
-                      <span className='font-semibold text-sm'>{isDeliveredLoading ? '...' : deliveredOrdersCount}</span>
+                      <span className='text-sm font-semibold'>
+                        {isDeliveredLoading ? '...' : deliveredOrdersCount}
+                      </span>
                     </div>
                     <div className='flex items-center justify-between'>
-                      <span className='text-xs text-muted-foreground flex items-center gap-1'>
+                      <span className='text-muted-foreground flex items-center gap-1 text-xs'>
                         <XCircle className='h-3.5 w-3.5' /> Cancelled Orders
                       </span>
-                      <span className='font-semibold text-sm'>{isCancelledLoading ? '...' : cancelledOrdersCount}</span>
+                      <span className='text-sm font-semibold'>
+                        {isCancelledLoading ? '...' : cancelledOrdersCount}
+                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -425,19 +466,32 @@ export default function Dashboard() {
                   ) : (
                     <div className='space-y-1'>
                       <div className='flex items-center justify-between'>
-                        <span className='text-xs text-muted-foreground'>Non-cancelled Orders</span>
-                        <span className='font-semibold'>{formatINR(revenueBreakdown.nonCancelled)}</span>
+                        <span className='text-muted-foreground text-xs'>
+                          Non-cancelled Orders
+                        </span>
+                        <span className='font-semibold'>
+                          {formatINR(revenueBreakdown.nonCancelled)}
+                        </span>
                       </div>
                       <div className='flex items-center justify-between'>
-                        <span className='text-xs text-muted-foreground'>Cancelled Orders</span>
-                        <span className='font-semibold'>{formatINR(revenueBreakdown.cancelled)}</span>
+                        <span className='text-muted-foreground text-xs'>
+                          Cancelled Orders
+                        </span>
+                        <span className='font-semibold'>
+                          {formatINR(revenueBreakdown.cancelled)}
+                        </span>
                       </div>
-                      <div className='flex items-center justify-between pt-1 border-t mt-2'>
+                      <div className='mt-2 flex items-center justify-between border-t pt-1'>
                         <span className='text-sm font-medium'>Total</span>
-                        <span className='text-lg font-bold'>{formatINR(revenueBreakdown.total)}</span>
+                        <span className='text-lg font-bold'>
+                          {formatINR(revenueBreakdown.total)}
+                        </span>
                       </div>
                       <p className='text-muted-foreground text-[10px]'>
-                        Computed from item totals + shipping{dateRange?.from && dateRange?.to ? ' in selected range' : ''}
+                        Computed from item totals + shipping
+                        {dateRange?.from && dateRange?.to
+                          ? ' in selected range'
+                          : ''}
                       </p>
                     </div>
                   )}
@@ -446,7 +500,9 @@ export default function Dashboard() {
               <Card>
                 <CardHeader className='flex flex-row items-center justify-start space-y-0 pb-2'>
                   <HandCoins />
-                  <CardTitle className='text-md font-semibold'>Received Payments</CardTitle>
+                  <CardTitle className='text-md font-semibold'>
+                    Received Payments
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {isAllOrdersLoading ? (
@@ -454,19 +510,34 @@ export default function Dashboard() {
                   ) : (
                     <div className='space-y-1'>
                       <div className='flex items-center justify-between'>
-                        <span className='text-xs text-muted-foreground'>Non-cancelled Orders (paid)</span>
-                        <span className='font-semibold'>{formatINR(paidBreakdown.nonCancelledPaid)}</span>
+                        <span className='text-muted-foreground text-xs'>
+                          Non-cancelled Orders (paid)
+                        </span>
+                        <span className='font-semibold'>
+                          {formatINR(paidBreakdown.nonCancelledPaid)}
+                        </span>
                       </div>
                       <div className='flex items-center justify-between'>
-                        <span className='text-xs text-muted-foreground'>Cancelled Orders (paid)</span>
-                        <span className='font-semibold'>{formatINR(paidBreakdown.cancelledPaid)}</span>
+                        <span className='text-muted-foreground text-xs'>
+                          Cancelled Orders (paid)
+                        </span>
+                        <span className='font-semibold'>
+                          {formatINR(paidBreakdown.cancelledPaid)}
+                        </span>
                       </div>
-                      <div className='flex items-center justify-between pt-1 border-t mt-2'>
-                        <span className='text-sm font-medium'>Total (paid)</span>
-                        <span className='text-lg font-bold'>{formatINR(paidBreakdown.totalPaid)}</span>
+                      <div className='mt-2 flex items-center justify-between border-t pt-1'>
+                        <span className='text-sm font-medium'>
+                          Total (paid)
+                        </span>
+                        <span className='text-lg font-bold'>
+                          {formatINR(paidBreakdown.totalPaid)}
+                        </span>
                       </div>
                       <p className='text-muted-foreground text-[10px]'>
-                        Paid amount split by cancelled status{dateRange?.from && dateRange?.to ? ' in selected range' : ''}
+                        Paid amount split by cancelled status
+                        {dateRange?.from && dateRange?.to
+                          ? ' in selected range'
+                          : ''}
                       </p>
                     </div>
                   )}
@@ -485,19 +556,34 @@ export default function Dashboard() {
                   ) : (
                     <div className='space-y-1'>
                       <div className='flex items-center justify-between'>
-                        <span className='text-xs text-muted-foreground'>Non-cancelled Orders (unpaid)</span>
-                        <span className='font-semibold'>{formatINR(unpaidBreakdown.nonCancelledUnpaid)}</span>
+                        <span className='text-muted-foreground text-xs'>
+                          Non-cancelled Orders (unpaid)
+                        </span>
+                        <span className='font-semibold'>
+                          {formatINR(unpaidBreakdown.nonCancelledUnpaid)}
+                        </span>
                       </div>
                       <div className='flex items-center justify-between'>
-                        <span className='text-xs text-muted-foreground'>Cancelled Orders (unpaid)</span>
-                        <span className='font-semibold'>{formatINR(unpaidBreakdown.cancelledUnpaid)}</span>
+                        <span className='text-muted-foreground text-xs'>
+                          Cancelled Orders (unpaid)
+                        </span>
+                        <span className='font-semibold'>
+                          {formatINR(unpaidBreakdown.cancelledUnpaid)}
+                        </span>
                       </div>
-                      <div className='flex items-center justify-between pt-1 border-t mt-2'>
-                        <span className='text-sm font-medium'>Total (unpaid)</span>
-                        <span className='text-lg font-bold'>{formatINR(unpaidBreakdown.totalUnpaid)}</span>
+                      <div className='mt-2 flex items-center justify-between border-t pt-1'>
+                        <span className='text-sm font-medium'>
+                          Total (unpaid)
+                        </span>
+                        <span className='text-lg font-bold'>
+                          {formatINR(unpaidBreakdown.totalUnpaid)}
+                        </span>
                       </div>
                       <p className='text-muted-foreground text-[10px]'>
-                        Unpaid amount split by cancelled status{dateRange?.from && dateRange?.to ? ' in selected range' : ''}
+                        Unpaid amount split by cancelled status
+                        {dateRange?.from && dateRange?.to
+                          ? ' in selected range'
+                          : ''}
                       </p>
                     </div>
                   )}
@@ -517,7 +603,8 @@ export default function Dashboard() {
                 <CardHeader>
                   <CardTitle>Recent Order</CardTitle>
                   <CardDescription>
-                    Latest customer orders with quick access to details and status.
+                    Latest customer orders with quick access to details and
+                    status.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className='max-h-96 overflow-auto px-6'>
@@ -529,9 +616,8 @@ export default function Dashboard() {
         </Tabs>
       </Main>
     </>
-  );
+  )
 }
-
 
 const topNav = [
   {
@@ -552,4 +638,4 @@ const topNav = [
     isActive: true,
     disabled: false,
   },
-];
+]

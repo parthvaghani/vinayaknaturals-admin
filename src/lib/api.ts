@@ -1,8 +1,9 @@
 import axios from 'axios'
-import Cookies from 'js-cookie'
 import type { AxiosRequestHeaders } from 'axios'
+import Cookies from 'js-cookie'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/authStore'
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/v1',
   timeout: 10000,
@@ -34,7 +35,9 @@ api.interceptors.response.use(
       if (clearAuth) clearAuth()
       Cookies.remove('admin_session')
       // Avoid leaving stale header around
-      const commonHeaders = (api.defaults.headers as unknown as { common: AxiosRequestHeaders }).common
+      const commonHeaders = (
+        api.defaults.headers as unknown as { common: AxiosRequestHeaders }
+      ).common
       if (commonHeaders && 'Authorization' in commonHeaders) {
         delete commonHeaders.Authorization
       }

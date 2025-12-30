@@ -287,7 +287,7 @@ export function ProductsPrimaryButtons() {
                   {productData.ingredients.map((ing, i) => (
                     <span
                       key={i}
-                      className='flex items-center gap-1 rounded bg-muted/50 px-2 py-1 text-sm'
+                      className='bg-muted/50 flex items-center gap-1 rounded px-2 py-1 text-sm'
                     >
                       {ing}
                       <button
@@ -318,7 +318,7 @@ export function ProductsPrimaryButtons() {
                   {productData.benefits.map((ben, i) => (
                     <span
                       key={i}
-                      className='flex items-center gap-1 rounded bg-muted/50 px-2 py-1 text-sm'
+                      className='bg-muted/50 flex items-center gap-1 rounded px-2 py-1 text-sm'
                     >
                       {ben}
                       <button
@@ -365,7 +365,8 @@ export function ProductsPrimaryButtons() {
                   />
                   <Button onClick={handleAddVariant}>Add</Button>
                 </div>
-                {productData.variants.gm.length > 0 || productData.variants.kg.length > 0 ? (
+                {productData.variants.gm.length > 0 ||
+                productData.variants.kg.length > 0 ? (
                   <div className='mt-2'>
                     {(['gm', 'kg'] as const).map((type) => (
                       <div key={type} className='mt-2'>
@@ -375,7 +376,7 @@ export function ProductsPrimaryButtons() {
                         {productData.variants[type].map((v, i) => (
                           <div
                             key={i}
-                            className='mt-1 flex items-center justify-between rounded border bg-muted/50 p-2'
+                            className='bg-muted/50 mt-1 flex items-center justify-between rounded border p-2'
                           >
                             <div className='flex items-center gap-3 text-sm'>
                               <span className='font-medium'>
@@ -384,12 +385,20 @@ export function ProductsPrimaryButtons() {
                               </span>
                               {v.discount ? (
                                 <>
-                                  <span className='line-through text-muted-foreground'>₹{v.price}</span>
-                                  <span className='font-semibold'>₹{v.price - v.discount}</span>
-                                  <span className='rounded bg-red-600 px-2 pt-0.5 text-xs text-white'>₹{v.discount} OFF</span>
+                                  <span className='text-muted-foreground line-through'>
+                                    ₹{v.price}
+                                  </span>
+                                  <span className='font-semibold'>
+                                    ₹{v.price - v.discount}
+                                  </span>
+                                  <span className='rounded bg-red-600 px-2 pt-0.5 text-xs text-white'>
+                                    ₹{v.discount} OFF
+                                  </span>
                                 </>
                               ) : (
-                                <span className='font-semibold'>₹{v.price}</span>
+                                <span className='font-semibold'>
+                                  ₹{v.price}
+                                </span>
                               )}
                             </div>
                             <button

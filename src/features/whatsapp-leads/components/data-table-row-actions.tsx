@@ -1,5 +1,16 @@
 import { useState } from 'react'
-import { Eye, Phone, MessageSquare, Calendar, Globe, User, Monitor } from 'lucide-react'
+import type { VariantProps } from 'class-variance-authority'
+import {
+  Eye,
+  Phone,
+  MessageSquare,
+  Calendar,
+  Globe,
+  User,
+  Monitor,
+} from 'lucide-react'
+import { useWhatsappLeadById } from '@/hooks/use-whatsapp-leads'
+import { Badge, badgeVariants } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -8,16 +19,17 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { useWhatsappLeadById } from '@/hooks/use-whatsapp-leads'
-import { Badge, badgeVariants } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import type { VariantProps } from 'class-variance-authority'
 
 interface WhatsappLeadRow {
   _id?: string
 }
 
-export function DataTableRowActions({ row }: { row: { original: WhatsappLeadRow } }) {
+export function DataTableRowActions({
+  row,
+}: {
+  row: { original: WhatsappLeadRow }
+}) {
   const [open, setOpen] = useState(false)
   const id = row.original._id || ''
   const { data } = useWhatsappLeadById(id)
@@ -26,12 +38,17 @@ export function DataTableRowActions({ row }: { row: { original: WhatsappLeadRow 
 
   return (
     <div className='flex items-center justify-center gap-2'>
-      <Button variant='ghost' size='icon' onClick={() => setOpen(true)} className='h-8 w-8'>
+      <Button
+        variant='ghost'
+        size='icon'
+        onClick={() => setOpen(true)}
+        className='h-8 w-8'
+      >
         <Eye className='h-4 w-4' />
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className='max-h-[85vh] overflow-y-auto max-w-2xl'>
+        <DialogContent className='max-h-[85vh] max-w-2xl overflow-y-auto'>
           <DialogHeader>
             <DialogTitle className='flex items-center gap-2'>
               <MessageSquare className='h-5 w-5' />
@@ -46,43 +63,57 @@ export function DataTableRowActions({ row }: { row: { original: WhatsappLeadRow 
             <div className='space-y-6'>
               {/* Lead Information */}
               <div className='space-y-4'>
-                <div className='flex items-center gap-2 text-sm font-medium text-muted-foreground'>
+                <div className='text-muted-foreground flex items-center gap-2 text-sm font-medium'>
                   <MessageSquare className='h-4 w-4' />
                   Lead Information
                 </div>
 
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
                   <div>
-                    <Label className='text-xs text-muted-foreground'>Page</Label>
-                    <div className='font-medium text-sm mt-1'>{lead.page}</div>
+                    <Label className='text-muted-foreground text-xs'>
+                      Page
+                    </Label>
+                    <div className='mt-1 text-sm font-medium'>{lead.page}</div>
                   </div>
                   <div>
-                    <Label className='text-xs text-muted-foreground'>Button</Label>
-                    <div className='text-sm mt-1'>{lead.button}</div>
+                    <Label className='text-muted-foreground text-xs'>
+                      Button
+                    </Label>
+                    <div className='mt-1 text-sm'>{lead.button}</div>
                   </div>
                 </div>
 
                 <div>
-                  <Label className='text-xs text-muted-foreground'>Message</Label>
-                  <div className='text-sm mt-1 p-3 bg-muted/50 rounded-md border'>
+                  <Label className='text-muted-foreground text-xs'>
+                    Message
+                  </Label>
+                  <div className='bg-muted/50 mt-1 rounded-md border p-3 text-sm'>
                     {lead.message}
                   </div>
                 </div>
 
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
                   <div>
-                    <Label className='text-xs text-muted-foreground flex items-center gap-1'>
+                    <Label className='text-muted-foreground flex items-center gap-1 text-xs'>
                       <Phone className='h-3 w-3' />
                       Phone Number
                     </Label>
-                    <div className='text-sm mt-1 font-mono'>{lead.phoneNumber}</div>
+                    <div className='mt-1 font-mono text-sm'>
+                      {lead.phoneNumber}
+                    </div>
                   </div>
                   <div>
-                    <Label className='text-xs text-muted-foreground'>Status</Label>
+                    <Label className='text-muted-foreground text-xs'>
+                      Status
+                    </Label>
                     <div className='mt-1'>
                       {(() => {
-                        const status = String(lead.status ?? 'new').toLowerCase()
-                        let variant: VariantProps<typeof badgeVariants>['variant'] = 'default'
+                        const status = String(
+                          lead.status ?? 'new'
+                        ).toLowerCase()
+                        let variant: VariantProps<
+                          typeof badgeVariants
+                        >['variant'] = 'default'
                         switch (status) {
                           case 'new':
                             variant = 'pending'
@@ -105,19 +136,27 @@ export function DataTableRowActions({ row }: { row: { original: WhatsappLeadRow 
                   </div>
                 </div>
 
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
                   <div>
-                    <Label className='text-xs text-muted-foreground'>WhatsApp Intent</Label>
+                    <Label className='text-muted-foreground text-xs'>
+                      WhatsApp Intent
+                    </Label>
                     <div className='mt-1'>
-                      <Badge variant={lead.whatsappIntent ? 'enable' : 'destructive'}>
+                      <Badge
+                        variant={lead.whatsappIntent ? 'enable' : 'destructive'}
+                      >
                         {lead.whatsappIntent ? 'Yes' : 'No'}
                       </Badge>
                     </div>
                   </div>
                   <div>
-                    <Label className='text-xs text-muted-foreground'>WhatsApp Sent</Label>
+                    <Label className='text-muted-foreground text-xs'>
+                      WhatsApp Sent
+                    </Label>
                     <div className='mt-1'>
-                      <Badge variant={lead.whatsappSent ? 'enable' : 'destructive'}>
+                      <Badge
+                        variant={lead.whatsappSent ? 'enable' : 'destructive'}
+                      >
                         {lead.whatsappSent ? 'Yes' : 'No'}
                       </Badge>
                     </div>
@@ -129,32 +168,50 @@ export function DataTableRowActions({ row }: { row: { original: WhatsappLeadRow 
 
               {/* Product Information */}
               <div className='space-y-4'>
-                <div className='flex items-center gap-2 text-sm font-medium text-muted-foreground'>
+                <div className='text-muted-foreground flex items-center gap-2 text-sm font-medium'>
                   <Globe className='h-4 w-4' />
                   Product Information
                 </div>
 
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
                   <div>
-                    <Label className='text-xs text-muted-foreground'>Product ID</Label>
-                    <div className='text-sm mt-1 font-mono text-xs'>{lead.metadata?.productId || '—'}</div>
+                    <Label className='text-muted-foreground text-xs'>
+                      Product ID
+                    </Label>
+                    <div className='mt-1 font-mono text-sm text-xs'>
+                      {lead.metadata?.productId || '—'}
+                    </div>
                   </div>
                   <div>
-                    <Label className='text-xs text-muted-foreground'>Product Name</Label>
-                    <div className='text-sm mt-1 font-medium'>{lead.metadata?.productName || '—'}</div>
+                    <Label className='text-muted-foreground text-xs'>
+                      Product Name
+                    </Label>
+                    <div className='mt-1 text-sm font-medium'>
+                      {lead.metadata?.productName || '—'}
+                    </div>
                   </div>
                 </div>
                 {lead.metadata?.variant && (
                   <div>
-                    <Label className='text-xs text-muted-foreground'>Variant</Label>
-                    <div className='text-sm mt-1'>{lead.metadata.variant}</div>
+                    <Label className='text-muted-foreground text-xs'>
+                      Variant
+                    </Label>
+                    <div className='mt-1 text-sm'>{lead.metadata.variant}</div>
                   </div>
                 )}
                 {lead.metadata?.discountApplied !== undefined && (
                   <div>
-                    <Label className='text-xs text-muted-foreground'>Discount Applied</Label>
-                    <div className='text-sm mt-1'>
-                      <Badge variant={lead.metadata.discountApplied ? 'enable' : 'destructive'}>
+                    <Label className='text-muted-foreground text-xs'>
+                      Discount Applied
+                    </Label>
+                    <div className='mt-1 text-sm'>
+                      <Badge
+                        variant={
+                          lead.metadata.discountApplied
+                            ? 'enable'
+                            : 'destructive'
+                        }
+                      >
                         {lead.metadata.discountApplied ? 'Yes' : 'No'}
                       </Badge>
                     </div>
@@ -166,24 +223,26 @@ export function DataTableRowActions({ row }: { row: { original: WhatsappLeadRow 
 
               {/* Source Information */}
               <div className='space-y-4'>
-                <div className='flex items-center gap-2 text-sm font-medium text-muted-foreground'>
+                <div className='text-muted-foreground flex items-center gap-2 text-sm font-medium'>
                   <Globe className='h-4 w-4' />
                   Source Information
                 </div>
 
                 <div>
-                  <Label className='text-xs text-muted-foreground'>Source URL</Label>
+                  <Label className='text-muted-foreground text-xs'>
+                    Source URL
+                  </Label>
                   {lead.sourceUrl ? (
                     <a
                       href={lead.sourceUrl}
                       target='_blank'
                       rel='noreferrer'
-                      className='text-sm mt-1 text-primary underline underline-offset-4 hover:text-primary/80 block truncate'
+                      className='text-primary hover:text-primary/80 mt-1 block truncate text-sm underline underline-offset-4'
                     >
                       {lead.sourceUrl}
                     </a>
                   ) : (
-                    <div className='text-sm mt-1 text-muted-foreground'>—</div>
+                    <div className='text-muted-foreground mt-1 text-sm'>—</div>
                   )}
                 </div>
               </div>
@@ -192,53 +251,63 @@ export function DataTableRowActions({ row }: { row: { original: WhatsappLeadRow 
 
               {/* Technical Information */}
               <div className='space-y-4'>
-                <div className='flex items-center gap-2 text-sm font-medium text-muted-foreground'>
+                <div className='text-muted-foreground flex items-center gap-2 text-sm font-medium'>
                   <Monitor className='h-4 w-4' />
                   Technical Information
                 </div>
 
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
                   <div>
-                    <Label className='text-xs text-muted-foreground flex items-center gap-1'>
+                    <Label className='text-muted-foreground flex items-center gap-1 text-xs'>
                       <User className='h-3 w-3' />
                       IP Address
                     </Label>
-                    <div className='text-sm mt-1 font-mono'>{lead.ipAddress || '—'}</div>
+                    <div className='mt-1 font-mono text-sm'>
+                      {lead.ipAddress || '—'}
+                    </div>
                   </div>
                   <div>
-                    <Label className='text-xs text-muted-foreground flex items-center gap-1'>
+                    <Label className='text-muted-foreground flex items-center gap-1 text-xs'>
                       <Calendar className='h-3 w-3' />
                       Created
                     </Label>
-                    <div className='text-sm mt-1'>
-                      {lead.createdAt ? new Intl.DateTimeFormat('en-IN', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      }).format(new Date(lead.createdAt)) : '—'}
+                    <div className='mt-1 text-sm'>
+                      {lead.createdAt
+                        ? new Intl.DateTimeFormat('en-IN', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          }).format(new Date(lead.createdAt))
+                        : '—'}
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <Label className='text-xs text-muted-foreground'>Updated</Label>
-                  <div className='text-sm mt-1'>
-                    {lead.updatedAt ? new Intl.DateTimeFormat('en-IN', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: '2-digit',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    }).format(new Date(lead.updatedAt)) : '—'}
+                  <Label className='text-muted-foreground text-xs'>
+                    Updated
+                  </Label>
+                  <div className='mt-1 text-sm'>
+                    {lead.updatedAt
+                      ? new Intl.DateTimeFormat('en-IN', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        }).format(new Date(lead.updatedAt))
+                      : '—'}
                   </div>
                 </div>
 
                 {lead.userAgent && (
                   <div>
-                    <Label className='text-xs text-muted-foreground'>User Agent</Label>
-                    <div className='text-xs mt-1 text-muted-foreground font-mono bg-muted/50 p-2 rounded border'>
+                    <Label className='text-muted-foreground text-xs'>
+                      User Agent
+                    </Label>
+                    <div className='text-muted-foreground bg-muted/50 mt-1 rounded border p-2 font-mono text-xs'>
                       {lead.userAgent}
                     </div>
                   </div>
@@ -251,5 +320,3 @@ export function DataTableRowActions({ row }: { row: { original: WhatsappLeadRow 
     </div>
   )
 }
-
-

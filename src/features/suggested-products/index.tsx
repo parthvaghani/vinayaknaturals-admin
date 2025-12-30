@@ -1,26 +1,38 @@
+import { useState, useMemo, useCallback } from 'react'
+import { useSuggestedProductsList } from '@/hooks/use-suggested-products'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
+import { columns, type SuggestedProduct } from './components/columns'
 // import { ThemeSwitch } from '@/components/theme-switch'
 import { DataTable } from './components/data-table'
-import { columns, type SuggestedProduct } from './components/columns'
-import { useState, useMemo, useCallback } from 'react'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useSuggestedProductsList } from '@/hooks/use-suggested-products'
 
 export default function SuggestedProducts() {
-  const [status, setStatus] = useState<'all' | 'pending' | 'reviewed' | 'approved' | 'rejected'>('all')
-  const statusParam = useMemo(() => (status === 'all' ? undefined : status), [status])
+  const [status, setStatus] = useState<
+    'all' | 'pending' | 'reviewed' | 'approved' | 'rejected'
+  >('all')
+  const statusParam = useMemo(
+    () => (status === 'all' ? undefined : status),
+    [status]
+  )
   const [page, setPage] = useState<number>(1)
   const [limit, setLimit] = useState<number>(10)
   const [search, setSearch] = useState('')
-  const { data, isLoading, isError, error, isFetching } = useSuggestedProductsList({
-    page,
-    limit,
-    search,
-    status: statusParam,
-  })
+  const { data, isLoading, isError, error, isFetching } =
+    useSuggestedProductsList({
+      page,
+      limit,
+      search,
+      status: statusParam,
+    })
 
   const handleSearchChange = useCallback((val: string) => {
     setSearch(val)
@@ -40,12 +52,21 @@ export default function SuggestedProducts() {
       <Main>
         <div className='mb-2 flex flex-wrap items-center justify-between space-y-2 gap-x-4'>
           <div>
-            <h2 className='text-2xl font-bold tracking-tight'>Suggested Products</h2>
-            <p className='text-muted-foreground'>Manage user suggested products.</p>
+            <h2 className='text-2xl font-bold tracking-tight'>
+              Suggested Products
+            </h2>
+            <p className='text-muted-foreground'>
+              Manage user suggested products.
+            </p>
           </div>
           <div className='flex items-center gap-3'>
             <div className='flex items-center gap-2'>
-              <Select value={status} onValueChange={(val: 'all' | 'pending' | 'reviewed' | 'approved' | 'rejected') => setStatus(val)}>
+              <Select
+                value={status}
+                onValueChange={(
+                  val: 'all' | 'pending' | 'reviewed' | 'approved' | 'rejected'
+                ) => setStatus(val)}
+              >
                 <SelectTrigger id='status-filter' className='h-8 w-[160px]'>
                   <SelectValue placeholder='All' />
                 </SelectTrigger>
@@ -72,7 +93,11 @@ export default function SuggestedProducts() {
               columns={columns}
               search={search}
               onSearchChange={handleSearchChange}
-              pagination={{ page, limit, total: data?.total ?? data?.results?.length ?? 0 }}
+              pagination={{
+                page,
+                limit,
+                total: data?.total ?? data?.results?.length ?? 0,
+              }}
               onPaginationChange={({ page: nextPage, limit: nextLimit }) => {
                 setPage(nextPage)
                 setLimit(nextLimit)
@@ -84,5 +109,3 @@ export default function SuggestedProducts() {
     </>
   )
 }
-
-

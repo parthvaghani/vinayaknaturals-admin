@@ -1,26 +1,26 @@
-import { useState, useMemo } from 'react';
-import { useProductsList } from '@/hooks/use-products';
-import { Header } from '@/components/layout/header';
-import { Main } from '@/components/layout/main';
-import { ProfileDropdown } from '@/components/profile-dropdown';
-import { Search } from '@/components/search';
+import { useState, useMemo } from 'react'
+import { useProductsList } from '@/hooks/use-products'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { Header } from '@/components/layout/header'
+import { Main } from '@/components/layout/main'
+import { ProfileDropdown } from '@/components/profile-dropdown'
+import { Search } from '@/components/search'
 // import { ThemeSwitch } from '@/components/theme-switch';
-import { columns } from './components/columns';
-import { DataTable } from './components/data-table';
-import { ProductsPrimaryButtons } from './components/products-primary-buttons';
-import TasksProvider from './context/tasks-context';
-import type { Product } from './data/schema';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+import { columns } from './components/columns'
+import { DataTable } from './components/data-table'
+import { ProductsPrimaryButtons } from './components/products-primary-buttons'
+import TasksProvider from './context/tasks-context'
+import type { Product } from './data/schema'
+
 // import { ColumnDef } from '@tanstack/react-table'
 
-
 export default function Products() {
-  const [isPremium, setIsPremium] = useState<boolean | undefined>(undefined);
-  const [isPopular, setIsPopular] = useState<boolean | undefined>(undefined);
-  const [page, setPage] = useState<number>(1);
-  const [limit, setLimit] = useState<number>(10);
-  const [search, setSearch] = useState<string>('');
+  const [isPremium, setIsPremium] = useState<boolean | undefined>(undefined)
+  const [isPopular, setIsPopular] = useState<boolean | undefined>(undefined)
+  const [page, setPage] = useState<number>(1)
+  const [limit, setLimit] = useState<number>(10)
+  const [search, setSearch] = useState<string>('')
 
   const { data, isLoading, isError, error, isFetching } = useProductsList({
     page,
@@ -28,12 +28,12 @@ export default function Products() {
     search,
     isPremium,
     isPopular,
-  });
+  })
 
   const products: Product[] = useMemo(() => {
-    const raw = data?.results ?? [];
-    return Array.isArray(raw) ? (raw as Product[]) : [];
-  }, [data]);
+    const raw = data?.results ?? []
+    return Array.isArray(raw) ? (raw as Product[]) : []
+  }, [data])
   return (
     <TasksProvider>
       <Header fixed>
@@ -55,7 +55,9 @@ export default function Products() {
           <div className='flex flex-col space-y-4 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4 lg:space-x-6'>
             <div className='flex flex-wrap items-center gap-3 sm:gap-4'>
               <div className='flex items-center gap-2'>
-                <Label htmlFor='filter-premium' className='text-sm'>Premium</Label>
+                <Label htmlFor='filter-premium' className='text-sm'>
+                  Premium
+                </Label>
                 <Switch
                   id='filter-premium'
                   checked={isPremium ?? false}
@@ -66,7 +68,9 @@ export default function Products() {
                 />
               </div>
               <div className='flex items-center gap-2'>
-                <Label htmlFor='filter-popular' className='text-sm'>Popular</Label>
+                <Label htmlFor='filter-popular' className='text-sm'>
+                  Popular
+                </Label>
                 <Switch
                   id='filter-popular'
                   checked={isPopular ?? false}
@@ -90,63 +94,78 @@ export default function Products() {
             <p className='text-red-500'>Error: {(error as Error).message}</p>
           ) : (
             <DataTable
-              data={(() => {
-                const rawData: Product[] = products;
-                return rawData.map((product) => ({
-                  _id: product._id, // or String(product._id)
-                  id: product._id,  // or String(product._id)
-                  category:
-                    typeof product.category === 'object' && product.category !== null
-                      ? product.category
-                      : String(product.category || 'Unknown Category'),
-                  name: product.name || 'Unnamed',
-                  description: product.description || '',
-                  isPremium: Boolean(product.isPremium ?? false),
-                  isPopular: Boolean(product.isPopular ?? false),
-                  variants: product.variants || {},
-                  images: Array.isArray(product.images) ? product.images : [],
-                  ingredients: Array.isArray(product.ingredients) ? product.ingredients : [],
-                  benefits: Array.isArray(product.benefits) ? product.benefits : [],
-                  product_slug: product.product_slug || '',
-                }));
-              })() as {
-                _id: string;
-                id: string;
-                category: string;
-                name: string;
-                description?: string;
-                isPremium?: boolean;
-                isPopular?: boolean;
-                variants?: Record<string, unknown>;
-                images?: string[];
-                ingredients?: string[];
-                benefits?: string[];
-                product_slug?: string;
-              }[]
+              data={
+                (() => {
+                  const rawData: Product[] = products
+                  return rawData.map((product) => ({
+                    _id: product._id, // or String(product._id)
+                    id: product._id, // or String(product._id)
+                    category:
+                      typeof product.category === 'object' &&
+                      product.category !== null
+                        ? product.category
+                        : String(product.category || 'Unknown Category'),
+                    name: product.name || 'Unnamed',
+                    description: product.description || '',
+                    isPremium: Boolean(product.isPremium ?? false),
+                    isPopular: Boolean(product.isPopular ?? false),
+                    variants: product.variants || {},
+                    images: Array.isArray(product.images) ? product.images : [],
+                    ingredients: Array.isArray(product.ingredients)
+                      ? product.ingredients
+                      : [],
+                    benefits: Array.isArray(product.benefits)
+                      ? product.benefits
+                      : [],
+                    product_slug: product.product_slug || '',
+                  }))
+                })() as {
+                  _id: string
+                  id: string
+                  category: string
+                  name: string
+                  description?: string
+                  isPremium?: boolean
+                  isPopular?: boolean
+                  variants?: Record<string, unknown>
+                  images?: string[]
+                  ingredients?: string[]
+                  benefits?: string[]
+                  product_slug?: string
+                }[]
               }
-              columns={columns as import('@tanstack/react-table').ColumnDef<{
-                _id: string;
-                id: string;
-                category: string;
-                name: string;
-                description?: string;
-                isPremium?: boolean;
-                isPopular?: boolean;
-                variants?: Record<string, unknown>;
-                images?: string[];
-                ingredients?: string[];
-                benefits?: string[];
-                product_slug?: string;
-              }, unknown>[]}
+              columns={
+                columns as import('@tanstack/react-table').ColumnDef<
+                  {
+                    _id: string
+                    id: string
+                    category: string
+                    name: string
+                    description?: string
+                    isPremium?: boolean
+                    isPopular?: boolean
+                    variants?: Record<string, unknown>
+                    images?: string[]
+                    ingredients?: string[]
+                    benefits?: string[]
+                    product_slug?: string
+                  },
+                  unknown
+                >[]
+              }
               search={search}
               onSearchChange={(val) => {
-                setSearch(val);
-                setPage(1);
+                setSearch(val)
+                setPage(1)
               }}
-              pagination={{ page, limit, total: data?.total ?? products.length }}
+              pagination={{
+                page,
+                limit,
+                total: data?.total ?? products.length,
+              }}
               onPaginationChange={({ page: nextPage, limit: nextLimit }) => {
-                setPage(nextPage);
-                setLimit(nextLimit);
+                setPage(nextPage)
+                setLimit(nextLimit)
               }}
             />
           )}
@@ -155,5 +174,5 @@ export default function Products() {
 
       {/* <ProductDialogs /> */}
     </TasksProvider>
-  );
+  )
 }

@@ -7,13 +7,13 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
+import 'flag-icons/css/flag-icons.min.css'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/authStore'
 import { handleServerError } from '@/utils/handle-server-error'
 import { FontProvider } from './context/font-context'
 import { ThemeProvider } from './context/theme-context'
 import './index.css'
-import 'flag-icons/css/flag-icons.min.css'
 // Generated Routes
 import { routeTree } from './routeTree.gen'
 

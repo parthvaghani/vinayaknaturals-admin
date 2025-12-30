@@ -48,8 +48,11 @@ export function DataTable<TData, TValue>({
   search,
   onSearchChange,
 }: DataTableProps<TData, TValue>) {
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({})
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  )
   const [sorting, setSorting] = React.useState<SortingState>([])
 
   const table = useReactTable({
@@ -71,7 +74,11 @@ export function DataTable<TData, TValue>({
   return (
     <div className='space-y-4'>
       {showToolbar ? (
-        <DataTableToolbar table={table} search={search ?? ''} onSearchChange={(val) => onSearchChange?.(val)} />
+        <DataTableToolbar
+          table={table}
+          search={search ?? ''}
+          onSearchChange={(val) => onSearchChange?.(val)}
+        />
       ) : null}
       <div className='overflow-hidden rounded-md border'>
         <Table>
@@ -83,7 +90,10 @@ export function DataTable<TData, TValue>({
                     <TableHead key={header.id} colSpan={header.colSpan}>
                       {header.isPlaceholder
                         ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                     </TableHead>
                   )
                 })}
@@ -96,14 +106,20 @@ export function DataTable<TData, TValue>({
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className='h-24 text-center'>
+                <TableCell
+                  colSpan={columns.length}
+                  className='h-24 text-center'
+                >
                   No results.
                 </TableCell>
               </TableRow>
@@ -112,10 +128,12 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
       {showPagination && pagination && onPaginationChange ? (
-        <DataTablePagination table={table} pagination={pagination} onChange={onPaginationChange} />
+        <DataTablePagination
+          table={table}
+          pagination={pagination}
+          onChange={onPaginationChange}
+        />
       ) : null}
     </div>
   )
 }
-
-

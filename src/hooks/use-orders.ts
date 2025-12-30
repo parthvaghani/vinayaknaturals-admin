@@ -1,91 +1,99 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '@/lib/api';
-import { useAuthStore } from '@/stores/authStore';
+import { AxiosError } from 'axios'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useAuthStore } from '@/stores/authStore'
+import api from '@/lib/api'
 
 export interface OrderProductDetail {
   productId: {
-    _id: string;
-    name: string;
-    images: Array<string | { url: string; }>;
-  };
-  weightVariant: string;
-  weight: string;
-  pricePerUnit: number;
-  discount: number;
-  totalUnit: number;
-  _id: string;
+    _id: string
+    name: string
+    images: Array<string | { url: string }>
+  }
+  weightVariant: string
+  weight: string
+  pricePerUnit: number
+  discount: number
+  totalUnit: number
+  _id: string
 }
 
 export interface Order {
-  _id: string;
-  userId: string | {
-    _id: string;
-    id: string;
-    email: string;
-    phoneNumber: string;
-    role: string;
-    user_details: {
-      name: string;
-      country: string;
-    };
-  };
-  phoneNumber: string;
-  status: string;
-  paymentStatus?: string;
-  shippingCharge?: number;
-  invoiceNumber?: string;
-  createdAt: string;
-  updatedAt?: string;
-  cancelDetails?: { reason?: string | null; };
+  _id: string
+  userId:
+    | string
+    | {
+        _id: string
+        id: string
+        email: string
+        phoneNumber: string
+        role: string
+        user_details: {
+          name: string
+          country: string
+        }
+      }
+  phoneNumber: string
+  status: string
+  paymentStatus?: string
+  shippingCharge?: number
+  invoiceNumber?: string
+  createdAt: string
+  updatedAt?: string
+  cancelDetails?: { reason?: string | null }
   address?: {
-    addressLine1?: string;
-    addressLine2?: string;
-    city?: string;
-    state?: string;
-    zip?: string;
-    country?: string;
-  };
+    addressLine1?: string
+    addressLine2?: string
+    city?: string
+    state?: string
+    zip?: string
+    country?: string
+  }
   statusHistory: {
-    _id: string;
-    status: string;
-    note: string | null;
-    updatedBy: "user" | "admin";
-    date: string; // ISO timestamp
-  }[];
-  productsDetails: OrderProductDetail[];
-  applyCoupon: { couponId: string; discountAmount: number; discountPercentage: string; };
-  totalAmount: number;
-  originalTotal: number;
-  posOrder?: boolean; // Field to identify POS orders
-  paymentMethod?: 'prepaid' | 'cod';
-  prepaidDiscount?: number;
-  codFee?: number;
-  finalAmount?: number;
-  razorpayOrderId?: string;
-  razorpayPaymentId?: string;
-  razorpaySignature?: string;
+    _id: string
+    status: string
+    note: string | null
+    updatedBy: 'user' | 'admin'
+    date: string // ISO timestamp
+  }[]
+  productsDetails: OrderProductDetail[]
+  applyCoupon: {
+    couponId: string
+    discountAmount: number
+    discountPercentage: string
+  }
+  totalAmount: number
+  originalTotal: number
+  posOrder?: boolean // Field to identify POS orders
+  paymentMethod?: 'prepaid' | 'cod'
+  prepaidDiscount?: number
+  codFee?: number
+  finalAmount?: number
+  razorpayOrderId?: string
+  razorpayPaymentId?: string
+  razorpaySignature?: string
 }
 
 export interface GetOrdersParams {
-  page?: number;
-  limit?: number;
-  search?: string;
-  status?: string;
-  sortBy?: string; // e.g. 'createdAt:desc'
-  posOrder?: boolean;
+  page?: number
+  limit?: number
+  search?: string
+  status?: string
+  sortBy?: string // e.g. 'createdAt:desc'
+  posOrder?: boolean
 }
 
 interface OrdersResponse {
-  results: Order[];
-  total?: number;
-  page?: number;
-  limit?: number;
+  results: Order[]
+  total?: number
+  page?: number
+  limit?: number
 }
 
-const getOrdersApi = async (params: GetOrdersParams = {}): Promise<OrdersResponse> => {
-  const { page, limit, search, status, sortBy, posOrder } = params;
+const getOrdersApi = async (
+  params: GetOrdersParams = {}
+): Promise<OrdersResponse> => {
+  const { page, limit, search, status, sortBy, posOrder } = params
   const response = await api.get('/orders/all', {
     params: {
       page,
@@ -95,87 +103,111 @@ const getOrdersApi = async (params: GetOrdersParams = {}): Promise<OrdersRespons
       sortBy,
       posOrder,
     },
-  });
+  })
 
-  const payload = response?.data?.data ?? response?.data ?? {};
+  const payload = response?.data?.data ?? response?.data ?? {}
   const results: Order[] = Array.isArray(payload)
     ? (payload as Order[])
-    : (payload?.results ?? []);
+    : (payload?.results ?? [])
 
   const total: number | undefined =
-    payload?.total ?? payload?.count ?? payload?.totalResults ?? (Array.isArray(payload) ? results.length : undefined);
-  const currentPage: number | undefined = payload?.page ?? payload?.currentPage;
-  const currentLimit: number | undefined = payload?.limit ?? payload?.pageSize;
+    payload?.total ??
+    payload?.count ??
+    payload?.totalResults ??
+    (Array.isArray(payload) ? results.length : undefined)
+  const currentPage: number | undefined = payload?.page ?? payload?.currentPage
+  const currentLimit: number | undefined = payload?.limit ?? payload?.pageSize
 
   return {
     results,
     total,
     page: currentPage,
     limit: currentLimit,
-  };
-};
+  }
+}
 
 // Get single order by ID
 const getOrderByIdApi = async (id: string): Promise<Order> => {
-  const response = await api.get(`/orders/${id}`);
-  const payload = response?.data?.data ?? response?.data ?? {};
-  const order: Order = (payload?.order ?? payload) as Order;
-  return order;
-};
+  const response = await api.get(`/orders/${id}`)
+  const payload = response?.data?.data ?? response?.data ?? {}
+  const order: Order = (payload?.order ?? payload) as Order
+  return order
+}
 
 // Update order status
 export interface UpdateOrderStatusPayload {
-  id: string;
-  status?: string;
-  note?: string;
-  paymentStatus?: string;
-  trackingLink?: string;
-  trackingNumber?: string;
-  courierName?: string;
-  customMessage?: string;
+  id: string
+  status?: string
+  note?: string
+  paymentStatus?: string
+  trackingLink?: string
+  trackingNumber?: string
+  courierName?: string
+  customMessage?: string
 }
 
-const updateOrderStatusApi = async ({ id, status, paymentStatus, note, trackingLink, trackingNumber, courierName, customMessage }: UpdateOrderStatusPayload) => {
-  const response = await api.patch(`/orders/${id}/status`, { status, paymentStatus, note, trackingLink, trackingNumber, courierName, customMessage });
-  return response.data;
-};
+const updateOrderStatusApi = async ({
+  id,
+  status,
+  paymentStatus,
+  note,
+  trackingLink,
+  trackingNumber,
+  courierName,
+  customMessage,
+}: UpdateOrderStatusPayload) => {
+  const response = await api.patch(`/orders/${id}/status`, {
+    status,
+    paymentStatus,
+    note,
+    trackingLink,
+    trackingNumber,
+    courierName,
+    customMessage,
+  })
+  return response.data
+}
 
 // Update order shipping charge
 export interface UpdateOrderShippingChargePayload {
-  id: string;
-  shippingCharge: number;
+  id: string
+  shippingCharge: number
 }
 
-const updateOrderShippingChargeApi = async ({ id, shippingCharge }: UpdateOrderShippingChargePayload) => {
-  const response = await api.put(`/orders/${id}`, { shippingCharge });
-  return response.data;
-};
+const updateOrderShippingChargeApi = async ({
+  id,
+  shippingCharge,
+}: UpdateOrderShippingChargePayload) => {
+  const response = await api.put(`/orders/${id}`, { shippingCharge })
+  return response.data
+}
 
 // Download invoice
 const downloadInvoiceApi = async (id: string): Promise<Blob> => {
   const response = await api.get(`/orders/${id}/invoice`, {
     responseType: 'blob',
-  });
-  return response.data;
-};
+  })
+  return response.data
+}
 
 export function useOrdersList(params: GetOrdersParams) {
-  const { page = 1, limit = 10, search = '', status, sortBy, posOrder } = params;
-  const accessToken = useAuthStore((state) => state.auth.accessToken);
+  const { page = 1, limit = 10, search = '', status, sortBy, posOrder } = params
+  const accessToken = useAuthStore((state) => state.auth.accessToken)
   return useQuery({
     queryKey: ['orders', { page, limit, search, status, sortBy, posOrder }],
-    queryFn: () => getOrdersApi({ page, limit, search, status, sortBy, posOrder }),
+    queryFn: () =>
+      getOrdersApi({ page, limit, search, status, sortBy, posOrder }),
     enabled: Boolean(accessToken),
     placeholderData: keepPreviousData,
     staleTime: 1000 * 30,
     retry: (failureCount, error) => {
       if (error instanceof AxiosError && error.response?.status === 401) {
-        return false;
+        return false
       }
-      return failureCount < 3;
+      return failureCount < 3
     },
     refetchOnWindowFocus: false,
-  });
+  })
 }
 
 // Query hook to fetch a single order by ID
@@ -187,69 +219,67 @@ export function useIdByOrder(id?: string) {
     staleTime: 1000 * 30,
     retry: 3,
     refetchOnWindowFocus: false,
-  });
+  })
 }
 
 // Mutation hook to update order status
 export function useUpdateOrderStatus() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: updateOrderStatusApi,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] })
     },
-  });
+  })
 }
 
 // Mutation hook to update order shipping charge
 export function useUpdateOrderShippingCharge() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: updateOrderShippingChargeApi,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] })
     },
-  });
+  })
 }
 
 // Mutation hook to download invoice
 export function useDownloadInvoice() {
   return useMutation({
     mutationFn: downloadInvoiceApi,
-  });
+  })
 }
 // POS Order Creation
 export interface POSOrderPayload {
   cart: Array<{
-    productId: string;
-    weightVariant: string;
-    weight: string;
-    totalProduct: number;
-  }>;
+    productId: string
+    weightVariant: string
+    weight: string
+    totalProduct: number
+  }>
   address: {
-    addressLine1: string;
-    addressLine2: string;
-    city: string;
-    state: string;
-    zip: string;
-  };
-  phoneNumber: string;
+    addressLine1: string
+    addressLine2: string
+    city: string
+    state: string
+    zip: string
+  }
+  phoneNumber: string
 }
 
 const createPOSOrderApi = async (payload: POSOrderPayload) => {
-  const response = await api.post('/orders/pos', payload);
-  return response.data;
-};
+  const response = await api.post('/orders/pos', payload)
+  return response.data
+}
 
 // Mutation hook to create POS order
 export function useCreatePOSOrder() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: createPOSOrderApi,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] })
     },
-  });
+  })
 }
-
-

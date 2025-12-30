@@ -22,11 +22,11 @@ import {
   // IconTool,
   // IconUserCog,
   // IconUserOff,
-} from '@tabler/icons-react';
+} from '@tabler/icons-react'
+import { Handshake, ShoppingBag, TicketPercent } from 'lucide-react'
 // import { Command } from 'lucide-react'
 // import { ClerkLogo } from '@/assets/clerk-logo'
-import { type SidebarData } from '../types';
-import { Handshake, ShoppingBag, TicketPercent } from 'lucide-react';
+import { type SidebarData } from '../types'
 
 export const sidebarData: SidebarData = {
   user: {
@@ -234,4 +234,4 @@ export const sidebarData: SidebarData = {
     //   ],
     // },
   ],
-};
+}

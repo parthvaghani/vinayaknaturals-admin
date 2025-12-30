@@ -1,7 +1,3 @@
 export default function Any() {
-    return (
-        <>
-       dd
-        </>
-    )
+  return <>dd</>
 }

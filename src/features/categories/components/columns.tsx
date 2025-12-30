@@ -1,8 +1,13 @@
 import { ColumnDef } from '@tanstack/react-table'
 import { Badge } from '@/components/ui/badge'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { DataTableColumnHeader } from './data-table-column-header'
 import { DataTableRowActions } from './data-table-row-actions'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 // Define a proper Category type for strong typing
 export interface Category {
@@ -29,7 +34,11 @@ export const columns: ColumnDef<Category>[] = [
   {
     accessorKey: 'category',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Category' className='text-center' />
+      <DataTableColumnHeader
+        column={column}
+        title='Category'
+        className='text-center'
+      />
     ),
     cell: ({ row }) => (
       <div className='flex space-x-2'>
@@ -44,7 +53,11 @@ export const columns: ColumnDef<Category>[] = [
   {
     accessorKey: 'name',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Name' className='text-center' />
+      <DataTableColumnHeader
+        column={column}
+        title='Name'
+        className='text-center'
+      />
     ),
     cell: ({ row }) => (
       <div className='flex w-[150px] items-center'>
@@ -59,22 +72,31 @@ export const columns: ColumnDef<Category>[] = [
   // ✅ Description Column
   {
     accessorKey: 'description',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Description" className='text-center' />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title='Description'
+        className='text-center'
+      />
+    ),
     cell: ({ row }) => {
       const description = row.getValue('description') as string
       const maxLength = 50 // reduced length to prevent scroll
-      const truncated = description?.length > maxLength ? `${description.slice(0, maxLength)}...` : description || '—'
+      const truncated =
+        description?.length > maxLength
+          ? `${description.slice(0, maxLength)}...`
+          : description || '—'
 
       return (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="truncate block max-w-[200px] text-sm text-muted-foreground cursor-help">
+              <span className='text-muted-foreground block max-w-[200px] cursor-help truncate text-sm'>
                 {truncated}
               </span>
             </TooltipTrigger>
             {description && (
-              <TooltipContent className="max-w-xs">
+              <TooltipContent className='max-w-xs'>
                 <p>{description}</p>
               </TooltipContent>
             )}
@@ -88,7 +110,11 @@ export const columns: ColumnDef<Category>[] = [
   {
     accessorKey: 'pricingEnabled',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Pricing Enabled' className='text-center' />
+      <DataTableColumnHeader
+        column={column}
+        title='Pricing Enabled'
+        className='text-center'
+      />
     ),
     cell: ({ row }) => {
       const isEnabled = row.getValue('pricingEnabled') as boolean
@@ -109,10 +135,15 @@ export const columns: ColumnDef<Category>[] = [
   // ✅ Actions Column (Edit/Delete)
   {
     id: 'actions',
-    header: ({column}) => ( <DataTableColumnHeader column={column} title='Actions' className='text-center' />
-  ),
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title='Actions'
+        className='text-center'
+      />
+    ),
     cell: ({ row }) => <DataTableRowActions row={row} />,
     enableSorting: false,
     enableHiding: false,
-  }
+  },
 ]

@@ -1,31 +1,29 @@
-import { useState, useMemo } from 'react';
-import { Header } from '@/components/layout/header';
-import { Main } from '@/components/layout/main';
-import { ProfileDropdown } from '@/components/profile-dropdown';
-import { Search } from '@/components/search';
-import { columns } from './components/columns';
-import { DataTable } from './components/data-table';
-import { TasksDialogs } from './components/tasks-dialogs';
-import { CouponsPrimaryButtons } from './components/tasks-primary-buttons';
-import TasksProvider from './context/tasks-context';
-import { Coupon, useCoupons } from '@/hooks/use-coupons';
+import { useState, useMemo } from 'react'
+import { Coupon, useCoupons } from '@/hooks/use-coupons'
+import { Header } from '@/components/layout/header'
+import { Main } from '@/components/layout/main'
+import { ProfileDropdown } from '@/components/profile-dropdown'
+import { Search } from '@/components/search'
+import { columns } from './components/columns'
+import { DataTable } from './components/data-table'
+import { TasksDialogs } from './components/tasks-dialogs'
+import { CouponsPrimaryButtons } from './components/tasks-primary-buttons'
+import TasksProvider from './context/tasks-context'
 
 export default function Coupons() {
-  const [page, setPage] = useState<number>(1);
-  const [limit, setLimit] = useState<number>(10);
-  const [search, setSearch] = useState<string>('');
+  const [page, setPage] = useState<number>(1)
+  const [limit, setLimit] = useState<number>(10)
+  const [search, setSearch] = useState<string>('')
 
   const { data, isLoading, isError, error, isFetching } = useCoupons({
     page,
     limit,
     search,
-  });
+  })
 
   // ✅ UseMemo to avoid re-mapping on every render
   const tableData = useMemo(() => {
-    const rawData = Array.isArray(data)
-      ? data
-      : data?.results ?? [];
+    const rawData = Array.isArray(data) ? data : (data?.results ?? [])
 
     return rawData.map((coupon: Coupon, index: number) => ({
       _id: coupon._id || `coupon-${index}`,
@@ -51,44 +49,42 @@ export default function Coupons() {
         ? new Date(coupon.expiryDate).toLocaleDateString()
         : '-',
       couponType: coupon.couponType || 'normal',
-    }));
-  }, [data]);
+    }))
+  }, [data])
 
   return (
     <TasksProvider>
       <Header fixed>
         <Search />
-        <div className="ml-auto flex items-center space-x-4">
+        <div className='ml-auto flex items-center space-x-4'>
           <ProfileDropdown />
         </div>
       </Header>
 
       <Main>
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-4">
+        <div className='mb-2 flex flex-wrap items-center justify-between gap-4'>
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">Coupons</h2>
-            <p className="text-muted-foreground">
+            <h2 className='text-2xl font-bold tracking-tight'>Coupons</h2>
+            <p className='text-muted-foreground'>
               Manage and view all coupons in one place!
             </p>
           </div>
           <CouponsPrimaryButtons />
         </div>
 
-        <div className="-mx-4 flex-1 overflow-auto px-4 py-1">
+        <div className='-mx-4 flex-1 overflow-auto px-4 py-1'>
           {isLoading || isFetching ? (
             <p>Loading coupons...</p>
           ) : isError ? (
-            <p className="text-red-500">
-              Error: {(error as Error)?.message}
-            </p>
+            <p className='text-red-500'>Error: {(error as Error)?.message}</p>
           ) : (
             <DataTable
               data={tableData}
               columns={columns}
               search={search}
               onSearchChange={(val) => {
-                setSearch(val);
-                setPage(1);
+                setSearch(val)
+                setPage(1)
               }}
               pagination={{
                 page,
@@ -96,8 +92,8 @@ export default function Coupons() {
                 total: data?.total ?? 0,
               }}
               onPaginationChange={({ page: nextPage, limit: nextLimit }) => {
-                setPage(nextPage);
-                setLimit(nextLimit);
+                setPage(nextPage)
+                setLimit(nextLimit)
               }}
             />
           )}
@@ -106,5 +102,5 @@ export default function Coupons() {
 
       <TasksDialogs />
     </TasksProvider>
-  );
+  )
 }

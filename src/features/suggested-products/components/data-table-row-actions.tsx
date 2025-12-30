@@ -2,6 +2,12 @@ import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Eye, SquarePen, Trash } from 'lucide-react'
 import { toast } from 'sonner'
+import {
+  useDeleteSuggestedProduct,
+  useSuggestedProductById,
+  useUpdateSuggestedProduct,
+} from '@/hooks/use-suggested-products'
+import type { SuggestedProduct } from '@/hooks/use-suggested-products'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -12,14 +18,14 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
-  useDeleteSuggestedProduct,
-  useSuggestedProductById,
-  useUpdateSuggestedProduct,
-} from '@/hooks/use-suggested-products'
-import type { SuggestedProduct } from '@/hooks/use-suggested-products'
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 
 interface SuggestedProductRow {
   _id?: string
@@ -32,7 +38,11 @@ interface SuggestedProductRow {
   updatedAt?: string | Date
 }
 
-export function DataTableRowActions({ row }: { row: { original: SuggestedProductRow } }) {
+export function DataTableRowActions({
+  row,
+}: {
+  row: { original: SuggestedProductRow }
+}) {
   const queryClient = useQueryClient()
   const product = row.original
   const productId = product._id || product.id || ''
@@ -50,15 +60,19 @@ export function DataTableRowActions({ row }: { row: { original: SuggestedProduct
   }, [product])
 
   const { data: fetched } = useSuggestedProductById(productId)
-  const { mutate: updateSuggested, isPending: isUpdating } = useUpdateSuggestedProduct()
-  const { mutate: deleteSuggested, isPending: isDeleting } = useDeleteSuggestedProduct()
+  const { mutate: updateSuggested, isPending: isUpdating } =
+    useUpdateSuggestedProduct()
+  const { mutate: deleteSuggested, isPending: isDeleting } =
+    useDeleteSuggestedProduct()
 
   const handleEditSubmit = () => {
     if (!productId) {
       toast.error('ID is missing!')
       return
     }
-    type UpdatePayload = Omit<SuggestedProduct, 'createdAt' | 'updatedAt'> & { id: string }
+    type UpdatePayload = Omit<SuggestedProduct, 'createdAt' | 'updatedAt'> & {
+      id: string
+    }
     const payload: UpdatePayload = {
       id: productId,
       name: formData.name || '',
@@ -98,13 +112,28 @@ export function DataTableRowActions({ row }: { row: { original: SuggestedProduct
 
   return (
     <div className='flex items-center justify-center gap-2'>
-      <Button variant='ghost' size='icon' onClick={() => setEditOpen(true)} className='h-8 w-8'>
+      <Button
+        variant='ghost'
+        size='icon'
+        onClick={() => setEditOpen(true)}
+        className='h-8 w-8'
+      >
         <SquarePen className='h-4 w-4 text-blue-600' />
       </Button>
-      <Button variant='ghost' size='icon' onClick={() => setDeleteConfirm(true)} className='h-8 w-8'>
+      <Button
+        variant='ghost'
+        size='icon'
+        onClick={() => setDeleteConfirm(true)}
+        className='h-8 w-8'
+      >
         <Trash className='h-4 w-4 text-red-600' />
       </Button>
-      <Button variant='ghost' size='icon' onClick={() => setDetailsOpen(true)} className='h-8 w-8'>
+      <Button
+        variant='ghost'
+        size='icon'
+        onClick={() => setDetailsOpen(true)}
+        className='h-8 w-8'
+      >
         <Eye className='h-4 w-4' />
       </Button>
 
@@ -121,11 +150,15 @@ export function DataTableRowActions({ row }: { row: { original: SuggestedProduct
                 id='sp-name'
                 className='mt-2'
                 value={formData.name || ''}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
               />
             </div>
             <div>
-              <Label htmlFor='sp-ingredients'>Ingredients (comma separated)</Label>
+              <Label htmlFor='sp-ingredients'>
+                Ingredients (comma separated)
+              </Label>
               <Input
                 id='sp-ingredients'
                 className='mt-2'
@@ -139,7 +172,9 @@ export function DataTableRowActions({ row }: { row: { original: SuggestedProduct
                 id='sp-description'
                 className='mt-2'
                 value={formData.description || ''}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 rows={5}
               />
             </div>
@@ -148,7 +183,9 @@ export function DataTableRowActions({ row }: { row: { original: SuggestedProduct
               <div className='mt-2'>
                 <Select
                   value={(formData.status as string) || 'pending'}
-                  onValueChange={(val) => setFormData({ ...formData, status: val })}
+                  onValueChange={(val) =>
+                    setFormData({ ...formData, status: val })
+                  }
                 >
                   <SelectTrigger id='sp-status' className='w-full'>
                     <SelectValue placeholder='Select status' />
@@ -187,7 +224,11 @@ export function DataTableRowActions({ row }: { row: { original: SuggestedProduct
             <Button variant='outline' onClick={() => setDeleteConfirm(false)}>
               Cancel
             </Button>
-            <Button variant='destructive' onClick={handleDelete} disabled={isDeleting}>
+            <Button
+              variant='destructive'
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
               {isDeleting ? 'Deleting...' : 'Delete'}
             </Button>
           </DialogFooter>
@@ -204,18 +245,24 @@ export function DataTableRowActions({ row }: { row: { original: SuggestedProduct
           </DialogHeader>
           <div className='space-y-3'>
             <div>
-              <Label className='text-xs text-muted-foreground'>Status</Label>
+              <Label className='text-muted-foreground text-xs'>Status</Label>
               <div>{fetched?.status ?? product.status ?? '—'}</div>
             </div>
             <div>
-              <Label className='text-xs text-muted-foreground'>Ingredients</Label>
-              <div className='text-sm text-muted-foreground'>
-                {(fetched?.ingredients ?? product.ingredients ?? []).join(', ') || '—'}
+              <Label className='text-muted-foreground text-xs'>
+                Ingredients
+              </Label>
+              <div className='text-muted-foreground text-sm'>
+                {(fetched?.ingredients ?? product.ingredients ?? []).join(
+                  ', '
+                ) || '—'}
               </div>
             </div>
             <div>
-              <Label className='text-xs text-muted-foreground'>Description</Label>
-              <p className='mt-1 text-sm text-muted-foreground'>
+              <Label className='text-muted-foreground text-xs'>
+                Description
+              </Label>
+              <p className='text-muted-foreground mt-1 text-sm'>
                 {fetched?.description ?? product.description ?? '—'}
               </p>
             </div>
@@ -225,5 +272,3 @@ export function DataTableRowActions({ row }: { row: { original: SuggestedProduct
     </div>
   )
 }
-
-

@@ -26,7 +26,11 @@ interface DataTablePaginationProps<TData> {
   onChange?: (next: PaginationState) => void
 }
 
-export function DataTablePagination<TData>({ table, pagination, onChange }: DataTablePaginationProps<TData>) {
+export function DataTablePagination<TData>({
+  table,
+  pagination,
+  onChange,
+}: DataTablePaginationProps<TData>) {
   const safePagination: PaginationState = pagination ?? {
     page: 1,
     limit: table.getState().pagination?.pageSize ?? 10,
@@ -34,11 +38,15 @@ export function DataTablePagination<TData>({ table, pagination, onChange }: Data
   }
   const currentPageIndex = Math.max(0, (safePagination.page ?? 1) - 1)
   const pageSize = safePagination.limit ?? 10
-  const totalItems = safePagination.total ?? table.getFilteredRowModel().rows.length
+  const totalItems =
+    safePagination.total ?? table.getFilteredRowModel().rows.length
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
 
   return (
-    <div className='flex items-center justify-end overflow-clip px-2' style={{ overflowClipMargin: 1 }}>
+    <div
+      className='flex items-center justify-end overflow-clip px-2'
+      style={{ overflowClipMargin: 1 }}
+    >
       {/* <div className='text-muted-foreground hidden flex-1 text-sm sm:block'>
         {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} row(s) selected.
       </div> */}
@@ -80,7 +88,12 @@ export function DataTablePagination<TData>({ table, pagination, onChange }: Data
           <Button
             variant='outline'
             className='h-8 w-8 p-0'
-            onClick={() => onChange?.({ ...safePagination, page: Math.max(1, safePagination.page - 1) })}
+            onClick={() =>
+              onChange?.({
+                ...safePagination,
+                page: Math.max(1, safePagination.page - 1),
+              })
+            }
             disabled={currentPageIndex <= 0}
           >
             <span className='sr-only'>Go to previous page</span>
@@ -89,7 +102,12 @@ export function DataTablePagination<TData>({ table, pagination, onChange }: Data
           <Button
             variant='outline'
             className='h-8 w-8 p-0'
-            onClick={() => onChange?.({ ...safePagination, page: Math.min(totalPages, safePagination.page + 1) })}
+            onClick={() =>
+              onChange?.({
+                ...safePagination,
+                page: Math.min(totalPages, safePagination.page + 1),
+              })
+            }
             disabled={currentPageIndex + 1 >= totalPages}
           >
             <span className='sr-only'>Go to next page</span>

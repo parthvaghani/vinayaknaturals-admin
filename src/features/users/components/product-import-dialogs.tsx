@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 
-const formSchema = z.object({ 
+const formSchema = z.object({
   file: z
     .instanceof(FileList)
     .refine((files) => files.length > 0, {

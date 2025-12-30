@@ -1,7 +1,7 @@
-import * as React from 'react';
-import { Slot } from '@radix-ui/react-slot';
-import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '@/lib/utils';
+import * as React from 'react'
+import { Slot } from '@radix-ui/react-slot'
+import { cva, type VariantProps } from 'class-variance-authority'
+import { cn } from '@/lib/utils'
 
 const badgeVariants = cva(
   'inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden bg-green-700',
@@ -13,23 +13,17 @@ const badgeVariants = cva(
         secondary:
           'border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90',
         enable:
-          "border-transparent !bg-enable text-white [a&]:hover:bg-enable/90",
+          'border-transparent !bg-enable text-white [a&]:hover:bg-enable/90',
         destructive:
           'border-transparent bg-destructive/90 text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
         outline:
           'text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
-        pending:
-          'border-amber-200 bg-amber-400 text-white',
-        reviewed:
-          'border-primary bg-primary text-primary-foreground',
-        placed:
-          'border-primary-dark bg-primary-dark text-primary-foreground',
-        accepted:
-          'border-primary bg-primary text-primary-foreground',
-        inprogress:
-          'border-amber-500 bg-amber-500 text-white',
-        delivered:
-          'border-green-600 bg-green-600 text-white',
+        pending: 'border-amber-200 bg-amber-400 text-white',
+        reviewed: 'border-primary bg-primary text-primary-foreground',
+        placed: 'border-primary-dark bg-primary-dark text-primary-foreground',
+        accepted: 'border-primary bg-primary text-primary-foreground',
+        inprogress: 'border-amber-500 bg-amber-500 text-white',
+        delivered: 'border-green-600 bg-green-600 text-white',
         trackDelivered:
           'inline-flex items-center gap-4 rounded-full bg-primary-dark px-4 py-2 text-md border-primary-dark text-primary-light',
         trackCancelled:
@@ -40,7 +34,7 @@ const badgeVariants = cva(
       variant: 'default',
     },
   }
-);
+)
 
 function Badge({
   className,
@@ -48,8 +42,8 @@ function Badge({
   asChild = false,
   ...props
 }: React.ComponentProps<'span'> &
-  VariantProps<typeof badgeVariants> & { asChild?: boolean; }) {
-  const Comp = asChild ? Slot : 'span';
+  VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
+  const Comp = asChild ? Slot : 'span'
 
   return (
     <Comp
@@ -57,7 +51,7 @@ function Badge({
       className={cn(badgeVariants({ variant }), className)}
       {...props}
     />
-  );
+  )
 }
 
-export { Badge, badgeVariants };
+export { Badge, badgeVariants }

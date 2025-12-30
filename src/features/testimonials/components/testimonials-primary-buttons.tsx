@@ -2,11 +2,10 @@ import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { IconPlus } from '@tabler/icons-react'
 import { toast } from 'sonner'
+import { useCreateTestimonial } from '@/hooks/use-testimonials'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { Textarea } from '@/components/ui/textarea'
 import {
   Sheet,
   SheetContent,
@@ -14,7 +13,8 @@ import {
   SheetTitle,
   SheetFooter,
 } from '@/components/ui/sheet'
-import { useCreateTestimonial } from '@/hooks/use-testimonials'
+import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 
 export function TestimonialsPrimaryButtons() {
   const [openSheet, setOpenSheet] = useState(false)
@@ -74,7 +74,10 @@ export function TestimonialsPrimaryButtons() {
         location: 'Location is required',
         img: 'Image URL is required',
       }
-      setErrors((prev) => ({ ...prev, [name]: fieldLabels[name] || 'This field is required' }))
+      setErrors((prev) => ({
+        ...prev,
+        [name]: fieldLabels[name] || 'This field is required',
+      }))
     } else if (name === 'img' && !isValidUrl(value.trim())) {
       setErrors((prev) => ({ ...prev, img: '"image" must be a valid uri' }))
     }
@@ -88,8 +91,8 @@ export function TestimonialsPrimaryButtons() {
       img: !formData.img.trim()
         ? 'Image URL is required'
         : isValidUrl(formData.img.trim())
-        ? ''
-        : '"img" must be a valid uri',
+          ? ''
+          : '"img" must be a valid uri',
     }
     setErrors(newErrors)
     return Object.values(newErrors).every((msg) => !msg)
@@ -114,7 +117,13 @@ export function TestimonialsPrimaryButtons() {
         onSuccess: () => {
           toast.success('Testimonial created successfully!')
           queryClient.invalidateQueries({ queryKey: ['testimonials'] })
-          setFormData({ name: '', body: '', img: '', location: '', visible: true })
+          setFormData({
+            name: '',
+            body: '',
+            img: '',
+            location: '',
+            visible: true,
+          })
           setErrors({ name: '', body: '', img: '', location: '' })
           setOpenSheet(false)
         },
@@ -145,70 +154,94 @@ export function TestimonialsPrimaryButtons() {
 
             <div className='mt-6 space-y-5'>
               <div className='space-y-2'>
-                <Label htmlFor='t-name'>Name <span className="text-red-500">*</span></Label>
+                <Label htmlFor='t-name'>
+                  Name <span className='text-red-500'>*</span>
+                </Label>
                 <Input
                   id='t-name'
                   name='name'
                   aria-invalid={!!errors.name}
-                  className={errors.name ? 'border-red-500 focus-visible:ring-red-500' : ''}
+                  className={
+                    errors.name
+                      ? 'border-red-500 focus-visible:ring-red-500'
+                      : ''
+                  }
                   value={formData.name}
                   onChange={handleChange}
                   onBlur={handleBlur}
                 />
                 {errors.name ? (
-                  <p className='text-red-500 text-xs'>{errors.name}</p>
+                  <p className='text-xs text-red-500'>{errors.name}</p>
                 ) : null}
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='t-location'>Location <span className="text-red-500">*</span></Label>
+                <Label htmlFor='t-location'>
+                  Location <span className='text-red-500'>*</span>
+                </Label>
                 <Input
                   id='t-location'
                   name='location'
                   required
                   aria-invalid={!!errors.location}
-                  className={errors.location ? 'border-red-500 focus-visible:ring-red-500' : ''}
+                  className={
+                    errors.location
+                      ? 'border-red-500 focus-visible:ring-red-500'
+                      : ''
+                  }
                   value={formData.location}
                   onChange={handleChange}
                   onBlur={handleBlur}
                 />
                 {errors.location ? (
-                  <p className='text-red-500 text-xs'>{errors.location}</p>
+                  <p className='text-xs text-red-500'>{errors.location}</p>
                 ) : null}
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='t-img'>Image URL <span className="text-red-500">*</span></Label>
+                <Label htmlFor='t-img'>
+                  Image URL <span className='text-red-500'>*</span>
+                </Label>
                 <Input
                   id='t-img'
                   name='img'
                   placeholder='https://...'
                   required
                   aria-invalid={!!errors.img}
-                  className={errors.img ? 'border-red-500 focus-visible:ring-red-500' : ''}
+                  className={
+                    errors.img
+                      ? 'border-red-500 focus-visible:ring-red-500'
+                      : ''
+                  }
                   value={formData.img}
                   onChange={handleChange}
                   onBlur={handleBlur}
                 />
                 {errors.img ? (
-                  <p className='text-red-500 text-xs'>{errors.img}</p>
+                  <p className='text-xs text-red-500'>{errors.img}</p>
                 ) : null}
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='t-body'>Testimonial <span className="text-red-500">*</span></Label>
+                <Label htmlFor='t-body'>
+                  Testimonial <span className='text-red-500'>*</span>
+                </Label>
                 <Textarea
                   id='t-body'
                   name='body'
                   aria-invalid={!!errors.body}
-                  className={errors.body ? 'border-red-500 focus-visible:ring-red-500' : ''}
+                  className={
+                    errors.body
+                      ? 'border-red-500 focus-visible:ring-red-500'
+                      : ''
+                  }
                   value={formData.body}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   rows={6}
                 />
                 {errors.body ? (
-                  <p className='text-red-500 text-xs'>{errors.body}</p>
+                  <p className='text-xs text-red-500'>{errors.body}</p>
                 ) : null}
               </div>
 
@@ -239,7 +272,11 @@ export function TestimonialsPrimaryButtons() {
               >
                 Cancel
               </Button>
-              <Button onClick={handleSubmit} disabled={isPending} className='w-full'>
+              <Button
+                onClick={handleSubmit}
+                disabled={isPending}
+                className='w-full'
+              >
                 {isPending ? 'Saving...' : 'Save Testimonial'}
               </Button>
             </SheetFooter>
@@ -249,5 +286,3 @@ export function TestimonialsPrimaryButtons() {
     </div>
   )
 }
-
-

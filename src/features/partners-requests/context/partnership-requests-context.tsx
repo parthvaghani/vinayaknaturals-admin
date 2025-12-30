@@ -1,28 +1,36 @@
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, type ReactNode } from 'react'
 
 // Use object instead of empty interface to resolve lint error
-type PartnershipRequestsContextType = object;
+type PartnershipRequestsContextType = object
 
-const PartnershipRequestsContext = createContext<PartnershipRequestsContextType | undefined>(undefined);
+const PartnershipRequestsContext = createContext<
+  PartnershipRequestsContextType | undefined
+>(undefined)
 
-export function PartnershipRequestsProvider({ children }: { children: ReactNode }) {
+export function PartnershipRequestsProvider({
+  children,
+}: {
+  children: ReactNode
+}) {
   const value: PartnershipRequestsContextType = {
     // Add any context values needed for partnership requests
-  };
+  }
 
   return (
     <PartnershipRequestsContext.Provider value={value}>
       {children}
     </PartnershipRequestsContext.Provider>
-  );
+  )
 }
 
 export function usePartnershipRequestsContext() {
-  const context = useContext(PartnershipRequestsContext);
+  const context = useContext(PartnershipRequestsContext)
   if (context === undefined) {
-    throw new Error('usePartnershipRequestsContext must be used within a PartnershipRequestsProvider');
+    throw new Error(
+      'usePartnershipRequestsContext must be used within a PartnershipRequestsProvider'
+    )
   }
-  return context;
+  return context
 }
 
-export default PartnershipRequestsProvider;
+export default PartnershipRequestsProvider

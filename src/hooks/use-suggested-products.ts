@@ -46,8 +46,10 @@ const getSuggestedProductsApi = async (
     : (payload?.results ?? payload?.data ?? payload?.items ?? [])
   const total: number | undefined =
     payload?.total ?? payload?.count ?? payload?.totalResults ?? undefined
-  const currentPage: number | undefined = payload?.page ?? payload?.currentPage ?? payload?.pageNo
-  const currentLimit: number | undefined = payload?.limit ?? payload?.pageSize ?? payload?.perPage
+  const currentPage: number | undefined =
+    payload?.page ?? payload?.currentPage ?? payload?.pageNo
+  const currentLimit: number | undefined =
+    payload?.limit ?? payload?.pageSize ?? payload?.perPage
 
   return {
     results,
@@ -57,7 +59,9 @@ const getSuggestedProductsApi = async (
   }
 }
 
-const getSuggestedProductByIdApi = async (id: string): Promise<SuggestedProduct> => {
+const getSuggestedProductByIdApi = async (
+  id: string
+): Promise<SuggestedProduct> => {
   const response = await api.get(`/products/suggested/${id}`)
   return response?.data?.data ?? response.data
 }
@@ -104,5 +108,3 @@ export function useDeleteSuggestedProduct() {
     mutationFn: deleteSuggestedProductApi,
   })
 }
-
-

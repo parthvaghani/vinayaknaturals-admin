@@ -126,5 +126,3 @@ export function useDeleteTestimonial() {
     mutationFn: deleteTestimonialApi,
   })
 }
-
-

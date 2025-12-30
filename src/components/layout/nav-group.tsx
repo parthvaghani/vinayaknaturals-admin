@@ -1,6 +1,8 @@
 import { ReactNode } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { useOrdersList } from '@/hooks/use-orders'
 import {
   Collapsible,
   CollapsibleContent,
@@ -18,8 +20,6 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { Badge } from '../ui/badge'
-import { cn } from '@/lib/utils'
-import { useOrdersList } from '@/hooks/use-orders'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,8 +34,13 @@ export function NavGroup({ title, items }: NavGroup) {
   const { state, isMobile } = useSidebar()
   const href = useLocation({ select: (location) => location.href })
   // Dynamic count for orders with status "placed"
-  const { data: ordersPlacedData } = useOrdersList({ page: 1, limit: 1, status: 'placed' })
-  const ordersPlacedCount = typeof ordersPlacedData?.total === 'number' ? ordersPlacedData.total : 0
+  const { data: ordersPlacedData } = useOrdersList({
+    page: 1,
+    limit: 1,
+    status: 'placed',
+  })
+  const ordersPlacedCount =
+    typeof ordersPlacedData?.total === 'number' ? ordersPlacedData.total : 0
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{title}</SidebarGroupLabel>
@@ -44,25 +49,60 @@ export function NavGroup({ title, items }: NavGroup) {
           const key = `${item.title}-${item.url}`
 
           if (!item.items)
-            return <SidebarMenuLink key={key} item={item} href={href} ordersPlacedCount={ordersPlacedCount} />
+            return (
+              <SidebarMenuLink
+                key={key}
+                item={item}
+                href={href}
+                ordersPlacedCount={ordersPlacedCount}
+              />
+            )
 
           if (state === 'collapsed' && !isMobile)
             return (
-              <SidebarMenuCollapsedDropdown key={key} item={item} href={href} ordersPlacedCount={ordersPlacedCount} />
+              <SidebarMenuCollapsedDropdown
+                key={key}
+                item={item}
+                href={href}
+                ordersPlacedCount={ordersPlacedCount}
+              />
             )
 
-          return <SidebarMenuCollapsible key={key} item={item} href={href} ordersPlacedCount={ordersPlacedCount} />
+          return (
+            <SidebarMenuCollapsible
+              key={key}
+              item={item}
+              href={href}
+              ordersPlacedCount={ordersPlacedCount}
+            />
+          )
         })}
       </SidebarMenu>
     </SidebarGroup>
   )
 }
 
-const NavBadge = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <Badge className={cn('rounded-full px-1 py-0 text-xs', className)}>{children}</Badge>
+const NavBadge = ({
+  children,
+  className,
+}: {
+  children: ReactNode
+  className?: string
+}) => (
+  <Badge className={cn('rounded-full px-1 py-0 text-xs', className)}>
+    {children}
+  </Badge>
 )
 
-const SidebarMenuLink = ({ item, href, ordersPlacedCount }: { item: NavLink; href: string; ordersPlacedCount?: number }) => {
+const SidebarMenuLink = ({
+  item,
+  href,
+  ordersPlacedCount,
+}: {
+  item: NavLink
+  href: string
+  ordersPlacedCount?: number
+}) => {
   const { setOpenMobile } = useSidebar()
   const isOrders = item.url === '/orders'
   const showBadge = isOrders ? (ordersPlacedCount ?? 0) > 0 : !!item.badge

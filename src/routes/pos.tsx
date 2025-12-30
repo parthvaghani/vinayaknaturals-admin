@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { POSLayout } from '@/components/layout/pos-layout'
 import { useAuthStore } from '@/stores/authStore'
+import { POSLayout } from '@/components/layout/pos-layout'
 import POSScreen from '@/features/pos'
 
 export const Route = createFileRoute('/pos')({

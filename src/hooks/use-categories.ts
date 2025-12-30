@@ -57,28 +57,41 @@ const searchProductCategoriesApi = async (
   return results
 }
 // Create new category
-const createProductCategoryApi = async (payload: {category: string, name: string, description: string, pricingEnabled: boolean}): Promise<ProductCategory> => {
+const createProductCategoryApi = async (payload: {
+  category: string
+  name: string
+  description: string
+  pricingEnabled: boolean
+}): Promise<ProductCategory> => {
   const response = await api.post('/categories/product-category', payload)
   return response.data
 }
 
 // Update category
-export const updateProductCategoryApi = async (payload: { id: string, category:string, name:string, description:string, pricingEnabled:boolean } ) => {
-    const upadatedPayload = {
-        category: payload.category,
-        name: payload.name,
-        description: payload.description,
-        pricingEnabled:payload.pricingEnabled
-    }
-    const response = await api.put(`/categories/product-category/${payload.id}`, upadatedPayload)
-    return response.data
+export const updateProductCategoryApi = async (payload: {
+  id: string
+  category: string
+  name: string
+  description: string
+  pricingEnabled: boolean
+}) => {
+  const upadatedPayload = {
+    category: payload.category,
+    name: payload.name,
+    description: payload.description,
+    pricingEnabled: payload.pricingEnabled,
   }
+  const response = await api.put(
+    `/categories/product-category/${payload.id}`,
+    upadatedPayload
+  )
+  return response.data
+}
 
 // Delete category
 const deleteProductCategoryApi = async (id: string): Promise<void> => {
-    await api.delete(`/categories/product-category/${id}`)
-  }
-
+  await api.delete(`/categories/product-category/${id}`)
+}
 
 // Hooks
 export function useProductCategories() {
@@ -102,34 +115,41 @@ export function useCreateProductCategory() {
 }
 
 export function useUpdateProductCategory() {
-    return useMutation({
-      mutationFn: (params: { id: string, category:string, name:string, description:string, pricingEnabled:boolean }) => updateProductCategoryApi(params),
-    })
-  }
+  return useMutation({
+    mutationFn: (params: {
+      id: string
+      category: string
+      name: string
+      description: string
+      pricingEnabled: boolean
+    }) => updateProductCategoryApi(params),
+  })
+}
 
 export function useDeleteProductCategory() {
-    return useMutation<void, Error, string>({
-      mutationFn: deleteProductCategoryApi,
-    })
-  }
+  return useMutation<void, Error, string>({
+    mutationFn: deleteProductCategoryApi,
+  })
+}
 
-  export function useSearchProductCategories(search: string) {
-    return useQuery({
-      queryKey: ['product-categories-search', search],
-      queryFn: () => searchProductCategoriesApi(search),
-      enabled: !!search, // Only run when search is non-empty
-      staleTime: 1000 * 60 * 5,
-      retry: 3,
-      refetchOnWindowFocus: false,
-    })
-  }
+export function useSearchProductCategories(search: string) {
+  return useQuery({
+    queryKey: ['product-categories-search', search],
+    queryFn: () => searchProductCategoriesApi(search),
+    enabled: !!search, // Only run when search is non-empty
+    staleTime: 1000 * 60 * 5,
+    retry: 3,
+    refetchOnWindowFocus: false,
+  })
+}
 
 // Paginated list hook
 export function useProductCategoriesList(params: GetProductCategoriesParams) {
   const { page = 1, limit = 10, search = '', pricingEnabled } = params
   return useQuery({
     queryKey: ['product-categories', { page, limit, search, pricingEnabled }],
-    queryFn: () => getProductCategoriesApi({ page, limit, search, pricingEnabled }),
+    queryFn: () =>
+      getProductCategoriesApi({ page, limit, search, pricingEnabled }),
     placeholderData: keepPreviousData,
     staleTime: 1000 * 30,
     retry: 3,

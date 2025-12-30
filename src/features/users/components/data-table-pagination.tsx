@@ -26,14 +26,21 @@ interface DataTablePaginationProps<TData> {
   onChange: (next: PaginationState) => void
 }
 
-export function DataTablePagination<TData>({ table, pagination, onChange }: DataTablePaginationProps<TData>) {
+export function DataTablePagination<TData>({
+  table,
+  pagination,
+  onChange,
+}: DataTablePaginationProps<TData>) {
   const currentPageIndex = Math.max(0, (pagination.page ?? 1) - 1)
   const pageSize = pagination.limit ?? 10
   const totalItems = pagination.total ?? table.getFilteredRowModel().rows.length
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
 
   return (
-    <div className='flex items-center justify-end overflow-clip px-2' style={{ overflowClipMargin: 1 }}>
+    <div
+      className='flex items-center justify-end overflow-clip px-2'
+      style={{ overflowClipMargin: 1 }}
+    >
       {/* <div className='text-muted-foreground hidden flex-1 text-sm sm:block'>
         {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} row(s) selected.
       </div> */}
@@ -75,7 +82,9 @@ export function DataTablePagination<TData>({ table, pagination, onChange }: Data
           <Button
             variant='outline'
             className='h-8 w-8 p-0'
-            onClick={() => onChange({ ...pagination, page: Math.max(1, currentPageIndex) })}
+            onClick={() =>
+              onChange({ ...pagination, page: Math.max(1, currentPageIndex) })
+            }
             disabled={currentPageIndex <= 0}
           >
             <span className='sr-only'>Go to previous page</span>
@@ -84,7 +93,12 @@ export function DataTablePagination<TData>({ table, pagination, onChange }: Data
           <Button
             variant='outline'
             className='h-8 w-8 p-0'
-            onClick={() => onChange({ ...pagination, page: Math.min(totalPages, currentPageIndex + 2) })}
+            onClick={() =>
+              onChange({
+                ...pagination,
+                page: Math.min(totalPages, currentPageIndex + 2),
+              })
+            }
             disabled={currentPageIndex + 1 >= totalPages}
           >
             <span className='sr-only'>Go to next page</span>

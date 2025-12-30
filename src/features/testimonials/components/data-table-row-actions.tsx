@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { SquarePen, Trash, Eye } from 'lucide-react'
 import { toast } from 'sonner'
+import {
+  useDeleteTestimonial,
+  useTestimonialById,
+  useUpdateTestimonial,
+} from '@/hooks/use-testimonials'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -14,11 +19,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  useDeleteTestimonial,
-  useTestimonialById,
-  useUpdateTestimonial,
-} from '@/hooks/use-testimonials'
 
 interface TestimonialRow {
   _id?: string
@@ -32,7 +32,11 @@ interface TestimonialRow {
   updatedAt?: string | Date
 }
 
-export function DataTableRowActions({ row }: { row: { original: TestimonialRow } }) {
+export function DataTableRowActions({
+  row,
+}: {
+  row: { original: TestimonialRow }
+}) {
   const queryClient = useQueryClient()
   const testimonial = row.original
 
@@ -53,10 +57,13 @@ export function DataTableRowActions({ row }: { row: { original: TestimonialRow }
     setFormData({ ...testimonial })
   }, [testimonial])
 
-  const { data: fetched, isLoading: isFetchingDetails } = useTestimonialById(testimonialId)
+  const { data: fetched, isLoading: isFetchingDetails } =
+    useTestimonialById(testimonialId)
 
-  const { mutate: updateTestimonial, isPending: isUpdating } = useUpdateTestimonial()
-  const { mutate: deleteTestimonial, isPending: isDeleting } = useDeleteTestimonial()
+  const { mutate: updateTestimonial, isPending: isUpdating } =
+    useUpdateTestimonial()
+  const { mutate: deleteTestimonial, isPending: isDeleting } =
+    useDeleteTestimonial()
 
   const validate = () => {
     const nextErrors: {
@@ -66,8 +73,10 @@ export function DataTableRowActions({ row }: { row: { original: TestimonialRow }
       body?: string
     } = {}
 
-    if (!formData.name || !formData.name.trim()) nextErrors.name = 'Name is required.'
-    if (!formData.location || !formData.location.trim()) nextErrors.location = 'Location is required.'
+    if (!formData.name || !formData.name.trim())
+      nextErrors.name = 'Name is required.'
+    if (!formData.location || !formData.location.trim())
+      nextErrors.location = 'Location is required.'
     if (!formData.img || !formData.img.trim()) {
       nextErrors.img = 'Image URL is required.'
     } else {
@@ -81,7 +90,8 @@ export function DataTableRowActions({ row }: { row: { original: TestimonialRow }
         nextErrors.img = 'Image URL must be a valid URL.'
       }
     }
-    if (!formData.body || !formData.body.trim()) nextErrors.body = 'Testimonial is required.'
+    if (!formData.body || !formData.body.trim())
+      nextErrors.body = 'Testimonial is required.'
 
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
@@ -177,13 +187,14 @@ export function DataTableRowActions({ row }: { row: { original: TestimonialRow }
                 value={formData.name || ''}
                 onChange={(e) => {
                   setFormData({ ...formData, name: e.target.value })
-                  if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }))
+                  if (errors.name)
+                    setErrors((prev) => ({ ...prev, name: undefined }))
                 }}
                 aria-invalid={Boolean(errors.name)}
                 required
               />
               {errors.name ? (
-                <p className='mt-1 text-xs text-destructive'>{errors.name}</p>
+                <p className='text-destructive mt-1 text-xs'>{errors.name}</p>
               ) : null}
             </div>
             <div>
@@ -194,31 +205,35 @@ export function DataTableRowActions({ row }: { row: { original: TestimonialRow }
                 value={formData.location || ''}
                 onChange={(e) => {
                   setFormData({ ...formData, location: e.target.value })
-                  if (errors.location) setErrors((prev) => ({ ...prev, location: undefined }))
+                  if (errors.location)
+                    setErrors((prev) => ({ ...prev, location: undefined }))
                 }}
                 aria-invalid={Boolean(errors.location)}
                 required
               />
               {errors.location ? (
-                <p className='mt-1 text-xs text-destructive'>{errors.location}</p>
+                <p className='text-destructive mt-1 text-xs'>
+                  {errors.location}
+                </p>
               ) : null}
             </div>
             <div>
               <Label htmlFor='t-img'>Image URL</Label>
-                <Input
+              <Input
                 id='t-img'
                 className={`mt-2 ${errors.img ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 value={formData.img || ''}
                 onChange={(e) => {
                   setFormData({ ...formData, img: e.target.value })
-                  if (errors.img) setErrors((prev) => ({ ...prev, img: undefined }))
+                  if (errors.img)
+                    setErrors((prev) => ({ ...prev, img: undefined }))
                 }}
                 placeholder='https://...'
                 aria-invalid={Boolean(errors.img)}
                 required
               />
               {errors.img ? (
-                <p className='mt-1 text-xs text-destructive'>{errors.img}</p>
+                <p className='text-destructive mt-1 text-xs'>{errors.img}</p>
               ) : null}
             </div>
             <div>
@@ -229,14 +244,15 @@ export function DataTableRowActions({ row }: { row: { original: TestimonialRow }
                 value={formData.body || ''}
                 onChange={(e) => {
                   setFormData({ ...formData, body: e.target.value })
-                  if (errors.body) setErrors((prev) => ({ ...prev, body: undefined }))
+                  if (errors.body)
+                    setErrors((prev) => ({ ...prev, body: undefined }))
                 }}
                 rows={5}
                 aria-invalid={Boolean(errors.body)}
                 required
               />
               {errors.body ? (
-                <p className='mt-1 text-xs text-destructive'>{errors.body}</p>
+                <p className='text-destructive mt-1 text-xs'>{errors.body}</p>
               ) : null}
             </div>
             <div className='mt-2 flex items-center justify-between rounded-lg border px-3 py-1'>
@@ -244,12 +260,16 @@ export function DataTableRowActions({ row }: { row: { original: TestimonialRow }
                 <Label htmlFor='t-visible' className='text-sm font-medium'>
                   Visible
                 </Label>
-                <p className='text-muted-foreground text-xs'>Show on website/app.</p>
+                <p className='text-muted-foreground text-xs'>
+                  Show on website/app.
+                </p>
               </div>
               <Switch
                 id='t-visible'
                 checked={Boolean(formData.visible)}
-                onCheckedChange={(val) => setFormData({ ...formData, visible: val })}
+                onCheckedChange={(val) =>
+                  setFormData({ ...formData, visible: val })
+                }
               />
             </div>
           </div>
@@ -278,7 +298,11 @@ export function DataTableRowActions({ row }: { row: { original: TestimonialRow }
             <Button variant='outline' onClick={() => setDeleteConfirm(false)}>
               Cancel
             </Button>
-            <Button variant='destructive' onClick={handleDelete} disabled={isDeleting}>
+            <Button
+              variant='destructive'
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
               {isDeleting ? 'Deleting...' : 'Delete'}
             </Button>
           </DialogFooter>
@@ -295,15 +319,17 @@ export function DataTableRowActions({ row }: { row: { original: TestimonialRow }
           </DialogHeader>
           <div className='space-y-3'>
             <div>
-              <Label className='text-xs text-muted-foreground'>Location</Label>
+              <Label className='text-muted-foreground text-xs'>Location</Label>
               <div>{fetched?.location ?? testimonial.location ?? '—'}</div>
             </div>
             <div>
-              <Label className='text-xs text-muted-foreground'>Visible</Label>
-              <div>{(fetched?.visible ?? testimonial.visible) ? 'Yes' : 'No'}</div>
+              <Label className='text-muted-foreground text-xs'>Visible</Label>
+              <div>
+                {(fetched?.visible ?? testimonial.visible) ? 'Yes' : 'No'}
+              </div>
             </div>
             <div>
-              <Label className='text-xs text-muted-foreground'>Image</Label>
+              <Label className='text-muted-foreground text-xs'>Image</Label>
               {fetched?.img || testimonial.img ? (
                 <img
                   src={(fetched?.img || testimonial.img) as string}
@@ -315,40 +341,50 @@ export function DataTableRowActions({ row }: { row: { original: TestimonialRow }
               )}
             </div>
             <div>
-              <Label className='text-xs text-muted-foreground'>Testimonial</Label>
-              <p className='mt-1 text-sm text-muted-foreground'>
+              <Label className='text-muted-foreground text-xs'>
+                Testimonial
+              </Label>
+              <p className='text-muted-foreground mt-1 text-sm'>
                 {fetched?.body ?? testimonial.body ?? '—'}
               </p>
             </div>
             <div className='grid grid-cols-2 gap-4'>
               <div>
-                <Label className='text-xs text-muted-foreground'>Created</Label>
-              <div>
+                <Label className='text-muted-foreground text-xs'>Created</Label>
+                <div>
                   {(() => {
-                    const raw = (fetched?.createdAt ?? testimonial.createdAt) as string | Date | undefined
+                    const raw = (fetched?.createdAt ??
+                      testimonial.createdAt) as string | Date | undefined
                     if (!raw) return '—'
                     const d = typeof raw === 'string' ? new Date(raw) : raw
                     return new Intl.DateTimeFormat('en-IN', {
-                      year: 'numeric', month: 'short', day: '2-digit',
+                      year: 'numeric',
+                      month: 'short',
+                      day: '2-digit',
                     }).format(d)
                   })()}
                 </div>
               </div>
               <div>
-                <Label className='text-xs text-muted-foreground'>Updated</Label>
-              <div>
+                <Label className='text-muted-foreground text-xs'>Updated</Label>
+                <div>
                   {(() => {
-                    const raw = (fetched?.updatedAt ?? testimonial.updatedAt) as string | Date | undefined
+                    const raw = (fetched?.updatedAt ??
+                      testimonial.updatedAt) as string | Date | undefined
                     if (!raw) return '—'
                     const d = typeof raw === 'string' ? new Date(raw) : raw
                     return new Intl.DateTimeFormat('en-IN', {
-                      year: 'numeric', month: 'short', day: '2-digit',
+                      year: 'numeric',
+                      month: 'short',
+                      day: '2-digit',
                     }).format(d)
                   })()}
-                      </div>
-                    </div>
+                </div>
               </div>
-            {isFetchingDetails ? <p className='text-xs text-muted-foreground'>Fetching latest…</p> : null}
+            </div>
+            {isFetchingDetails ? (
+              <p className='text-muted-foreground text-xs'>Fetching latest…</p>
+            ) : null}
           </div>
         </DialogContent>
       </Dialog>

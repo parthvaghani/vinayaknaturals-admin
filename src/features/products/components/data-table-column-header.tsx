@@ -14,21 +14,23 @@ export function DataTableColumnHeader<TData, TValue>({
   className,
 }: DataTableColumnHeaderProps<TData, TValue>) {
   if (!column.getCanSort()) {
-    return <div className={cn('font-medium text-sm', className)}>{title}</div>
+    return <div className={cn('text-sm font-medium', className)}>{title}</div>
   }
 
   return (
     <div
-      className={cn('flex items-center space-x-1 cursor-pointer select-none', className)}
+      className={cn(
+        'flex cursor-pointer items-center space-x-1 select-none',
+        className
+      )}
       onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
     >
       <span>{title}</span>
       {column.getIsSorted() === 'desc' ? (
-        <ArrowDownIcon className='h-4 w-4 text-muted-foreground' />
+        <ArrowDownIcon className='text-muted-foreground h-4 w-4' />
       ) : column.getIsSorted() === 'asc' ? (
-        <ArrowUpIcon className='h-4 w-4 text-muted-foreground' />
+        <ArrowUpIcon className='text-muted-foreground h-4 w-4' />
       ) : null}
     </div>
   )
 }
-

@@ -1,24 +1,41 @@
+import { useMemo, useState } from 'react'
+import { useWhatsappLeadsList } from '@/hooks/use-whatsapp-leads'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
+import { columns } from './components/columns'
 // import { ThemeSwitch } from '@/components/theme-switch'
 import { DataTable } from './components/data-table'
-import { columns } from './components/columns'
-import { useMemo, useState } from 'react'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useWhatsappLeadsList } from '@/hooks/use-whatsapp-leads'
 
 export default function WhatsappLeads() {
-  const [status, setStatus] = useState<'all' | 'new' | 'contacted' | 'closed' | 'spam'>('all')
-  const statusParam = useMemo(() => (status === 'all' ? undefined : status), [status])
+  const [status, setStatus] = useState<
+    'all' | 'new' | 'contacted' | 'closed' | 'spam'
+  >('all')
+  const statusParam = useMemo(
+    () => (status === 'all' ? undefined : status),
+    [status]
+  )
   const [search, setSearch] = useState<string>('')
   const [page, setPage] = useState<number>(1)
   const [limit, setLimit] = useState<number>(10)
   const [intent, setIntent] = useState<'all' | 'true' | 'false'>('all')
   const [sent, setSent] = useState<'all' | 'true' | 'false'>('all')
-  const intentParam = useMemo(() => (intent === 'all' ? undefined : intent === 'true'), [intent])
-  const sentParam = useMemo(() => (sent === 'all' ? undefined : sent === 'true'), [sent])
+  const intentParam = useMemo(
+    () => (intent === 'all' ? undefined : intent === 'true'),
+    [intent]
+  )
+  const sentParam = useMemo(
+    () => (sent === 'all' ? undefined : sent === 'true'),
+    [sent]
+  )
 
   const { data, isLoading, isError, error, isFetching } = useWhatsappLeadsList({
     page,
@@ -43,16 +60,31 @@ export default function WhatsappLeads() {
           {/* Header Section */}
           <div className='flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0'>
             <div>
-              <h2 className='text-2xl font-bold tracking-tight'>Whatsapp Leads</h2>
-              <p className='text-muted-foreground'>Track WhatsApp inquiries from your store.</p>
+              <h2 className='text-2xl font-bold tracking-tight'>
+                Whatsapp Leads
+              </h2>
+              <p className='text-muted-foreground'>
+                Track WhatsApp inquiries from your store.
+              </p>
             </div>
           </div>
 
           {/* Filters Section */}
           <div className='flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3'>
             <div className='flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2'>
-              <Select value={status} onValueChange={(val: 'all' | 'new' | 'contacted' | 'closed' | 'spam') => { setStatus(val); setPage(1) }}>
-                <SelectTrigger id='status-filter' className='h-9 w-full sm:w-[160px]'>
+              <Select
+                value={status}
+                onValueChange={(
+                  val: 'all' | 'new' | 'contacted' | 'closed' | 'spam'
+                ) => {
+                  setStatus(val)
+                  setPage(1)
+                }}
+              >
+                <SelectTrigger
+                  id='status-filter'
+                  className='h-9 w-full sm:w-[160px]'
+                >
                   <SelectValue placeholder='All' />
                 </SelectTrigger>
                 <SelectContent>
@@ -65,8 +97,17 @@ export default function WhatsappLeads() {
               </Select>
             </div>
             <div className='flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2'>
-              <Select value={intent} onValueChange={(val: 'all' | 'true' | 'false') => { setIntent(val); setPage(1) }}>
-                <SelectTrigger id='intent-filter' className='h-9 w-full sm:w-[140px]'>
+              <Select
+                value={intent}
+                onValueChange={(val: 'all' | 'true' | 'false') => {
+                  setIntent(val)
+                  setPage(1)
+                }}
+              >
+                <SelectTrigger
+                  id='intent-filter'
+                  className='h-9 w-full sm:w-[140px]'
+                >
                   <SelectValue placeholder='All' />
                 </SelectTrigger>
                 <SelectContent>
@@ -77,8 +118,17 @@ export default function WhatsappLeads() {
               </Select>
             </div>
             <div className='flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2'>
-              <Select value={sent} onValueChange={(val: 'all' | 'true' | 'false') => { setSent(val); setPage(1) }}>
-                <SelectTrigger id='sent-filter' className='h-9 w-full sm:w-[140px]'>
+              <Select
+                value={sent}
+                onValueChange={(val: 'all' | 'true' | 'false') => {
+                  setSent(val)
+                  setPage(1)
+                }}
+              >
+                <SelectTrigger
+                  id='sent-filter'
+                  className='h-9 w-full sm:w-[140px]'
+                >
                   <SelectValue placeholder='All' />
                 </SelectTrigger>
                 <SelectContent>
@@ -98,14 +148,26 @@ export default function WhatsappLeads() {
             <p className='text-red-500'>Error: {(error as Error).message}</p>
           ) : (
             <DataTable
-              data={(data?.results ?? []) as import('@/hooks/use-whatsapp-leads').WhatsappLead[]}
-              columns={columns as import('@tanstack/react-table').ColumnDef<import('@/hooks/use-whatsapp-leads').WhatsappLead, unknown>[]}
+              data={
+                (data?.results ??
+                  []) as import('@/hooks/use-whatsapp-leads').WhatsappLead[]
+              }
+              columns={
+                columns as import('@tanstack/react-table').ColumnDef<
+                  import('@/hooks/use-whatsapp-leads').WhatsappLead,
+                  unknown
+                >[]
+              }
               search={search}
               onSearchChange={(val) => {
                 setSearch(val)
                 setPage(1)
               }}
-              pagination={{ page, limit, total: data?.total ?? (data?.results?.length ?? 0) }}
+              pagination={{
+                page,
+                limit,
+                total: data?.total ?? data?.results?.length ?? 0,
+              }}
               onPaginationChange={({ page: nextPage, limit: nextLimit }) => {
                 setPage(nextPage)
                 setLimit(nextLimit)
@@ -117,5 +179,3 @@ export default function WhatsappLeads() {
     </>
   )
 }
-
-

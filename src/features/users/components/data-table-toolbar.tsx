@@ -1,36 +1,40 @@
-import { Cross2Icon } from '@radix-ui/react-icons';
-import { Table } from '@tanstack/react-table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { DataTableViewOptions } from '../components/data-table-view-options';
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react'
+import { Cross2Icon } from '@radix-ui/react-icons'
+import { Table } from '@tanstack/react-table'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { DataTableViewOptions } from '../components/data-table-view-options'
 
 interface DataTableToolbarProps<TData> {
-  table: Table<TData>;
-  search: string;
-  onSearchChange: (value: string) => void;
+  table: Table<TData>
+  search: string
+  onSearchChange: (value: string) => void
 }
 
-export function DataTableToolbar<TData>({ table, search, onSearchChange }: DataTableToolbarProps<TData>) {
+export function DataTableToolbar<TData>({
+  table,
+  search,
+  onSearchChange,
+}: DataTableToolbarProps<TData>) {
   // Local state for debounce UX
-  const [localSearch, setLocalSearch] = useState(search);
+  const [localSearch, setLocalSearch] = useState(search)
 
   useEffect(() => {
-    setLocalSearch(search);
-  }, [search]);
+    setLocalSearch(search)
+  }, [search])
 
   // Debounce server-side search
   useEffect(() => {
     const delay = setTimeout(() => {
       // Only trigger change if value actually differs to avoid unintended resets
       if (localSearch !== search) {
-        onSearchChange(localSearch);
+        onSearchChange(localSearch)
       }
-    }, 500);
-    return () => clearTimeout(delay);
-  }, [localSearch, search, onSearchChange]);
+    }, 500)
+    return () => clearTimeout(delay)
+  }, [localSearch, search, onSearchChange])
 
-  const isFiltered = !!localSearch;
+  const isFiltered = !!localSearch
 
   return (
     <div className='flex items-center justify-between'>
@@ -46,8 +50,8 @@ export function DataTableToolbar<TData>({ table, search, onSearchChange }: DataT
           <Button
             variant='ghost'
             onClick={() => {
-              setLocalSearch('');
-              onSearchChange('');
+              setLocalSearch('')
+              onSearchChange('')
             }}
             className='h-8 px-2 lg:px-3'
           >
@@ -59,5 +63,5 @@ export function DataTableToolbar<TData>({ table, search, onSearchChange }: DataT
 
       <DataTableViewOptions table={table} />
     </div>
-  );
+  )
 }

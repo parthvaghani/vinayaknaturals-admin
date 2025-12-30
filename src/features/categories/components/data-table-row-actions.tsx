@@ -1,10 +1,19 @@
-import { Button } from '@/components/ui/button'
-import { SquarePen, Trash, Eye  } from 'lucide-react'
 import { useState } from 'react'
-import { useUpdateProductCategory, useDeleteProductCategory } from '@/hooks/use-categories'
 import { useQueryClient } from '@tanstack/react-query'
+import { SquarePen, Trash, Eye } from 'lucide-react'
 import { toast } from 'sonner'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import {
+  useUpdateProductCategory,
+  useDeleteProductCategory,
+} from '@/hooks/use-categories'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -25,13 +34,23 @@ export function DataTableRowActions({ row }: { row: { original: Category } }) {
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [formData, setFormData] = useState<Category>(category)
-  const [errors, setErrors] = useState<{ category?: string; name?: string; description?: string }>({})
+  const [errors, setErrors] = useState<{
+    category?: string
+    name?: string
+    description?: string
+  }>({})
 
-  const { mutate: updateCategory, isPending: isUpdating } = useUpdateProductCategory()
-  const { mutate: deleteCategory, isPending: isDeleting } = useDeleteProductCategory()
+  const { mutate: updateCategory, isPending: isUpdating } =
+    useUpdateProductCategory()
+  const { mutate: deleteCategory, isPending: isDeleting } =
+    useDeleteProductCategory()
 
   const validateForm = (data: Category) => {
-    const nextErrors: { category?: string; name?: string; description?: string } = {}
+    const nextErrors: {
+      category?: string
+      name?: string
+      description?: string
+    } = {}
     const categoryValue = (data.category || '').trim()
     const nameValue = (data.name || '').trim()
     const descriptionValue = (data.description || '').trim()
@@ -39,7 +58,8 @@ export function DataTableRowActions({ row }: { row: { original: Category } }) {
     if (!categoryValue) nextErrors.category = 'Category is required'
     if (!nameValue) nextErrors.name = 'Name is required'
     if (!descriptionValue) nextErrors.description = 'Description is required'
-    if (descriptionValue.length > 200) nextErrors.description = 'Description must be 200 characters or fewer'
+    if (descriptionValue.length > 200)
+      nextErrors.description = 'Description must be 200 characters or fewer'
 
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
@@ -86,27 +106,37 @@ export function DataTableRowActions({ row }: { row: { original: Category } }) {
   }
 
   return (
-    <div className="flex items-center justify-center gap-2">
+    <div className='flex items-center justify-center gap-2'>
       {/* Edit Button */}
       <Button
-        variant="ghost"
-        size="icon"
+        variant='ghost'
+        size='icon'
         onClick={() => {
           setFormData(category) // ✅ Always load latest category data when editing
           setEditOpen(true)
         }}
-        className="h-8 w-8"
+        className='h-8 w-8'
       >
-        <SquarePen className="h-4 w-4 text-blue-600" />
+        <SquarePen className='h-4 w-4 text-blue-600' />
       </Button>
 
       {/* Delete Button */}
-      <Button variant="ghost" size="icon" onClick={() => setDeleteConfirm(true)} className="h-8 w-8">
-        <Trash className="h-4 w-4 text-red-600" />
+      <Button
+        variant='ghost'
+        size='icon'
+        onClick={() => setDeleteConfirm(true)}
+        className='h-8 w-8'
+      >
+        <Trash className='h-4 w-4 text-red-600' />
       </Button>
 
-      <Button variant="ghost" size="icon" onClick={() => setDetailsOpen(true)} className="h-8 w-8">
-        <Eye className="h-4 w-4" />
+      <Button
+        variant='ghost'
+        size='icon'
+        onClick={() => setDetailsOpen(true)}
+        className='h-8 w-8'
+      >
+        <Eye className='h-4 w-4' />
       </Button>
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -114,7 +144,7 @@ export function DataTableRowActions({ row }: { row: { original: Category } }) {
           <DialogHeader>
             <DialogTitle>Edit Category</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className='space-y-4'>
             <div>
               <Label>Category</Label>
               <Input
@@ -127,11 +157,15 @@ export function DataTableRowActions({ row }: { row: { original: Category } }) {
                   setFormData(next)
                   if (errors.category) validateForm(next)
                 }}
-                onBlur={() => validateForm({ ...formData, category: formData.category })}
-                placeholder="Enter category"
+                onBlur={() =>
+                  validateForm({ ...formData, category: formData.category })
+                }
+                placeholder='Enter category'
               />
               {errors.category && (
-                <p className="mt-1 text-xs text-destructive">{errors.category}</p>
+                <p className='text-destructive mt-1 text-xs'>
+                  {errors.category}
+                </p>
               )}
             </div>
             <div>
@@ -146,11 +180,13 @@ export function DataTableRowActions({ row }: { row: { original: Category } }) {
                   setFormData(next)
                   if (errors.name) validateForm(next)
                 }}
-                onBlur={() => validateForm({ ...formData, name: formData.name })}
-                placeholder="Enter name"
+                onBlur={() =>
+                  validateForm({ ...formData, name: formData.name })
+                }
+                placeholder='Enter name'
               />
               {errors.name && (
-                <p className="mt-1 text-xs text-destructive">{errors.name}</p>
+                <p className='text-destructive mt-1 text-xs'>{errors.name}</p>
               )}
             </div>
             <div>
@@ -165,41 +201,55 @@ export function DataTableRowActions({ row }: { row: { original: Category } }) {
                   setFormData(next)
                   if (errors.description) validateForm(next)
                 }}
-                onBlur={() => validateForm({ ...formData, description: formData.description || '' })}
-                placeholder="Enter description (max 200 chars)"
+                onBlur={() =>
+                  validateForm({
+                    ...formData,
+                    description: formData.description || '',
+                  })
+                }
+                placeholder='Enter description (max 200 chars)'
                 maxLength={200}
               />
               {errors.description && (
-                <p className="mt-1 text-xs text-destructive">{errors.description}</p>
+                <p className='text-destructive mt-1 text-xs'>
+                  {errors.description}
+                </p>
               )}
             </div>
           </div>
 
           {/* Pricing Enabled Switch */}
-          <div className="flex items-center justify-between border rounded-lg px-3 py-1 mt-2">
+          <div className='mt-2 flex items-center justify-between rounded-lg border px-3 py-1'>
             <div>
-              <Label htmlFor="pricingEnabled" className="text-sm font-medium">
+              <Label htmlFor='pricingEnabled' className='text-sm font-medium'>
                 Pricing Enabled
               </Label>
-              <p className="text-xs text-muted-foreground">
+              <p className='text-muted-foreground text-xs'>
                 Enable pricing options for products in this category.
               </p>
             </div>
             <Switch
-              id="pricingEnabled"
+              id='pricingEnabled'
               checked={formData.pricingEnabled}
-              onCheckedChange={(val) => setFormData({ ...formData, pricingEnabled: val })}
+              onCheckedChange={(val) =>
+                setFormData({ ...formData, pricingEnabled: val })
+              }
             />
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
-            <Button onClick={handleEditSubmit} disabled={
-              isUpdating ||
-              !formData.category?.trim() ||
-              !formData.name?.trim() ||
-              !(formData.description ?? '').trim()
-            }>
+            <Button variant='outline' onClick={() => setEditOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleEditSubmit}
+              disabled={
+                isUpdating ||
+                !formData.category?.trim() ||
+                !formData.name?.trim() ||
+                !(formData.description ?? '').trim()
+              }
+            >
               {isUpdating ? 'Updating...' : 'Save Changes'}
             </Button>
           </DialogFooter>
@@ -212,53 +262,73 @@ export function DataTableRowActions({ row }: { row: { original: Category } }) {
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
           </DialogHeader>
-          <p>Are you sure you want to delete <strong>{category.name}</strong>?</p>
+          <p>
+            Are you sure you want to delete <strong>{category.name}</strong>?
+          </p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteConfirm(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+            <Button variant='outline' onClick={() => setDeleteConfirm(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant='destructive'
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
               {isDeleting ? 'Deleting...' : 'Delete'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-   {/* Details Dialog */}
+      {/* Details Dialog */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-  <DialogContent className="max-w-md rounded-lg shadow-lg border">
-    <DialogHeader>
-      <DialogTitle className="text-2xl font-semibold border-b pb-3">{category.name}</DialogTitle>
-    </DialogHeader>
+        <DialogContent className='max-w-md rounded-lg border shadow-lg'>
+          <DialogHeader>
+            <DialogTitle className='border-b pb-3 text-2xl font-semibold'>
+              {category.name}
+            </DialogTitle>
+          </DialogHeader>
 
-    <div className="space-y-6 mt-4">
-      {/* Category Section */}
-      <div>
-        <p className="text-xs uppercase text-gray-400 tracking-wider">Category</p>
-        <p className="text-base font-medium text-gray-800 mt-1">{category.category}</p>
-      </div>
+          <div className='mt-4 space-y-6'>
+            {/* Category Section */}
+            <div>
+              <p className='text-xs tracking-wider text-gray-400 uppercase'>
+                Category
+              </p>
+              <p className='mt-1 text-base font-medium text-gray-800'>
+                {category.category}
+              </p>
+            </div>
 
-      {/* Description Section */}
-      {category.description && (
-        <div>
-          <p className="text-xs uppercase text-gray-400 tracking-wider">Description</p>
-          <p className="text-sm text-gray-700 mt-1 leading-relaxed">{category.description}</p>
-        </div>
-      )}
+            {/* Description Section */}
+            {category.description && (
+              <div>
+                <p className='text-xs tracking-wider text-gray-400 uppercase'>
+                  Description
+                </p>
+                <p className='mt-1 text-sm leading-relaxed text-gray-700'>
+                  {category.description}
+                </p>
+              </div>
+            )}
 
-      {/* Pricing Enabled Section */}
-      <div>
-        <p className="text-xs uppercase text-gray-400 tracking-wider mb-2">Pricing Status</p>
-        <span
-          className={`inline-block px-3 py-1 text-xs font-medium rounded-full mt-1 ${
-            category.pricingEnabled
-              ? 'bg-green-100 text-green-700 border border-green-300'
-              : 'bg-red-100 text-red-700 border border-red-300'
-          }`}
-        >
-          {category.pricingEnabled ? 'Enabled' : 'Disabled'}
-        </span>
-      </div>
-    </div>
-  </DialogContent>
-</Dialog>
+            {/* Pricing Enabled Section */}
+            <div>
+              <p className='mb-2 text-xs tracking-wider text-gray-400 uppercase'>
+                Pricing Status
+              </p>
+              <span
+                className={`mt-1 inline-block rounded-full px-3 py-1 text-xs font-medium ${
+                  category.pricingEnabled
+                    ? 'border border-green-300 bg-green-100 text-green-700'
+                    : 'border border-red-300 bg-red-100 text-red-700'
+                }`}
+              >
+                {category.pricingEnabled ? 'Enabled' : 'Disabled'}
+              </span>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

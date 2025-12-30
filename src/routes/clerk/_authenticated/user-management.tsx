@@ -15,8 +15,8 @@ import { LearnMore } from '@/components/learn-more'
 import { Search } from '@/components/search'
 // import { ThemeSwitch } from '@/components/theme-switch'
 import { columns } from '@/features/users/components/columns'
-import { DataTable } from '@/features/users/components/data-table'
 import type { UserRow as TableUser } from '@/features/users/components/columns'
+import { DataTable } from '@/features/users/components/data-table'
 
 export const Route = createFileRoute('/clerk/_authenticated/user-management')({
   component: UserManagement,
@@ -62,53 +62,53 @@ function UserManagement() {
     <>
       <SignedIn>
         {/* Wrapper removed since the original UsersProvider is not present */}
-          <Header fixed>
-            <Search />
-            <div className='ml-auto flex items-center space-x-4'>
-              {/* <ThemeSwitch /> */}
-              <UserButton />
-            </div>
-          </Header>
+        <Header fixed>
+          <Search />
+          <div className='ml-auto flex items-center space-x-4'>
+            {/* <ThemeSwitch /> */}
+            <UserButton />
+          </div>
+        </Header>
 
-          <Main>
-            <div className='mb-2 flex flex-wrap items-center justify-between space-y-2'>
-              <div>
-                <h2 className='text-2xl font-bold tracking-tight'>User List</h2>
-                <div className='flex gap-1'>
-                  <p className='text-muted-foreground'>
-                    Manage your users and their roles here.
+        <Main>
+          <div className='mb-2 flex flex-wrap items-center justify-between space-y-2'>
+            <div>
+              <h2 className='text-2xl font-bold tracking-tight'>User List</h2>
+              <div className='flex gap-1'>
+                <p className='text-muted-foreground'>
+                  Manage your users and their roles here.
+                </p>
+                <LearnMore
+                  open={opened}
+                  onOpenChange={setOpened}
+                  contentProps={{ side: 'right' }}
+                >
+                  <p>
+                    This is the same as{' '}
+                    <Link
+                      to='/users'
+                      className='text-blue-500 underline decoration-dashed underline-offset-2'
+                    >
+                      '/users'
+                    </Link>
                   </p>
-                  <LearnMore
-                    open={opened}
-                    onOpenChange={setOpened}
-                    contentProps={{ side: 'right' }}
-                  >
-                    <p>
-                      This is the same as{' '}
-                      <Link
-                        to='/users'
-                        className='text-blue-500 underline decoration-dashed underline-offset-2'
-                      >
-                        '/users'
-                      </Link>
-                    </p>
 
-                    <p className='mt-4'>
-                      You can sign out or manage/delete your account via the
-                      User Profile menu in the top-right corner of the page.
-                      <IconArrowUpRight className='inline-block size-4' />
-                    </p>
-                  </LearnMore>
-                </div>
+                  <p className='mt-4'>
+                    You can sign out or manage/delete your account via the User
+                    Profile menu in the top-right corner of the page.
+                    <IconArrowUpRight className='inline-block size-4' />
+                  </p>
+                </LearnMore>
               </div>
-              {/* Primary actions can be added here if needed */}
             </div>
-            <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-y-0 lg:space-x-12'>
-              <DataTable<TableUser> data={userList} columns={columns} />
-            </div>
-          </Main>
+            {/* Primary actions can be added here if needed */}
+          </div>
+          <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-y-0 lg:space-x-12'>
+            <DataTable<TableUser> data={userList} columns={columns} />
+          </div>
+        </Main>
 
-          {/* Dialogs can be added here if needed */}
+        {/* Dialogs can be added here if needed */}
       </SignedIn>
     </>
   )
