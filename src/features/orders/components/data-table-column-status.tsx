@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { toast } from 'sonner'
 import { useUpdateOrderStatus } from '@/hooks/use-orders'
 import { Badge } from '@/components/ui/badge'
@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { OrderRow } from './data-table-row-actions'
+import { RefundDialog } from './refund-dialog'
 
 const statusVariantMap: Record<
   string,
@@ -35,6 +36,7 @@ const statusVariantMap: Record<
   completed: 'enable',
   cancelled: 'destructive',
   delivered: 'delivered',
+  refunded: 'destructive',
 }
 
 const STATUS_OPTIONS = [
@@ -44,6 +46,7 @@ const STATUS_OPTIONS = [
   { value: 'completed', label: 'Completed' },
   { value: 'cancelled', label: 'Cancelled' },
   { value: 'delivered', label: 'Delivered' },
+  // { value: 'refunded', label: 'Refunded' },
 ] as const
 
 const paymentStatusVariantMap: Record<
@@ -52,11 +55,13 @@ const paymentStatusVariantMap: Record<
 > = {
   paid: 'enable',
   unpaid: 'destructive',
+  refunded: 'default',
 }
 
 const PAYMENT_STATUS_OPTIONS = [
   { value: 'paid', label: 'Paid' },
   { value: 'unpaid', label: 'Unpaid' },
+  { value: 'refunded', label: 'Refunded' },
 ] as const
 
 export function StatusCell({ order }: { order: OrderRow }) {
@@ -85,6 +90,13 @@ export function StatusCell({ order }: { order: OrderRow }) {
       return
     }
 
+    if (next === 'refunded') {
+      toast.error('To refund an order, please click "View" button and use "Initiate Refund" option', {
+        duration: 5000,
+      })
+      return
+    }
+
     updateStatus(
       { id: order._id, status: next },
       {
@@ -100,6 +112,11 @@ export function StatusCell({ order }: { order: OrderRow }) {
 
   // Disable rules based on your flow
   const isDisabled = (status: string) => {
+    // Refunded status can never be selected from dropdown - must use Initiate Refund button
+    if (status === 'refunded') {
+      return true
+    }
+
     switch (current) {
       case 'placed':
         return ['placed', 'inprogress', 'completed', 'delivered'].includes(
@@ -126,6 +143,8 @@ export function StatusCell({ order }: { order: OrderRow }) {
       case 'cancelled':
         return true
       case 'delivered':
+        return true
+      case 'refunded':
         return true
       default:
         return false
@@ -183,6 +202,9 @@ export function StatusCell({ order }: { order: OrderRow }) {
     )
   }
 
+  // Disable dropdown if order is refunded
+  const isRefunded = order.status?.toLowerCase() === 'refunded'
+
   return (
     <>
       <DropdownMenu>
@@ -191,9 +213,9 @@ export function StatusCell({ order }: { order: OrderRow }) {
             variant='ghost'
             size='sm'
             className='h-auto p-0'
-            disabled={isPending}
+            disabled={isPending || isRefunded}
           >
-            <Badge variant={variant} className='cursor-pointer select-none'>
+            <Badge variant={variant} className={`select-none ${isRefunded ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
               {order.status}
             </Badge>
           </Button>
@@ -327,9 +349,46 @@ export function PaymentStatusCell({ order }: { order: OrderRow }) {
   const current = order.paymentStatus?.toLowerCase()
   const variant = paymentStatusVariantMap[current] || 'default'
   const { mutate: updatePaymentStatus, isPending } = useUpdateOrderStatus()
+  const [showRefundDialog, setShowRefundDialog] = useState(false)
+
+  const maxRefundable = useMemo(() => {
+    const paidAmount = order.finalAmount || 0
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const alreadyRefunded = (order as any).refund?.refundAmount || 0
+    return Math.max(0, paidAmount - alreadyRefunded)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  }, [order.finalAmount, (order as any).refund])
+
+  const canRefund = useMemo(() => {
+    return (
+      order.paymentMethod === 'prepaid' &&
+      order.razorpayPaymentId &&
+      order.paymentStatus !== 'refunded' && 
+      maxRefundable > 0
+    )
+  }, [order.paymentMethod, order.paymentStatus, order.razorpayPaymentId, maxRefundable])
 
   const onSelect = (next: string) => {
     if (next === order.paymentStatus) return
+
+    if (next === 'refunded') {
+      if (!canRefund) {
+        if (order.paymentMethod !== 'prepaid') {
+          toast.error('Only prepaid orders can be refunded')
+        } else if (!order.razorpayPaymentId) {
+          toast.error('No payment ID found for this order')
+        } else if (order.paymentStatus === 'refunded') {
+          toast.error('Order has already been fully refunded')
+        } else if (maxRefundable <= 0) {
+          toast.error('No refundable amount available')
+        } else {
+          toast.error('This order cannot be refunded')
+        }
+        return
+      }
+      setShowRefundDialog(true)
+      return
+    }
 
     updatePaymentStatus(
       { id: order._id, paymentStatus: next },
@@ -346,36 +405,59 @@ export function PaymentStatusCell({ order }: { order: OrderRow }) {
     )
   }
 
+  const handleRefundSuccess = () => {
+    // Refund status will be updated automatically by backend
+    // No need to manually update payment status here
+  }
+
+  // Disable dropdown if order is refunded
+  const isRefunded = order.status?.toLowerCase() === 'refunded'
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant='ghost'
-          size='sm'
-          className='h-auto p-0'
-          disabled={isPending}
-        >
-          <Badge variant={variant} className='cursor-pointer select-none'>
-            {order.paymentStatus}
-          </Badge>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align='start'>
-        {PAYMENT_STATUS_OPTIONS.map((opt) => (
-          <DropdownMenuItem
-            key={opt.value}
-            disabled={isPending || opt.value === current}
-            onSelect={() => onSelect(opt.value)}
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant='ghost'
+            size='sm'
+            className='h-auto p-0'
+            disabled={isPending || isRefunded}
           >
-            <Badge
-              variant={paymentStatusVariantMap[opt.value]}
-              className='cursor-pointer select-none'
-            >
-              {opt.label}
+            <Badge variant={variant} className={`select-none ${isRefunded ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+              {order.paymentStatus}
             </Badge>
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align='start'>
+          {PAYMENT_STATUS_OPTIONS.filter((opt) => {
+            if (opt.value === 'refunded' && !canRefund) {
+              return false
+            }
+            return true
+          }).map((opt) => (
+            <DropdownMenuItem
+              key={opt.value}
+              disabled={isPending || opt.value === current}
+              onSelect={() => onSelect(opt.value)}
+            >
+              <Badge
+                variant={paymentStatusVariantMap[opt.value]}
+                className='cursor-pointer select-none'
+              >
+                {opt.label}
+              </Badge>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <RefundDialog
+        open={showRefundDialog}
+        onClose={() => setShowRefundDialog(false)}
+        orderId={order._id}
+        maxRefundable={maxRefundable}
+        onSuccess={handleRefundSuccess}
+      />
+    </>
   )
 }

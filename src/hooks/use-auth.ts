@@ -9,7 +9,7 @@ import { setCookie, removeCookie } from './use-cookie'
 
 // Types
 interface LoginData {
-  emailOrUsername: string // This can be either email or username from the form
+  email: string // Admin login only accepts email
   password: string
 }
 
@@ -63,7 +63,7 @@ interface ResetPasswordData {
 }
 
 const loginApi = async (data: LoginData): Promise<AuthResponse> => {
-  const response = await api.post('/auth/login', data)
+  const response = await api.post('/auth/admin/login', data)
   return response.data
 }
 
@@ -123,8 +123,25 @@ export function useLogin() {
         navigate({ to: '/' })
       }
     },
-    onError: (error) => {
-      toast.error(error.message)
+    onError: (error: unknown) => {
+      let errorMessage = 'Login failed. Please try again.'
+      
+      if (error && typeof error === 'object') {
+        // Handle Axios error response
+        const axiosError = error as {
+          response?: { data?: { message?: string } }
+          message?: string
+        }
+        
+        errorMessage =
+          axiosError.response?.data?.message ||
+          axiosError.message ||
+          errorMessage
+      } else if (typeof error === 'string') {
+        errorMessage = error
+      }
+      
+      toast.error(errorMessage)
     },
   })
 }

@@ -72,6 +72,23 @@ export interface Order {
   razorpayOrderId?: string
   razorpayPaymentId?: string
   razorpaySignature?: string
+  refund?: {
+    refundId: string | null
+    refundAmount: number
+    refundStatus: 'pending' | 'processed' | 'failed' | 'none'
+    refundReason: string | null
+    refundInitiatedAt: string | null
+    refundProcessedAt: string | null
+    refundInitiatedBy: string | null
+    refundHistory: Array<{
+      status: string
+      razorpayRefundId?: string
+      amount?: number
+      timestamp: string
+      error?: string
+      note?: string
+    }>
+  }
 }
 
 export interface GetOrdersParams {
@@ -281,5 +298,69 @@ export function useCreatePOSOrder() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] })
     },
+  })
+}
+
+// Refund types
+export interface InitiateRefundPayload {
+  id: string
+  amount: number
+  reason?: string
+}
+
+export interface RefundStatus {
+  orderId: string
+  refund: {
+    refundId: string | null
+    refundAmount: number
+    refundStatus: 'pending' | 'processed' | 'failed' | 'none'
+    refundReason: string | null
+    refundInitiatedAt: string | null
+    refundProcessedAt: string | null
+    refundHistory: Array<{
+      status: string
+      razorpayRefundId?: string
+      amount?: number
+      timestamp: string
+      error?: string
+      note?: string
+    }>
+  }
+  paymentStatus: string
+}
+
+// API functions
+const initiateRefundApi = async (payload: InitiateRefundPayload) => {
+  const { id, ...data } = payload
+  const response = await api.post(`/orders/${id}/refund`, data)
+  return response.data
+}
+
+const getRefundStatusApi = async (orderId: string): Promise<RefundStatus> => {
+  const response = await api.get(`/orders/${orderId}/refund-status`)
+  const payload = response?.data?.data ?? response?.data ?? {}
+  return payload as RefundStatus
+}
+
+// Mutation hook to initiate refund
+export function useInitiateRefund() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: initiateRefundApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] })
+    },
+  })
+}
+
+// Query hook to get refund status
+export function useRefundStatus(orderId?: string) {
+  return useQuery({
+    queryKey: ['orders', 'refund', orderId],
+    queryFn: () => getRefundStatusApi(orderId as string),
+    enabled: Boolean(orderId),
+    staleTime: 1000 * 30,
+    retry: 3,
+    refetchOnWindowFocus: false,
   })
 }

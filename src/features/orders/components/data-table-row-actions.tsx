@@ -19,6 +19,7 @@ import {
   useDownloadInvoice,
   type Order,
 } from '@/hooks/use-orders'
+import { RefundDialog } from './refund-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -44,18 +45,18 @@ import { ContentLoader } from '@/components/content-loader'
 export interface OrderRow {
   _id: string
   userId:
-    | string
-    | {
-        _id?: string
-        id?: string
-        email?: string
-        phoneNumber?: string
-        role?: string
-        user_details?: {
-          name?: string
-          country?: string
-        }
-      }
+  | string
+  | {
+    _id?: string
+    id?: string
+    email?: string
+    phoneNumber?: string
+    role?: string
+    user_details?: {
+      name?: string
+      country?: string
+    }
+  }
   phoneNumber: string
   status: string
   createdAt: string
@@ -126,6 +127,27 @@ type NormalizedOrder = {
   originalTotal?: number
   shippingCharge?: number
   statusHistory?: StatusHistoryEntry[]
+  paymentMethod?: 'prepaid' | 'cod'
+  paymentStatus?: string
+  razorpayPaymentId?: string
+  finalAmount?: number
+  refund?: {
+    refundId: string | null
+    refundAmount: number
+    refundStatus: 'pending' | 'processed' | 'failed' | 'none'
+    refundReason: string | null
+    refundInitiatedAt: string | null
+    refundProcessedAt: string | null
+    refundInitiatedBy: string | null
+    refundHistory: Array<{
+      status: string
+      razorpayRefundId?: string
+      amount?: number
+      timestamp: string
+      error?: string
+      note?: string
+    }>
+  }
 }
 
 // Constants moved outside component for better performance
@@ -200,6 +222,11 @@ const normalizeOrderFromApi = (o: Order): NormalizedOrder => ({
   shippingCharge: o.shippingCharge,
   statusHistory: (o as unknown as { statusHistory?: StatusHistoryEntry[] })
     .statusHistory,
+  paymentMethod: o.paymentMethod,
+  paymentStatus: o.paymentStatus,
+  razorpayPaymentId: o.razorpayPaymentId,
+  finalAmount: o.finalAmount,
+  refund: o.refund,
 })
 
 // Add helper function to calculate product-level discount from line items
@@ -509,6 +536,7 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow> }) {
   const [open, setOpen] = useState(false)
   const [isEditingShipping, setIsEditingShipping] = useState(false)
   const [shippingChargeValue, setShippingChargeValue] = useState<number>(0)
+  const [showRefundDialog, setShowRefundDialog] = useState(false)
 
   const {
     data: fetchedOrder,
@@ -633,6 +661,24 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow> }) {
     detail.shippingCharge,
     order.applyCoupon,
   ])
+
+  // Calculate refund eligibility and max refundable amount
+  // Allow refunds from any status (as per backend logic)
+  // Only check: prepaid method, has payment ID, not already fully refunded
+  const canRefund = useMemo(() => {
+    return (
+      detail.paymentMethod === 'prepaid' &&
+      detail.razorpayPaymentId &&
+      detail.paymentStatus !== 'refunded' // Can't refund if already fully refunded
+    )
+  }, [detail.paymentMethod, detail.paymentStatus, detail.razorpayPaymentId])
+
+  const maxRefundable = useMemo(() => {
+    const paidAmount = detail.finalAmount || 0
+    const alreadyRefunded = detail.refund?.refundAmount || 0
+    return Math.max(0, paidAmount - alreadyRefunded)
+  }, [detail.finalAmount, detail.refund])
+
   // useCallback for event handlers
   const handleShippingChargeEdit = useCallback(() => {
     setIsEditingShipping(true)
@@ -702,20 +748,32 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow> }) {
                     {order.paymentStatus}
                   </Badge>
                 </DialogTitle>
-                {fetchedOrder?.invoiceNumber && (
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={handleDownloadInvoice}
-                    disabled={downloadInvoiceMutation.isPending}
-                    className='mr-2 gap-2'
-                  >
-                    <Download className='h-4 w-4' />
-                    {downloadInvoiceMutation.isPending
-                      ? 'Downloading...'
-                      : 'Download Invoice'}
-                  </Button>
-                )}
+                <div className='flex items-center gap-1.5 mr-3'>
+                  {fetchedOrder?.invoiceNumber && (
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={handleDownloadInvoice}
+                      disabled={downloadInvoiceMutation.isPending}
+                      className='gap-2'
+                    >
+                      <Download className='h-4 w-4' />
+                      {downloadInvoiceMutation.isPending
+                        ? 'Downloading...'
+                        : 'Download Invoice'}
+                    </Button>
+                  )}
+                  {canRefund && maxRefundable > 0 && (
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => setShowRefundDialog(true)}
+                      className='gap-2'
+                    >
+                      Initiate Refund
+                    </Button>
+                  )}
+                </div>
               </div>
             </DialogHeader>
 
@@ -779,6 +837,34 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow> }) {
                           {detail.cancelDetails.reason}
                         </span>
                       </div>
+                    )}
+                    {detail?.refund && detail.refund.refundStatus !== 'none' && (
+                      <>
+                        <div className='flex justify-between'>
+                          <span className='text-muted-foreground'>Refund Status</span>
+                          <Badge
+                            variant={
+                              detail.refund.refundStatus === 'processed'
+                                ? 'enable'
+                                : detail.refund.refundStatus === 'failed'
+                                  ? 'destructive'
+                                  : 'default'
+                            }
+                          >
+                            {detail.refund.refundStatus}
+                          </Badge>
+                        </div>
+                        <div className='flex justify-between'>
+                          <span className='text-muted-foreground'>Refund Amount</span>
+                          <span className='font-medium'>{formatINR(detail.refund.refundAmount)}</span>
+                        </div>
+                        {detail.refund.refundId && (
+                          <div className='flex justify-between'>
+                            <span className='text-muted-foreground'>Refund ID</span>
+                            <span className='font-medium text-xs break-all'>{detail.refund.refundId}</span>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -969,17 +1055,17 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow> }) {
                       {(orderTotals.productDiscount > 0 ||
                         orderTotals.couponDiscount > 0 ||
                         orderTotals.prepaidDiscount > 0) && (
-                        <div className='flex justify-between text-sm font-medium sm:text-base'>
-                          <span>Total Discount:</span>
-                          <span className='text-green-600'>
-                            {formatINR(
-                              orderTotals.productDiscount +
+                          <div className='flex justify-between text-sm font-medium sm:text-base'>
+                            <span>Total Discount:</span>
+                            <span className='text-green-600'>
+                              {formatINR(
+                                orderTotals.productDiscount +
                                 orderTotals.couponDiscount +
                                 orderTotals.prepaidDiscount
-                            )}
-                          </span>
-                        </div>
-                      )}
+                              )}
+                            </span>
+                          </div>
+                        )}
 
                       {/* COD Fee */}
                       {orderTotals.codFee > 0 && (
@@ -1051,6 +1137,13 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow> }) {
           </>
         )}
       </DialogContent>
+      <RefundDialog
+        open={showRefundDialog}
+        onClose={() => setShowRefundDialog(false)}
+        orderId={detail._id}
+        maxRefundable={maxRefundable}
+        onSuccess={() => refetch()}
+      />
     </Dialog>
   )
 }

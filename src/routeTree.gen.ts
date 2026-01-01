@@ -32,6 +32,7 @@ import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authen
 import { Route as AuthenticatedWhatsappLeadsIndexRouteImport } from './routes/_authenticated/whatsapp-leads/index'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedTestimonialsIndexRouteImport } from './routes/_authenticated/testimonials/index'
+import { Route as AuthenticatedTasksIndexRouteImport } from './routes/_authenticated/tasks/index'
 import { Route as AuthenticatedSuggestedProductsIndexRouteImport } from './routes/_authenticated/suggested-products/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedProductsIndexRouteImport } from './routes/_authenticated/products/index'
@@ -164,6 +165,11 @@ const AuthenticatedTestimonialsIndexRoute =
     path: '/testimonials/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTasksIndexRoute = AuthenticatedTasksIndexRouteImport.update({
+  id: '/tasks/',
+  path: '/tasks/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSuggestedProductsIndexRoute =
   AuthenticatedSuggestedProductsIndexRouteImport.update({
     id: '/suggested-products/',
@@ -285,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/products': typeof AuthenticatedProductsIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/suggested-products': typeof AuthenticatedSuggestedProductsIndexRoute
+  '/tasks': typeof AuthenticatedTasksIndexRoute
   '/testimonials': typeof AuthenticatedTestimonialsIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
   '/whatsapp-leads': typeof AuthenticatedWhatsappLeadsIndexRoute
@@ -321,6 +328,7 @@ export interface FileRoutesByTo {
   '/products': typeof AuthenticatedProductsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/suggested-products': typeof AuthenticatedSuggestedProductsIndexRoute
+  '/tasks': typeof AuthenticatedTasksIndexRoute
   '/testimonials': typeof AuthenticatedTestimonialsIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
   '/whatsapp-leads': typeof AuthenticatedWhatsappLeadsIndexRoute
@@ -362,6 +370,7 @@ export interface FileRoutesById {
   '/_authenticated/products/': typeof AuthenticatedProductsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/suggested-products/': typeof AuthenticatedSuggestedProductsIndexRoute
+  '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
   '/_authenticated/testimonials/': typeof AuthenticatedTestimonialsIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
   '/_authenticated/whatsapp-leads/': typeof AuthenticatedWhatsappLeadsIndexRoute
@@ -401,6 +410,7 @@ export interface FileRouteTypes {
     | '/products'
     | '/settings/'
     | '/suggested-products'
+    | '/tasks'
     | '/testimonials'
     | '/users'
     | '/whatsapp-leads'
@@ -437,6 +447,7 @@ export interface FileRouteTypes {
     | '/products'
     | '/settings'
     | '/suggested-products'
+    | '/tasks'
     | '/testimonials'
     | '/users'
     | '/whatsapp-leads'
@@ -477,6 +488,7 @@ export interface FileRouteTypes {
     | '/_authenticated/products/'
     | '/_authenticated/settings/'
     | '/_authenticated/suggested-products/'
+    | '/_authenticated/tasks/'
     | '/_authenticated/testimonials/'
     | '/_authenticated/users/'
     | '/_authenticated/whatsapp-leads/'
@@ -662,6 +674,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTestimonialsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/tasks/': {
+      id: '/_authenticated/tasks/'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof AuthenticatedTasksIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/suggested-products/': {
       id: '/_authenticated/suggested-products/'
       path: '/suggested-products'
@@ -805,6 +824,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOrdersIndexRoute: typeof AuthenticatedOrdersIndexRoute
   AuthenticatedProductsIndexRoute: typeof AuthenticatedProductsIndexRoute
   AuthenticatedSuggestedProductsIndexRoute: typeof AuthenticatedSuggestedProductsIndexRoute
+  AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
   AuthenticatedTestimonialsIndexRoute: typeof AuthenticatedTestimonialsIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
   AuthenticatedWhatsappLeadsIndexRoute: typeof AuthenticatedWhatsappLeadsIndexRoute
@@ -823,6 +843,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProductsIndexRoute: AuthenticatedProductsIndexRoute,
   AuthenticatedSuggestedProductsIndexRoute:
     AuthenticatedSuggestedProductsIndexRoute,
+  AuthenticatedTasksIndexRoute: AuthenticatedTasksIndexRoute,
   AuthenticatedTestimonialsIndexRoute: AuthenticatedTestimonialsIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
   AuthenticatedWhatsappLeadsIndexRoute: AuthenticatedWhatsappLeadsIndexRoute,

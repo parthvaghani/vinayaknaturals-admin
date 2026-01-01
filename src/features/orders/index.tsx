@@ -162,6 +162,7 @@ export default function Orders() {
                     'completed',
                     'cancelled',
                     'delivered',
+                    'refunded',
                   ].map((opt) => (
                     <SelectItem key={opt} value={opt}>
                       {opt.replace(/^\w/, (c) => c.toUpperCase())}

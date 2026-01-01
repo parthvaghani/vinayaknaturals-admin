@@ -5,7 +5,7 @@ export function handleServerError(error: unknown) {
   // eslint-disable-next-line no-console
   console.log(error)
 
-  let errMsg = 'Login successfully!'
+  let errMsg = 'An error occurred. Please try again.'
 
   if (
     error &&
@@ -17,7 +17,14 @@ export function handleServerError(error: unknown) {
   }
 
   if (error instanceof AxiosError) {
-    errMsg = error.response?.data.title
+    // Try to get message from response data (API format)
+    errMsg =
+      error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.message ||
+      errMsg
+  } else if (error && typeof error === 'object' && 'message' in error) {
+    errMsg = String(error.message)
   }
 
   toast.error(errMsg)

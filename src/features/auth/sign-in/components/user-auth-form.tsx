@@ -26,14 +26,10 @@ import { PasswordInput } from '@/components/password-input'
 type UserAuthFormProps = HTMLAttributes<HTMLFormElement>
 
 const formSchema = z.object({
-  emailOrUsername: z
+  email: z
     .string()
-    .min(1, 'Please enter your email or username')
-    .refine((value) => {
-      const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
-      const isUsername = value.length >= 3 && /^[a-zA-Z0-9_ ]+$/.test(value) // ✅ allows spaces in username
-      return isEmail || isUsername
-    }, 'Please enter a valid email or username (minimum 3 characters)'),
+    .min(1, 'Please enter your email')
+    .email('Please enter a valid email address'),
 
   password: z
     .string()
@@ -47,7 +43,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      emailOrUsername: '',
+      email: '',
       password: '',
     },
   })
@@ -73,12 +69,12 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
       >
         <FormField
           control={form.control}
-          name='emailOrUsername'
+          name='email'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email or Username</FormLabel>
+              <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder='Enter your email or username' {...field} />
+                <Input placeholder='Enter your email address' type='email' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
