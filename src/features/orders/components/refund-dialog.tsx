@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { useInitiateRefund } from '@/hooks/use-orders'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -9,11 +11,9 @@ import {
   DialogFooter,
   DialogDescription,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { AlertCircle } from 'lucide-react'
 
 interface RefundDialogProps {
   open: boolean
@@ -63,7 +63,8 @@ export function RefundDialog({
           onSuccess?.()
         },
         onError: (err: unknown) => {
-          const message = err instanceof Error ? err.message : 'Failed to initiate refund'
+          const message =
+            err instanceof Error ? err.message : 'Failed to initiate refund'
           toast.error(message)
         },
       }
@@ -81,7 +82,7 @@ export function RefundDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>Initiate Refund</DialogTitle>
           <DialogDescription>
@@ -89,13 +90,14 @@ export function RefundDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className='space-y-4 py-4'>
           {/* Max Refundable Amount Info */}
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5" />
-              <div className="text-sm text-blue-900">
-                <strong>Maximum Refundable:</strong> {formatCurrency(maxRefundable)}
+          <div className='rounded-lg border border-blue-200 bg-blue-50 p-3'>
+            <div className='flex items-start gap-2'>
+              <AlertCircle className='mt-0.5 h-4 w-4 text-blue-600' />
+              <div className='text-sm text-blue-900'>
+                <strong>Maximum Refundable:</strong>{' '}
+                {formatCurrency(maxRefundable)}
               </div>
             </div>
           </div>
@@ -123,40 +125,40 @@ export function RefundDialog({
 
           {/* Refund Amount */}
           {!isFullRefund && (
-            <div className="space-y-2">
-              <Label htmlFor="amount">Refund Amount (₹)</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='amount'>Refund Amount (₹)</Label>
               <Input
-                id="amount"
-                type="number"
+                id='amount'
+                type='number'
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="Enter amount"
-                min="1"
+                placeholder='Enter amount'
+                min='1'
                 max={maxRefundable}
-                step="1"
+                step='1'
               />
             </div>
           )}
 
           {/* Refund Reason */}
-          <div className="space-y-2">
-            <Label htmlFor="reason">Refund Reason (Optional)</Label>
+          <div className='space-y-2'>
+            <Label htmlFor='reason'>Refund Reason (Optional)</Label>
             <Textarea
-              id="reason"
+              id='reason'
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Enter detailed reason for refund (optional)"
+              placeholder='Enter detailed reason for refund (optional)'
               rows={3}
               maxLength={500}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className='text-muted-foreground text-xs'>
               {reason.length}/500 characters
             </p>
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={isPending}>
+          <Button variant='outline' onClick={handleClose} disabled={isPending}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isPending}>

@@ -91,9 +91,12 @@ export function StatusCell({ order }: { order: OrderRow }) {
     }
 
     if (next === 'refunded') {
-      toast.error('To refund an order, please click "View" button and use "Initiate Refund" option', {
-        duration: 5000,
-      })
+      toast.error(
+        'To refund an order, please click "View" button and use "Initiate Refund" option',
+        {
+          duration: 5000,
+        }
+      )
       return
     }
 
@@ -215,7 +218,10 @@ export function StatusCell({ order }: { order: OrderRow }) {
             className='h-auto p-0'
             disabled={isPending || isRefunded}
           >
-            <Badge variant={variant} className={`select-none ${isRefunded ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+            <Badge
+              variant={variant}
+              className={`select-none ${isRefunded ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+            >
               {order.status}
             </Badge>
           </Button>
@@ -356,17 +362,22 @@ export function PaymentStatusCell({ order }: { order: OrderRow }) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const alreadyRefunded = (order as any).refund?.refundAmount || 0
     return Math.max(0, paidAmount - alreadyRefunded)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }, [order.finalAmount, (order as any).refund])
 
   const canRefund = useMemo(() => {
     return (
       order.paymentMethod === 'prepaid' &&
       order.razorpayPaymentId &&
-      order.paymentStatus !== 'refunded' && 
+      order.paymentStatus !== 'refunded' &&
       maxRefundable > 0
     )
-  }, [order.paymentMethod, order.paymentStatus, order.razorpayPaymentId, maxRefundable])
+  }, [
+    order.paymentMethod,
+    order.paymentStatus,
+    order.razorpayPaymentId,
+    maxRefundable,
+  ])
 
   const onSelect = (next: string) => {
     if (next === order.paymentStatus) return
@@ -423,7 +434,10 @@ export function PaymentStatusCell({ order }: { order: OrderRow }) {
             className='h-auto p-0'
             disabled={isPending || isRefunded}
           >
-            <Badge variant={variant} className={`select-none ${isRefunded ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+            <Badge
+              variant={variant}
+              className={`select-none ${isRefunded ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+            >
               {order.paymentStatus}
             </Badge>
           </Button>

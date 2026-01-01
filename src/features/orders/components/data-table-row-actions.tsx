@@ -19,7 +19,6 @@ import {
   useDownloadInvoice,
   type Order,
 } from '@/hooks/use-orders'
-import { RefundDialog } from './refund-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -40,23 +39,24 @@ import {
   TableRow as UiTR,
 } from '@/components/ui/table'
 import { ContentLoader } from '@/components/content-loader'
+import { RefundDialog } from './refund-dialog'
 
 // Types remain the same
 export interface OrderRow {
   _id: string
   userId:
-  | string
-  | {
-    _id?: string
-    id?: string
-    email?: string
-    phoneNumber?: string
-    role?: string
-    user_details?: {
-      name?: string
-      country?: string
-    }
-  }
+    | string
+    | {
+        _id?: string
+        id?: string
+        email?: string
+        phoneNumber?: string
+        role?: string
+        user_details?: {
+          name?: string
+          country?: string
+        }
+      }
   phoneNumber: string
   status: string
   createdAt: string
@@ -748,7 +748,7 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow> }) {
                     {order.paymentStatus}
                   </Badge>
                 </DialogTitle>
-                <div className='flex items-center gap-1.5 mr-3'>
+                <div className='mr-3 flex items-center gap-1.5'>
                   {fetchedOrder?.invoiceNumber && (
                     <Button
                       variant='outline'
@@ -838,34 +838,45 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow> }) {
                         </span>
                       </div>
                     )}
-                    {detail?.refund && detail.refund.refundStatus !== 'none' && (
-                      <>
-                        <div className='flex justify-between'>
-                          <span className='text-muted-foreground'>Refund Status</span>
-                          <Badge
-                            variant={
-                              detail.refund.refundStatus === 'processed'
-                                ? 'enable'
-                                : detail.refund.refundStatus === 'failed'
-                                  ? 'destructive'
-                                  : 'default'
-                            }
-                          >
-                            {detail.refund.refundStatus}
-                          </Badge>
-                        </div>
-                        <div className='flex justify-between'>
-                          <span className='text-muted-foreground'>Refund Amount</span>
-                          <span className='font-medium'>{formatINR(detail.refund.refundAmount)}</span>
-                        </div>
-                        {detail.refund.refundId && (
+                    {detail?.refund &&
+                      detail.refund.refundStatus !== 'none' && (
+                        <>
                           <div className='flex justify-between'>
-                            <span className='text-muted-foreground'>Refund ID</span>
-                            <span className='font-medium text-xs break-all'>{detail.refund.refundId}</span>
+                            <span className='text-muted-foreground'>
+                              Refund Status
+                            </span>
+                            <Badge
+                              variant={
+                                detail.refund.refundStatus === 'processed'
+                                  ? 'enable'
+                                  : detail.refund.refundStatus === 'failed'
+                                    ? 'destructive'
+                                    : 'default'
+                              }
+                            >
+                              {detail.refund.refundStatus}
+                            </Badge>
                           </div>
-                        )}
-                      </>
-                    )}
+                          <div className='flex justify-between'>
+                            <span className='text-muted-foreground'>
+                              Refund Amount
+                            </span>
+                            <span className='font-medium'>
+                              {formatINR(detail.refund.refundAmount)}
+                            </span>
+                          </div>
+                          {detail.refund.refundId && (
+                            <div className='flex justify-between'>
+                              <span className='text-muted-foreground'>
+                                Refund ID
+                              </span>
+                              <span className='text-xs font-medium break-all'>
+                                {detail.refund.refundId}
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      )}
                   </div>
                 </div>
 
@@ -1055,17 +1066,17 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow> }) {
                       {(orderTotals.productDiscount > 0 ||
                         orderTotals.couponDiscount > 0 ||
                         orderTotals.prepaidDiscount > 0) && (
-                          <div className='flex justify-between text-sm font-medium sm:text-base'>
-                            <span>Total Discount:</span>
-                            <span className='text-green-600'>
-                              {formatINR(
-                                orderTotals.productDiscount +
+                        <div className='flex justify-between text-sm font-medium sm:text-base'>
+                          <span>Total Discount:</span>
+                          <span className='text-green-600'>
+                            {formatINR(
+                              orderTotals.productDiscount +
                                 orderTotals.couponDiscount +
                                 orderTotals.prepaidDiscount
-                              )}
-                            </span>
-                          </div>
-                        )}
+                            )}
+                          </span>
+                        </div>
+                      )}
 
                       {/* COD Fee */}
                       {orderTotals.codFee > 0 && (

@@ -125,14 +125,14 @@ export function useLogin() {
     },
     onError: (error: unknown) => {
       let errorMessage = 'Login failed. Please try again.'
-      
+
       if (error && typeof error === 'object') {
         // Handle Axios error response
         const axiosError = error as {
           response?: { data?: { message?: string } }
           message?: string
         }
-        
+
         errorMessage =
           axiosError.response?.data?.message ||
           axiosError.message ||
@@ -140,7 +140,7 @@ export function useLogin() {
       } else if (typeof error === 'string') {
         errorMessage = error
       }
-      
+
       toast.error(errorMessage)
     },
   })

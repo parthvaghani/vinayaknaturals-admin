@@ -74,7 +74,11 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder='Enter your email address' type='email' {...field} />
+                <Input
+                  placeholder='Enter your email address'
+                  type='email'
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
