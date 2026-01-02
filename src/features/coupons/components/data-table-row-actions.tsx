@@ -173,6 +173,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
       level: trimmed.level,
       isActive: trimmed.isActive,
       couponType: trimmed.couponType,
+      isPromoCode: trimmed.isPromoCode,
     }
 
     if (trimmed.couponCode !== coupon.couponCode) {
@@ -208,6 +209,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
       ...coupon,
       maxUsagePerUser: coupon.maxUsagePerUser || 1,
       firstOrderOnly: coupon.firstOrderOnly || false,
+      isPromoCode: coupon.isPromoCode || false,
     })
     setErrors({})
     setDateErrors({})
@@ -498,6 +500,22 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
                 id='firstOrderOnly'
                 checked={formData.firstOrderOnly || false}
                 onCheckedChange={(val) => updateField('firstOrderOnly', val)}
+              />
+            </div>
+
+            <div className='flex items-center justify-between rounded-lg border px-3 py-2'>
+              <div>
+                <Label htmlFor='isPromoCode' className='text-sm font-medium'>
+                  Promotional Code
+                </Label>
+                <p className='text-muted-foreground text-xs'>
+                  Hide from available coupons list (for creator/influencer codes).
+                </p>
+              </div>
+              <Switch
+                id='isPromoCode'
+                checked={formData.isPromoCode || false}
+                onCheckedChange={(val) => updateField('isPromoCode', val)}
               />
             </div>
 

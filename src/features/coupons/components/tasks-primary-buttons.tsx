@@ -44,6 +44,7 @@ export function CouponsPrimaryButtons() {
     firstOrderOnly: false, // Add this
     isActive: true,
     isPOSOnly: false,
+    isPromoCode: false, // NEW: Promotional code flag
   })
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
@@ -114,6 +115,7 @@ export function CouponsPrimaryButtons() {
         minOrderQuantity: Number(couponData.minOrderQuantity),
         maxUsage: Number(couponData.maxUsage),
         couponType: couponData.isPOSOnly ? 'pos' : 'normal',
+        isPromoCode: couponData.isPromoCode, // NEW: Include promotional code flag
       },
       {
         onSuccess: () => {
@@ -136,6 +138,7 @@ export function CouponsPrimaryButtons() {
             firstOrderOnly: false, // Add this
             isActive: true,
             isPOSOnly: false,
+            isPromoCode: false, // NEW: Promotional code flag
           })
           setOpenSheet(false)
         },
@@ -395,6 +398,22 @@ export function CouponsPrimaryButtons() {
                 checked={couponData.firstOrderOnly}
                 onCheckedChange={(val) =>
                   setCouponData({ ...couponData, firstOrderOnly: val })
+                }
+              />
+            </div>
+
+            {/* Promo Code Switch - NEW */}
+            <div className='flex items-center justify-between rounded-lg border px-3 py-2'>
+              <div>
+                <Label className='text-sm font-medium'>Promotional Code</Label>
+                <p className='text-muted-foreground text-xs'>
+                  Hide from available coupons list (for creator/influencer codes).
+                </p>
+              </div>
+              <Switch
+                checked={couponData.isPromoCode}
+                onCheckedChange={(val) =>
+                  setCouponData({ ...couponData, isPromoCode: val })
                 }
               />
             </div>

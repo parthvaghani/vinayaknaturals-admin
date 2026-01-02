@@ -49,6 +49,7 @@ export default function Coupons() {
         ? new Date(coupon.expiryDate).toLocaleDateString()
         : '-',
       couponType: coupon.couponType || 'normal',
+      isPromoCode: coupon.isPromoCode ?? false, // NEW: Promotional code flag
     }))
   }, [data])
 

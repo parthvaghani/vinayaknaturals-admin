@@ -28,6 +28,7 @@ export interface Coupon {
   createdAt?: string
   updatedAt?: string
   couponType?: 'pos' | 'normal'
+  isPromoCode?: boolean // Promotional codes (hidden from available coupons list)
 }
 
 export interface CreateCoupon {
@@ -51,6 +52,7 @@ export interface CreateCoupon {
   createdAt?: string
   updatedAt?: string
   couponType?: 'pos' | 'normal'
+  isPromoCode?: boolean // Promotional codes (hidden from available coupons list)
 }
 
 // Pagination interface
