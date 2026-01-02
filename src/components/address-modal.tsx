@@ -64,9 +64,9 @@ export function AddressModal({
     }
 
     if (!formData.zip.trim()) {
-      newErrors.zip = 'ZIP code is required'
+      newErrors.zip = 'Pincode is required'
     } else if (!/^\d{6}$/.test(formData.zip)) {
-      newErrors.zip = 'ZIP code must be 6 digits'
+      newErrors.zip = 'Pincode must be 6 digits'
     }
 
     if (!formData.phoneNumber.trim()) {
@@ -223,10 +223,10 @@ export function AddressModal({
                   </div>
                 </div>
 
-                {/* ZIP Code and Country */}
+                {/* Pincode and Country */}
                 <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
                   <div className='space-y-2'>
-                    <Label htmlFor='zip'>ZIP Code *</Label>
+                    <Label htmlFor='zip'>Pincode *</Label>
                     <Input
                       id='zip'
                       placeholder='400001'

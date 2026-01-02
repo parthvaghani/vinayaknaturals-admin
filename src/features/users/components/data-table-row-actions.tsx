@@ -145,7 +145,7 @@ export function DataTableRowActions({ row }: { row: { original: UserRow } }) {
                 </p>
               </div>
               <div>
-                <span className='text-muted-foreground'>ZIP</span>
+                <span className='text-muted-foreground'>Pincode</span>
                 <p className='mt-1 rounded-md border p-2'>
                   {user.user_details?.zip || '—'}
                 </p>
