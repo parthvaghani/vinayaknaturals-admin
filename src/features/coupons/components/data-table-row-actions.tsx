@@ -509,7 +509,8 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
                   Promotional Code
                 </Label>
                 <p className='text-muted-foreground text-xs'>
-                  Hide from available coupons list (for creator/influencer codes).
+                  Hide from available coupons list (for creator/influencer
+                  codes).
                 </p>
               </div>
               <Switch
