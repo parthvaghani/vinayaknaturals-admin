@@ -23,4 +23,3 @@ time %CURRENT_TIME%
 echo Date restored to %CURRENT_DATE% %CURRENT_TIME% and complete amend last commit!
 git push -uf origin %CURRENT_BRANCH% --no-verify
 @echo on
-pause
